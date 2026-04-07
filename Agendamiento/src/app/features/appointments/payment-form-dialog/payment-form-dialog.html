@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>Registrar pago</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Monto (COP)</mat-label>
+      <input
+        matInput
+        type="text"
+        formControlName="amount"
+        inputmode="numeric"
+        autocomplete="off"
+        (focus)="onAmountFocus()"
+        (input)="onAmountInput()"
+        (blur)="onAmountBlur()"
+      />
+      @if (form.controls.amount.invalid && form.controls.amount.touched) {
+        <mat-error>
+          @if (form.controls.amount.hasError('required')) {
+            Ingresa un monto
+          } @else if (form.controls.amount.hasError('min')) {
+            No puede ser negativo
+          }
+        </mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Método</mat-label>
+      <mat-select formControlName="payment_method">
+        <mat-option value="Cash">Efectivo</mat-option>
+        <mat-option value="Card">Tarjeta</mat-option>
+        <mat-option value="Transfer">Transferencia</mat-option>
+      </mat-select>
+    </mat-form-field>
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Omitir</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+    Guardar pago
+  </button>
+</mat-dialog-actions>

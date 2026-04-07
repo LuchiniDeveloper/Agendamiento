@@ -1,0 +1,80 @@
+<div class="auth-shell">
+  <aside class="auth-brand" aria-hidden="true">
+    <div class="auth-brand-bg"></div>
+    <div class="auth-brand-content">
+      <div class="auth-brand-badge">
+        <mat-icon>storefront</mat-icon>
+      </div>
+      <h2 class="auth-brand-title">Tu clínica</h2>
+      <p class="auth-brand-copy">
+        Elige una veterinaria existente o crea una nueva. El nombre aparecerá en el panel y en los mensajes a
+        tus clientes.
+      </p>
+    </div>
+  </aside>
+
+  <div class="auth-main">
+    <mat-card class="auth-card">
+      <mat-card-header>
+        <mat-card-title>Tu clínica</mat-card-title>
+        <mat-card-subtitle>Un solo paso para empezar</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (listLoading()) {
+          <div class="list-loading" aria-busy="true">
+            <mat-spinner diameter="32" />
+            <span>Cargando clínicas…</span>
+          </div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Veterinaria</mat-label>
+              <mat-select formControlName="clinicChoice" placeholder="Selecciona una opción">
+                @for (b of businesses(); track b.id) {
+                  <mat-option [value]="b.id">{{ b.name }}</mat-option>
+                }
+                <mat-option [value]="createNewValue">Crear nueva clínica…</mat-option>
+              </mat-select>
+              @if (form.controls.clinicChoice.invalid && form.controls.clinicChoice.touched) {
+                <mat-error>Elige una clínica o crear una nueva</mat-error>
+              }
+            </mat-form-field>
+
+            @if (isCreatingNew()) {
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Nombre de la nueva veterinaria</mat-label>
+                <input matInput formControlName="businessName" />
+                @if (form.controls.businessName.invalid && form.controls.businessName.touched) {
+                  <mat-error>
+                    @if (form.controls.businessName.hasError('required')) {
+                      Obligatorio
+                    } @else if (form.controls.businessName.hasError('minlength')) {
+                      Al menos 2 caracteres
+                    }
+                  </mat-error>
+                }
+              </mat-form-field>
+            }
+
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Tu nombre (opcional)</mat-label>
+              <input matInput formControlName="displayName" />
+            </mat-form-field>
+            @if (error()) {
+              <p class="error" role="alert">{{ error() }}</p>
+            }
+            <button
+              mat-flat-button
+              color="primary"
+              class="full submit-btn"
+              type="submit"
+              [disabled]="loading() || form.invalid"
+            >
+              {{ submitLabel() }}
+            </button>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

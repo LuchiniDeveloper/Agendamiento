@@ -1,0 +1,187 @@
+.auth-shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(clamp(11rem, 36vh, 22rem), auto) 1fr;
+
+  @media (min-width: 900px) {
+    grid-template-columns: minmax(280px, 1fr) minmax(400px, 520px);
+    grid-template-rows: 1fr;
+  }
+}
+
+.auth-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem 1.25rem 1.75rem;
+  overflow: hidden;
+  color: var(--mat-sys-on-primary);
+  min-height: clamp(11rem, 36vh, 22rem);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 78%, black);
+
+  @media (min-width: 900px) {
+    min-height: 0;
+    padding: 2.5rem 2.75rem 3rem;
+  }
+}
+
+.auth-brand-video-host {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 28%;
+    display: block;
+  }
+}
+
+.auth-brand-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0.35) 42%, transparent 78%),
+    linear-gradient(115deg, rgb(0 0 0 / 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 70% at 50% 20%, rgb(0 0 0 / 0.25) 0%, transparent 55%);
+}
+
+.auth-brand-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-brand-video-host {
+    display: none;
+  }
+
+  .auth-brand-overlay {
+    background:
+      radial-gradient(circle at 20% 20%, color-mix(in srgb, white 18%, transparent) 0%, transparent 45%),
+      radial-gradient(circle at 85% 70%, color-mix(in srgb, var(--mat-sys-tertiary) 40%, transparent) 0%, transparent 42%),
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--mat-sys-primary) 88%, black) 0%,
+        color-mix(in srgb, var(--mat-sys-primary) 52%, var(--mat-sys-tertiary)) 100%
+      );
+  }
+}
+
+.auth-brand-content {
+  position: relative;
+  z-index: 2;
+  max-width: 22rem;
+
+  @media (max-width: 899px) {
+    max-width: min(22rem, 100%);
+  }
+}
+
+.auth-brand-badge {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: var(--app-radius-md);
+  background: color-mix(in srgb, var(--mat-sys-on-primary) 16%, transparent);
+  backdrop-filter: blur(8px);
+
+  mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.auth-brand-title {
+  font-family: var(--app-font-display);
+  font-size: clamp(2rem, 3vw, 2.65rem);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.auth-brand-copy {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  opacity: 0.92;
+}
+
+.auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem 2rem;
+  position: relative;
+  background: var(--mat-sys-surface-container-low);
+  background-image:
+    radial-gradient(
+      ellipse 80% 60% at 50% -10%,
+      color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+      transparent 55%
+    );
+
+  @media (min-width: 900px) {
+    padding: 2rem;
+  }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: var(--app-radius-xl) !important;
+
+  mat-card-title {
+    font-family: var(--app-font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  mat-card-subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+.full {
+  width: 100%;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.submit-btn {
+  margin-top: 0.35rem;
+  padding: 0.65rem 1rem !important;
+  font-weight: 600 !important;
+}
+
+.error {
+  color: var(--mat-sys-error);
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+mat-card-actions {
+  padding: 0 1rem 1.15rem;
+
+  a {
+    font-weight: 600;
+  }
+}

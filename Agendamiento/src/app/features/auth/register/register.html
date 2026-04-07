@@ -1,0 +1,55 @@
+<div class="auth-shell">
+  <aside class="auth-brand" aria-hidden="true">
+    <div class="auth-brand-bg"></div>
+    <div class="auth-brand-content">
+      <div class="auth-brand-badge">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <h2 class="auth-brand-title">Crea tu espacio</h2>
+      <p class="auth-brand-copy">
+        Regístrate en segundos. Después podrás nombrar tu clínica y empezar a agendar.
+      </p>
+    </div>
+  </aside>
+
+  <div class="auth-main">
+    <mat-card class="auth-card">
+      <mat-card-header>
+        <mat-card-title>Crear cuenta</mat-card-title>
+        <mat-card-subtitle>Después crearás el nombre de tu clínica</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (awaitingEmailConfirmation()) {
+          <p class="info-banner" role="status">
+            Te enviamos un enlace de confirmación al correo. Ábrelo para activar la cuenta; después podrás iniciar
+            sesión. Si en el panel de Supabase tienes activada la confirmación obligatoria, sin ese paso el inicio de
+            sesión fallará.
+          </p>
+          <button mat-flat-button color="primary" class="full submit-btn" type="button" routerLink="/auth/login">
+            Ir al inicio de sesión
+          </button>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Correo</mat-label>
+              <input matInput type="email" formControlName="email" autocomplete="email" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Contraseña</mat-label>
+              <input matInput type="password" formControlName="password" autocomplete="new-password" />
+            </mat-form-field>
+            @if (error()) {
+              <p class="error" role="alert">{{ error() }}</p>
+            }
+            <button mat-flat-button color="primary" class="full submit-btn" type="submit" [disabled]="loading()">
+              Registrarme
+            </button>
+          </form>
+        }
+      </mat-card-content>
+      <mat-card-actions>
+        <a routerLink="/auth/login">Ya tengo cuenta</a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

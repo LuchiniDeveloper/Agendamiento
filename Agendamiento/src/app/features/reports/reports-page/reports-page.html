@@ -1,0 +1,68 @@
+<h1 class="page-title">Reportes</h1>
+<p class="muted">Ingresos y citas en el rango elegido (solo administradores).</p>
+
+<form [formGroup]="range" class="filters" (ngSubmit)="fetch()">
+  <mat-form-field appearance="outline">
+    <mat-label>Desde</mat-label>
+    <input matInput type="date" formControlName="from" />
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Hasta</mat-label>
+    <input matInput type="date" formControlName="to" />
+  </mat-form-field>
+  <button
+    mat-flat-button
+    color="primary"
+    type="submit"
+    class="app-cta app-cta--primary"
+    [disabled]="loading()"
+  >
+    <mat-icon aria-hidden="true">refresh</mat-icon>
+    Actualizar reporte
+  </button>
+</form>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else if (kpis(); as k) {
+  <div class="kpi-grid">
+    <mat-card>
+      <mat-card-header><mat-card-title>Ingresos (pagos)</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p class="big">{{ k.revenue ?? 0 | copCurrency }}</p>
+      </mat-card-content>
+    </mat-card>
+    <mat-card>
+      <mat-card-header><mat-card-title>Citas completadas</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <p class="big">{{ k.appointments_completed ?? 0 }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card class="mt">
+    <mat-card-header><mat-card-title>Por estado</mat-card-title></mat-card-header>
+    <mat-card-content>
+      @if (!k.appointments_by_status?.length) {
+        <p class="muted">Sin datos en el periodo.</p>
+      } @else {
+        <table class="simple">
+          <thead>
+            <tr>
+              <th>Estado</th>
+              <th>Cantidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of k.appointments_by_status; track row.status_name) {
+              <tr>
+                <td>{{ row.status_name }}</td>
+                <td>{{ row.cnt }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+}

@@ -1,0 +1,418 @@
+@use '@angular/material' as mat;
+
+// Tema M3: azul clínico (veterinaria) + acento cyan (higiene / foco secundario)
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+        theme-type: light,
+      ),
+      typography: (
+        plain-family: ('Plus Jakarta Sans', system-ui, sans-serif),
+        brand-family: ('Lexend', system-ui, sans-serif),
+        bold-weight: 700,
+        medium-weight: 600,
+        regular-weight: 400,
+      ),
+      density: 0,
+    ),
+  );
+}
+
+html.app-dark {
+  color-scheme: dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+        theme-type: dark,
+      ),
+      typography: (
+        plain-family: ('Plus Jakarta Sans', system-ui, sans-serif),
+        brand-family: ('Lexend', system-ui, sans-serif),
+        bold-weight: 700,
+        medium-weight: 600,
+        regular-weight: 400,
+      ),
+      density: 0,
+    ),
+  );
+}
+
+:root {
+  --app-font-display: 'Lexend', system-ui, sans-serif;
+  --app-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --app-space-xs: 0.35rem;
+  --app-space-sm: 0.5rem;
+  --app-space-md: 0.75rem;
+  --app-space-lg: 1rem;
+  --app-space-xl: 1.25rem;
+  --app-radius-sm: 0.625rem;
+  --app-radius-md: 1rem;
+  --app-radius-lg: 1.35rem;
+  --app-radius-xl: 1.75rem;
+  --app-blur: 18px;
+  --app-transition: 180ms cubic-bezier(0.33, 1, 0.68, 1);
+  --app-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.055), 0 12px 40px -12px rgba(30, 58, 95, 0.09);
+  --app-shadow-lift: 0 4px 16px color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  font-family: var(--app-font-body);
+}
+
+body {
+  font-family: var(--app-font-body);
+  color: var(--mat-sys-on-surface);
+  background-color: var(--mat-sys-surface);
+  background-image:
+    radial-gradient(
+      ellipse 110% 75% at 100% -18%,
+      color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 72% 48% at 0% 102%,
+      color-mix(in srgb, var(--mat-sys-tertiary) 9%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      168deg,
+      var(--mat-sys-surface) 0%,
+      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 96%, var(--mat-sys-primary) 4%) 100%
+    );
+  background-attachment: fixed;
+}
+
+html.app-dark {
+  --app-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 44px -14px rgba(0, 0, 0, 0.55);
+  --app-shadow-lift: 0 4px 18px color-mix(in srgb, var(--mat-sys-primary) 35%, transparent);
+}
+
+html.app-dark body {
+  background-image:
+    radial-gradient(
+      ellipse 110% 75% at 100% -18%,
+      color-mix(in srgb, var(--mat-sys-primary) 20%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 72% 48% at 0% 102%,
+      color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      168deg,
+      var(--mat-sys-surface) 0%,
+      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 94%, var(--mat-sys-primary) 6%) 100%
+    );
+}
+
+// Tarjetas Material más actuales: borde sutil y sombra suave
+.mat-mdc-card {
+  border-radius: var(--app-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
+  box-shadow: var(--app-shadow-soft) !important;
+}
+
+.mat-mdc-card.app-card-lift {
+  transition: box-shadow var(--app-transition);
+}
+
+.mat-mdc-card.app-card-lift:hover {
+  box-shadow: var(--app-shadow-soft), var(--app-shadow-lift) !important;
+}
+
+.mat-mdc-unelevated-card,
+.mat-mdc-outlined-card {
+  border-radius: var(--app-radius-lg) !important;
+}
+
+// Respiro entre cabecera / contenido / acciones de tarjetas (evita bloques pegados)
+mat-card-header + mat-card-content,
+.mat-mdc-card-header + mat-card-content,
+.mat-mdc-card-header + .mat-mdc-card-content {
+  margin-top: var(--app-space-xs);
+}
+
+mat-card-content + mat-card-actions,
+.mat-mdc-card-content + mat-card-actions {
+  margin-top: var(--app-space-sm);
+}
+
+.mat-mdc-card-actions {
+  gap: var(--app-space-sm);
+  padding-top: var(--app-space-sm) !important;
+}
+
+// Diálogos: separación título–formulario–botones
+.mat-mdc-dialog-title {
+  margin-bottom: var(--app-space-sm);
+  line-height: 1.35;
+}
+
+.mat-mdc-dialog-content {
+  padding-bottom: var(--app-space-md) !important;
+}
+
+.mat-mdc-dialog-actions {
+  gap: var(--app-space-sm);
+  padding-top: var(--app-space-md) !important;
+  margin-top: var(--app-space-xs);
+}
+
+// Párrafos consecutivos dentro de contenido de tarjeta / diálogo
+.mat-mdc-card-content > p + p,
+.mat-mdc-dialog-content > p + p {
+  margin-top: var(--app-space-sm);
+}
+
+// Botones filled más redondeados
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-filled-button {
+  border-radius: var(--app-radius-sm) !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+// CTAs de listado / formularios (Nuevo cliente, Agregar servicio, etc.)
+.app-cta {
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  border-radius: var(--app-radius-md) !important;
+  transition:
+    box-shadow 0.2s var(--app-transition),
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.app-cta mat-icon {
+  margin-right: 0.45rem;
+  margin-left: -0.05rem;
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: middle;
+}
+
+.app-cta--primary.mat-mdc-unelevated-button,
+.app-cta--primary.mat-mdc-button-base {
+  padding: 0.55rem 1.25rem !important;
+  min-height: 2.75rem;
+  box-shadow: var(--app-shadow-lift);
+}
+
+.app-cta--primary:hover:not([disabled]) {
+  box-shadow: var(--app-shadow-soft), var(--app-shadow-lift) !important;
+  filter: brightness(1.02);
+}
+
+.app-cta--primary:active:not([disabled]) {
+  transform: scale(0.98);
+}
+
+// Botón tonal M3 (matButton="tonal") — secundario respecto al filled primary
+.app-cta--tonal.mat-tonal-button {
+  padding: 0.55rem 1.2rem !important;
+  min-height: 2.75rem;
+  --mat-button-tonal-container-color: var(--mat-sys-primary-container);
+  --mat-button-tonal-label-text-color: var(--mat-sys-on-primary-container);
+  --mat-button-tonal-state-layer-color: var(--mat-sys-on-primary-container);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.07);
+}
+
+html.app-dark .app-cta--tonal.mat-tonal-button {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.app-cta--tonal.mat-tonal-button:hover:not([disabled]) {
+  filter: brightness(1.03);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-cta--primary:active:not([disabled]) {
+    transform: none;
+  }
+}
+
+// M3: la toolbar por defecto es surface; si solo forzamos texto on-primary queda blanco sobre blanco.
+.mat-toolbar.mat-primary {
+  --mat-toolbar-container-background-color: var(--mat-sys-primary);
+  --mat-toolbar-container-text-color: var(--mat-sys-on-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.mat-toolbar.mat-primary .mat-mdc-icon-button {
+  --mat-icon-button-icon-color: var(--mat-sys-on-primary);
+  --mat-icon-button-state-layer-color: var(--mat-sys-on-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+// Enlaces dentro de contenido
+a:not(.mat-mdc-button-base):not(.mdc-list-item) {
+  color: var(--mat-sys-primary);
+  text-underline-offset: 3px;
+}
+
+a:not(.mat-mdc-button-base):not(.mdc-list-item):hover {
+  color: color-mix(in srgb, var(--mat-sys-primary) 85%, black);
+}
+
+html.app-dark a:not(.mat-mdc-button-base):not(.mdc-list-item):hover {
+  color: color-mix(in srgb, var(--mat-sys-primary) 82%, white);
+}
+
+// Títulos de página en rutas con layout (opcional vía clase en layout)
+.app-content-area .page-title,
+.page-title {
+  font-family: var(--app-font-display);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
+  margin-bottom: var(--app-space-sm);
+}
+
+@keyframes app-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.app-reveal {
+  animation: app-fade-up 0.55s var(--app-transition) both;
+}
+
+.app-reveal-delay-1 {
+  animation-delay: 80ms;
+}
+
+.app-reveal-delay-2 {
+  animation-delay: 140ms;
+}
+
+.app-reveal-delay-3 {
+  animation-delay: 200ms;
+}
+
+// ——— Ritmo de página y textos de apoyo ———
+.app-content-area {
+  padding-top: 0.15rem;
+}
+
+.app-content-area .muted {
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 92%, var(--mat-sys-on-surface));
+}
+
+// ——— Formularios (campos outline M3) ———
+.mat-mdc-form-field.mat-form-field-appearance-outline {
+  .mat-mdc-notch-piece,
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: color-mix(in srgb, var(--mat-sys-outline-variant) 88%, var(--mat-sys-primary)) !important;
+  }
+
+  &:hover .mat-mdc-notch-piece,
+  &:hover .mdc-notched-outline__leading,
+  &:hover .mdc-notched-outline__notch,
+  &:hover .mdc-notched-outline__trailing {
+    border-color: color-mix(in srgb, var(--mat-sys-outline) 70%, var(--mat-sys-primary)) !important;
+  }
+}
+
+.mat-mdc-form-field.mat-focused.mat-form-field-appearance-outline {
+  .mat-mdc-notch-piece,
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--mat-sys-primary) !important;
+  }
+}
+
+// ——— Diálogos: más aire entre campos (overlay = prioridad sobre estilos encapsulados) ———
+.cdk-overlay-container .mat-mdc-dialog-container .mat-mdc-dialog-content .form {
+  gap: 0.8rem !important;
+  row-gap: 0.8rem !important;
+  column-gap: 0.9rem !important;
+}
+
+// ——— Snackbars (avisos tipo clínica) ———
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  border-radius: var(--app-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 35%, transparent);
+  box-shadow:
+    var(--app-shadow-soft),
+    0 16px 48px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 12%, transparent) !important;
+}
+
+.mat-mdc-snack-bar-container .mat-mdc-snack-bar-label {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+// ——— Paneles desplegables (historias, listas densas) ———
+.mat-expansion-panel {
+  border-radius: var(--app-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 50%, transparent);
+  box-shadow: var(--app-shadow-soft) !important;
+  background: var(--mat-sys-surface-container-low) !important;
+}
+
+.mat-expansion-panel-header {
+  font-family: var(--app-font-body);
+  transition: background-color var(--app-transition);
+}
+
+.mat-expansion-panel-header:hover {
+  background: color-mix(in srgb, var(--mat-sys-primary) 5%, var(--mat-sys-surface-container-low)) !important;
+}
+
+.mat-expansion-panel.mat-expanded > .mat-expansion-panel-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+}
+
+// ——— Menús y selects (superficie nítida) ———
+.mat-mdc-menu-panel {
+  border-radius: var(--app-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 40%, transparent);
+  box-shadow: var(--app-shadow-soft), var(--app-shadow-lift) !important;
+}
+
+.mat-mdc-select-panel {
+  border-radius: var(--app-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 35%, transparent);
+}
+
+// ——— Tablas HTML simples compartidas ———
+.app-content-area table.simple:not(.mat-mdc-table) thead th,
+.app-content-area .simple-table thead th {
+  background: color-mix(in srgb, var(--mat-sys-primary) 4%, var(--mat-sys-surface-container));
+}

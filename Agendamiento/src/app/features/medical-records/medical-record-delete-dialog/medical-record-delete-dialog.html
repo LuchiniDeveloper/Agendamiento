@@ -1,0 +1,22 @@
+<h2 mat-dialog-title class="dlg-title">
+  <mat-icon class="dlg-title__icon" aria-hidden="true">warning</mat-icon>
+  ¿Eliminar nota clínica?
+</h2>
+
+<mat-dialog-content class="dlg-body">
+  <p>Esta acción no se puede deshacer.</p>
+  @if (data.record.diagnosis) {
+    <p>
+      <strong class="dlg-name">Dx:</strong>
+      {{ data.record.diagnosis }}
+    </p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dlg-actions">
+  <button matButton="text" type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="warn" type="button" (click)="confirm()">
+    <mat-icon aria-hidden="true">delete_forever</mat-icon>
+    Eliminar
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,71 @@
+<h2 mat-dialog-title>Crear miembro</h2>
+<mat-dialog-content class="create-content">
+  <p class="muted">
+    Se creará la cuenta con la contraseña que indiques. El correo quedará confirmado; no se envía invitación ni
+    verificación por email.
+  </p>
+  <form [formGroup]="form" class="create-form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Correo</mat-label>
+      <input matInput type="email" formControlName="email" autocomplete="off" />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <mat-error>Correo válido obligatorio</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Contraseña</mat-label>
+      <input matInput type="password" formControlName="password" autocomplete="new-password" />
+      @if (form.controls.password.hasError('required') && form.controls.password.touched) {
+        <mat-error>Obligatoria</mat-error>
+      }
+      @if (form.controls.password.hasError('minlength') && form.controls.password.touched) {
+        <mat-error>Mínimo {{ minPassword }} caracteres</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Confirmar contraseña</mat-label>
+      <input matInput type="password" formControlName="passwordConfirm" autocomplete="new-password" />
+      @if (form.controls.passwordConfirm.hasError('required') && form.controls.passwordConfirm.touched) {
+        <mat-error>Confirma la contraseña</mat-error>
+      }
+    </mat-form-field>
+    @if (form.hasError('passwordMismatch') && form.touched) {
+      <p class="field-hint field-hint--error" role="alert">Las contraseñas no coinciden</p>
+    }
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre del miembro</mat-label>
+      <input matInput formControlName="name" autocomplete="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>Obligatorio</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Rol</mat-label>
+      <mat-select formControlName="role_id" placeholder="Rol">
+        @for (r of dlgData.roles; track r.id) {
+          <mat-option [value]="r.id">{{ r.name }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.role_id.invalid && form.controls.role_id.touched) {
+        <mat-error>Elige un rol</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Teléfono (opcional)</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="saving()">
+    @if (saving()) {
+      Creando…
+    } @else {
+      Crear miembro
+    }
+  </button>
+</mat-dialog-actions>

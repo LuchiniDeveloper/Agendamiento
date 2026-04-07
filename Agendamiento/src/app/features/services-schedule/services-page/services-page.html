@@ -1,0 +1,215 @@
+<h1 class="page-title">Servicios y horarios</h1>
+<p class="muted">Catálogo de consultas y disponibilidad por veterinario</p>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else {
+  <mat-card class="mb">
+    <mat-card-header>
+      <mat-card-title>Servicios</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="svcForm" class="row-form" (ngSubmit)="addService()">
+        <mat-form-field appearance="outline" class="service-name-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Duración (min)</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="duration_minutes"
+            min="5"
+            step="1"
+          />
+          @if (svcForm.controls.duration_minutes.invalid && svcForm.controls.duration_minutes.touched) {
+            <mat-error>
+              @if (svcForm.controls.duration_minutes.hasError('min')) {
+                La duración debe ser de al menos 5 minutos
+              } @else if (svcForm.controls.duration_minutes.hasError('required')) {
+                Obligatorio
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Precio (COP)</mat-label>
+          <input
+            matInput
+            type="text"
+            formControlName="price"
+            inputmode="numeric"
+            autocomplete="off"
+            (focus)="onPriceFocus()"
+            (input)="onSvcPriceInput()"
+            (blur)="onPriceBlur()"
+          />
+          @if (svcForm.controls.price.invalid && svcForm.controls.price.touched) {
+            <mat-error>
+              @if (svcForm.controls.price.hasError('required')) {
+                Ingresa un precio
+              } @else if (svcForm.controls.price.hasError('min')) {
+                El precio no puede ser negativo
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="grow desc-field">
+          <mat-label>Descripción</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            rows="3"
+            [maxlength]="descMax"
+          ></textarea>
+          <mat-hint align="end">
+            <span
+              class="desc-meter"
+              [ngClass]="'desc-meter--' + descCounterTone(svcForm.controls.description.value.length)"
+            >
+              {{ svcForm.controls.description.value.length }} / {{ descMax }}
+            </span>
+          </mat-hint>
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" class="app-cta app-cta--primary">
+          <mat-icon aria-hidden="true">medical_services</mat-icon>
+          Agregar servicio
+        </button>
+      </form>
+      <div class="services-table-panel">
+        <table class="services-table">
+          <thead>
+            <tr>
+              <th class="services-table__th services-table__th--state">Estado</th>
+              <th class="services-table__th">Servicio</th>
+              <th class="services-table__th services-table__th--num">Min</th>
+              <th class="services-table__th services-table__th--num">Precio</th>
+              <th class="services-table__th services-table__th--actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of services(); track s.id) {
+              <tr class="services-table__row" [class.services-table__row--inactive]="!s.active">
+                <td class="services-table__td services-table__td--state">
+                  <div class="state-cell">
+                    <button
+                      type="button"
+                      class="status-pill"
+                      [class.status-pill--inactive]="!s.active"
+                      [disabled]="togglingServiceId() === s.id"
+                      (click)="onStatusPillClick(s)"
+                    >
+                      {{ s.active ? 'Activo' : 'Inactivo' }}
+                    </button>
+                    <mat-slide-toggle
+                      [checked]="!!s.active"
+                      [disabled]="togglingServiceId() === s.id"
+                      (change)="onSlideToggleChange(s, $event)"
+                      color="primary"
+                      [attr.aria-label]="
+                        s.active ? 'Desactivar servicio ' + s.name : 'Activar servicio ' + s.name
+                      "
+                      matTooltip="Los servicios inactivos no aparecen al agendar citas"
+                      matTooltipPosition="above"
+                    />
+                  </div>
+                </td>
+                <td class="services-table__td">
+                  <div class="svc-cell">
+                    <span class="svc-cell__name">{{ s.name }}</span>
+                    @if (s.description) {
+                      <span class="svc-cell__desc">{{ previewDesc(s.description) }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="services-table__td services-table__td--num">
+                  <span class="mono-val">{{ s.duration_minutes }}</span>
+                </td>
+                <td class="services-table__td services-table__td--num">
+                  <span class="mono-val">{{ s.price | copCurrency }}</span>
+                </td>
+                <td class="services-table__td services-table__td--actions">
+                  <div class="action-group">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="action-group__btn"
+                      matTooltip="Editar"
+                      (click)="openEdit(s)"
+                    >
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="action-group__btn action-group__btn--danger"
+                      matTooltip="Eliminar"
+                      (click)="openDelete(s)"
+                    >
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Horario semanal</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field appearance="outline" class="vet-select">
+        <mat-label>Veterinario</mat-label>
+        <mat-select
+          [value]="selectedVetId()"
+          (selectionChange)="onVetChange($event.value)"
+        >
+          @for (v of staff(); track v.id) {
+            <mat-option [value]="v.id">{{ v.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="sched-toolbar">
+        <button matButton="tonal" type="button" class="app-cta app-cta--tonal" (click)="openScheduleDialog(null)">
+          <mat-icon aria-hidden="true">more_time</mat-icon>
+          Añadir franja
+        </button>
+      </div>
+
+      <table class="simple sched-table">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Horario</th>
+            <th>Servicio</th>
+            <th class="sched-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of schedules(); track r.id) {
+            <tr>
+              <td>{{ days[r.day_of_week] }}</td>
+              <td>{{ r.start_time.slice(0, 5) }} – {{ r.end_time.slice(0, 5) }}</td>
+              <td>{{ scheduleServiceLabel(r.service_id) }}</td>
+              <td class="sched-actions">
+                <button mat-icon-button type="button" matTooltip="Editar" (click)="openScheduleDialog(r)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button type="button" matTooltip="Eliminar" (click)="removeSchedule(r.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </mat-card-content>
+  </mat-card>
+}

@@ -1,0 +1,72 @@
+<h2 mat-dialog-title>{{ payload.pet ? 'Editar mascota' : 'Nueva mascota' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Especie</mat-label>
+      <mat-select formControlName="speciesPreset" placeholder="Seleccionar">
+        @for (g of speciesGroups; track g.label) {
+          <mat-optgroup [label]="g.label">
+            @for (opt of g.options; track opt.value) {
+              <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+            }
+          </mat-optgroup>
+        }
+        <mat-optgroup label="Otra">
+          <mat-option [value]="speciesOther">Otro</mat-option>
+        </mat-optgroup>
+      </mat-select>
+    </mat-form-field>
+    @if (form.controls.speciesPreset.value === speciesOther) {
+      <mat-form-field appearance="outline" class="half">
+        <mat-label>Especifique la especie</mat-label>
+        <input matInput formControlName="speciesOther" autocomplete="off" />
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Raza</mat-label>
+      <input matInput formControlName="breed" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Sexo</mat-label>
+      <mat-select formControlName="gender" placeholder="Seleccionar">
+        @for (g of genders; track g.value) {
+          <mat-option [value]="g.value">{{ g.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Nacimiento</mat-label>
+      <input matInput [matDatepicker]="dp" formControlName="birth_date" />
+      <mat-datepicker-toggle matIconSuffix [for]="dp" />
+      <mat-datepicker #dp />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Peso (kg)</mat-label>
+      <input matInput type="number" formControlName="weight" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Color</mat-label>
+      <input matInput formControlName="color" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="2" formControlName="notes"></textarea>
+    </mat-form-field>
+    @if (form.hasError('speciesOtherRequired')) {
+      <p class="err">Indique la especie cuando elija «Otro».</p>
+    }
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+    Guardar
+  </button>
+</mat-dialog-actions>

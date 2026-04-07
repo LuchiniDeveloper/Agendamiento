@@ -1,0 +1,11 @@
+# https://supabase.com/docs/guides/cli/config
+project_id = "xxmkcmgqgprmseoviilb"
+
+[functions.invite-staff]
+verify_jwt = false
+
+[functions.update-staff-password]
+verify_jwt = false
+
+[functions.delete-staff-member]
+verify_jwt = false

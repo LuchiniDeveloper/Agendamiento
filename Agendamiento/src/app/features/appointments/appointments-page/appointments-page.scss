@@ -1,0 +1,414 @@
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.vet-filter {
+  width: min(100%, 16.5rem);
+
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 0.15rem;
+  }
+}
+
+.page-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.head button[mat-flat-button] {
+  font-weight: 600;
+  border-radius: var(--app-radius-sm) !important;
+  box-shadow: var(--app-shadow-lift);
+
+  mat-icon {
+    margin-right: 0.35rem;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.leg-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 50%, transparent);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-surface) 80%, transparent);
+}
+
+:host {
+  display: block;
+}
+
+:host ::ng-deep .fc {
+  --fc-border-color: color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--mat-sys-surface-container-low);
+  --fc-today-bg-color: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+  --fc-list-event-hover-bg-color: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+  --fc-event-border-color: transparent;
+  --fc-button-text-color: var(--mat-sys-on-primary);
+  --fc-button-bg-color: var(--mat-sys-primary);
+  --fc-button-border-color: var(--mat-sys-primary);
+  --fc-button-hover-bg-color: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
+  --fc-button-hover-border-color: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
+  --fc-button-active-bg-color: color-mix(in srgb, var(--mat-sys-primary) 82%, black);
+  --fc-button-active-border-color: color-mix(in srgb, var(--mat-sys-primary) 82%, black);
+  font-family: var(--app-font-body);
+}
+
+// Vista semana/día: franjas horarias más altas (por defecto FullCalendar usa 1.5em)
+:host ::ng-deep .fc .fc-timegrid-slot {
+  height: 2.4em !important;
+  min-height: 2.4em;
+}
+
+// ——— Barra de herramientas: contenedor con aire ———
+:host ::ng-deep .fc .fc-header-toolbar {
+  margin-bottom: 1.25rem;
+  padding: 0.65rem 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  background: color-mix(in srgb, var(--mat-sys-surface-container) 75%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-soft);
+}
+
+:host ::ng-deep .fc .fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .fc .fc-toolbar-title {
+  font-family: var(--app-font-display);
+  font-weight: 700;
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  letter-spacing: -0.02em;
+  color: var(--mat-sys-on-surface);
+  line-height: 1.25;
+}
+
+// Anular el margen legacy entre grupos (usamos gap)
+:host ::ng-deep .fc-direction-ltr .fc-toolbar > * > :not(:first-child) {
+  margin-left: 0 !important;
+}
+
+// ——— Grupos de botones: sin solapes, radios propios ———
+:host ::ng-deep .fc .fc-button-group {
+  gap: 0.35rem;
+  box-shadow: none;
+}
+
+:host ::ng-deep .fc-direction-ltr .fc-button-group > .fc-button {
+  margin-left: 0 !important;
+  border-radius: var(--app-radius-sm) !important;
+}
+
+// ——— Anterior / siguiente: iconos circulares “ghost” ———
+:host ::ng-deep .fc .fc-prev-button,
+:host ::ng-deep .fc .fc-next-button {
+  width: 2.5rem !important;
+  min-width: 2.5rem !important;
+  height: 2.5rem !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent) !important;
+  background: var(--mat-sys-surface-container-lowest) !important;
+  color: var(--mat-sys-on-surface) !important;
+  font-weight: 600 !important;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.15s ease,
+    box-shadow 0.18s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+:host ::ng-deep .fc .fc-prev-button .fc-icon,
+:host ::ng-deep .fc .fc-next-button .fc-icon {
+  font-size: 1.15em !important;
+}
+
+:host ::ng-deep .fc .fc-prev-button:hover,
+:host ::ng-deep .fc .fc-next-button:hover {
+  background: color-mix(in srgb, var(--mat-sys-primary) 10%, var(--mat-sys-surface-container-lowest)) !important;
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 35%, var(--mat-sys-outline-variant)) !important;
+  color: var(--mat-sys-primary) !important;
+}
+
+:host ::ng-deep .fc .fc-prev-button:active,
+:host ::ng-deep .fc .fc-next-button:active {
+  transform: scale(0.96);
+}
+
+// ——— Hoy: píldora secundaria (no sólida primary) ———
+:host ::ng-deep .fc .fc-today-button {
+  padding: 0.5rem 1rem !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  letter-spacing: 0.02em;
+  text-transform: none !important;
+  border: 1.5px solid var(--mat-sys-primary) !important;
+  background: transparent !important;
+  color: var(--mat-sys-primary) !important;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+:host ::ng-deep .fc .fc-today-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent) !important;
+  color: var(--mat-sys-primary) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
+}
+
+:host ::ng-deep .fc .fc-today-button:disabled {
+  opacity: 0.45;
+}
+
+// ——— Mes / Semana / Día: control segmentado ———
+:host ::ng-deep .fc-header-toolbar .fc-toolbar-chunk:last-child .fc-button-group {
+  padding: 4px;
+  gap: 4px;
+  background: var(--mat-sys-surface-container-high);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 40%, transparent);
+}
+
+:host ::ng-deep .fc-header-toolbar .fc-toolbar-chunk:last-child .fc-button {
+  padding: 0.45rem 0.9rem !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.03em;
+  text-transform: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--mat-sys-on-surface-variant) !important;
+  box-shadow: none !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:host ::ng-deep .fc-header-toolbar .fc-toolbar-chunk:last-child .fc-button:hover:not(:disabled):not(.fc-button-active) {
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent) !important;
+  color: var(--mat-sys-on-surface) !important;
+}
+
+:host ::ng-deep .fc-header-toolbar .fc-toolbar-chunk:last-child .fc-button.fc-button-active {
+  background: var(--mat-sys-primary) !important;
+  color: var(--mat-sys-on-primary) !important;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--mat-sys-primary) 35%, transparent) !important;
+}
+
+:host ::ng-deep .fc-header-toolbar .fc-toolbar-chunk:last-child .fc-button.fc-button-active:hover {
+  background: color-mix(in srgb, var(--mat-sys-primary) 92%, black) !important;
+}
+
+// ——— Focus accesible ———
+:host ::ng-deep .fc .fc-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+:host ::ng-deep .fc .fc-button:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  :host ::ng-deep .fc .fc-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  :host ::ng-deep .fc .fc-toolbar-chunk {
+    justify-content: center;
+  }
+
+  :host ::ng-deep .fc .fc-toolbar-chunk:last-child .fc-button-group {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+:host ::ng-deep .fc-theme-standard .fc-scrollgrid {
+  border-radius: var(--app-radius-lg);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent) !important;
+  box-shadow: var(--app-shadow-soft);
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+// Citas simultáneas: borde y sombra para separar bloques en la misma franja
+:host ::ng-deep .fc-timegrid-event {
+  border-radius: 8px !important;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 55%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 12%, transparent),
+    0 2px 6px color-mix(in srgb, var(--mat-sys-shadow, #000) 14%, transparent) !important;
+}
+
+:host ::ng-deep .fc-timegrid-event .fc-event-main {
+  padding: 2px 3px 2px 2px;
+}
+
+// Agenda: avatar + veterinario (vista combinada) + título + servicio
+:host ::ng-deep .fc-appt-custom {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:host ::ng-deep .fc-appt-custom--shared {
+  padding-left: 5px;
+  margin-left: 1px;
+  border-left: 4px solid rgba(255, 255, 255, 0.95);
+  border-radius: 0 6px 6px 0;
+}
+
+:host ::ng-deep .fc-appt-custom__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  line-height: 1.2;
+}
+
+:host ::ng-deep .fc-appt-custom__vet {
+  font-size: 0.65em;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+:host ::ng-deep .fc-appt-custom__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.78em;
+}
+
+:host ::ng-deep .fc-appt-custom__service {
+  font-size: 0.68em;
+  font-weight: 500;
+  opacity: 0.92;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .pet-cal-avatar {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid color-mix(in srgb, currentColor 22%, transparent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--mat-sys-shadow, #000) 12%, transparent);
+}
+
+:host ::ng-deep .pet-cal-avatar__emoji {
+  font-size: 0.85rem;
+  line-height: 1;
+  user-select: none;
+}
+
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='perro'] {
+  background: linear-gradient(145deg, #e9a66c, #c56d2e);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='gato'] {
+  background: linear-gradient(145deg, #c4a5e8, #8b6bc9);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='aves'] {
+  background: linear-gradient(145deg, #7ec8e8, #3d9ccc);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='pequenas'] {
+  background: linear-gradient(145deg, #f0b8c8, #d47a9a);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='reptiles'] {
+  background: linear-gradient(145deg, #7dce9a, #3a9d6a);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='peces'] {
+  background: linear-gradient(145deg, #6bb3e0, #2a78b8);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='grandes'] {
+  background: linear-gradient(145deg, #d4b896, #9a7654);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='exoticas'] {
+  background: linear-gradient(145deg, #e0a8d8, #b068a8);
+}
+:host ::ng-deep .pet-cal-avatar[data-pet-tone='other'] {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, currentColor 28%, transparent),
+    color-mix(in srgb, currentColor 12%, transparent)
+  );
+}

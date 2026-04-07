@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>{{ payload.record ? 'Editar nota clínica' : 'Nota clínica' }}</h2>
+<mat-dialog-content class="med-dialog-body">
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="field-full" subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Diagnóstico</mat-label>
+      <textarea matInput rows="3" formControlName="diagnosis"></textarea>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="field-full" subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Tratamiento</mat-label>
+      <textarea matInput rows="3" formControlName="treatment"></textarea>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="field-full" subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Observaciones</mat-label>
+      <textarea matInput rows="3" formControlName="observations"></textarea>
+    </mat-form-field>
+    <div class="field-row">
+      <mat-form-field appearance="outline" class="field-half" subscriptSizing="dynamic" floatLabel="always">
+        <mat-label>Peso (kg)</mat-label>
+        <input matInput type="number" step="0.01" min="0" formControlName="weight" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="field-half" subscriptSizing="dynamic" floatLabel="always">
+        <mat-label>Próxima visita</mat-label>
+        <input
+          matInput
+          [matDatepicker]="dp"
+          [min]="minNextVisitDate"
+          formControlName="next_visit_date"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="dp" />
+        <mat-datepicker #dp />
+      </mat-form-field>
+    </div>
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+    Guardar
+  </button>
+</mat-dialog-actions>

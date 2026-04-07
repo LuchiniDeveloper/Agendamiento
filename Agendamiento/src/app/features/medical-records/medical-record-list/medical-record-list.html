@@ -1,0 +1,96 @@
+<div class="med-head">
+  <span class="label">Historia clínica</span>
+  @if (tenant.canEditMedical()) {
+    <button mat-stroked-button type="button" (click)="addNote()">
+      <mat-icon>add</mat-icon>
+      Nota
+    </button>
+  }
+</div>
+
+<div class="filters">
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Desde</mat-label>
+    <input matInput [matDatepicker]="dpFrom" [formControl]="filterFrom" />
+    <mat-datepicker-toggle matIconSuffix [for]="dpFrom" />
+    <mat-datepicker #dpFrom />
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>Hasta</mat-label>
+    <input matInput [matDatepicker]="dpTo" [formControl]="filterTo" />
+    <mat-datepicker-toggle matIconSuffix [for]="dpTo" />
+    <mat-datepicker #dpTo />
+  </mat-form-field>
+  <button mat-stroked-button type="button" (click)="applyFilters()">Aplicar</button>
+  <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+</div>
+
+<div class="bulk-actions">
+  <button mat-button type="button" (click)="expandAll()" [disabled]="rows().length === 0">
+    Expandir todo
+  </button>
+  <button mat-button type="button" (click)="collapseAll()" [disabled]="rows().length === 0">
+    Colapsar todo
+  </button>
+</div>
+
+@if (loading()) {
+  <p class="muted">Cargando…</p>
+} @else if (rows().length === 0) {
+  <p class="muted">Sin registros en este rango.</p>
+} @else {
+  <mat-accordion class="hist-acc" multi>
+    @for (r of rows(); track r.id) {
+      <mat-expansion-panel
+        [expanded]="panelExpanded(r.id)"
+        (expandedChange)="onPanelToggle(r.id, $event)"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title class="hist-sum">
+            <span class="hist-sum__tipo">{{ recordTipo(r) }}</span>
+            <span class="hist-sum__one-line">{{ summaryHeaderLine(r) }}</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="hist-body">
+          @if (tenant.canEditMedical()) {
+            <div class="hist-actions">
+              <button mat-icon-button type="button" aria-label="Editar" (click)="editNote(r); $event.stopPropagation()">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                type="button"
+                aria-label="Eliminar"
+                (click)="deleteNote(r); $event.stopPropagation()"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+          <div class="hist-detail">
+            @if (r.diagnosis) {
+              <p><strong>Dx:</strong> {{ r.diagnosis }}</p>
+            }
+            @if (r.treatment) {
+              <p><strong>Tx:</strong> {{ r.treatment }}</p>
+            }
+            @if (r.observations?.trim()) {
+              <p><strong>Observaciones:</strong> {{ r.observations }}</p>
+            }
+            @if (r.weight != null) {
+              <p class="muted small">Peso: {{ r.weight }} kg</p>
+            }
+            @if (r.next_visit_date) {
+              <p class="muted small">Próxima visita: {{ r.next_visit_date }}</p>
+            }
+          </div>
+        </div>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+  @if (rows().length > 0 && rows().length === limit()) {
+    <button mat-stroked-button type="button" class="load-more" (click)="loadMore()">
+      Cargar más registros
+    </button>
+  }
+}

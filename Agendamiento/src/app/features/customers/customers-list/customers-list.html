@@ -1,0 +1,63 @@
+<h1 class="page-title">Clientes</h1>
+<p class="muted">Busca por teléfono o revisa los últimos registros</p>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search">
+    <mat-label>Teléfono o nombre</mat-label>
+    <input matInput [formControl]="search" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    class="app-cta app-cta--primary"
+    (click)="openNew()"
+  >
+    <mat-icon aria-hidden="true">person_add</mat-icon>
+    Nuevo cliente
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else {
+  <mat-card>
+    <mat-card-content class="table-wrap">
+      <table class="simple-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th class="col-nota">Nota</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of rows(); track c.id) {
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>{{ c.phone ?? '—' }}</td>
+              <td class="col-nota">
+                <span
+                  class="note-preview"
+                  [matTooltip]="noteTooltip(c.notes)"
+                  [matTooltipDisabled]="!noteTooltip(c.notes)"
+                  matTooltipShowDelay="250"
+                >
+                  {{ notePreview(c.notes) }}
+                </span>
+              </td>
+              <td>
+                <a mat-button [routerLink]="['/app/customers', c.id]">Ver</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (rows().length === 0) {
+        <p class="muted pad">Sin resultados. Crea un cliente o ajusta la búsqueda.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+}

@@ -1,0 +1,83 @@
+.edit-content {
+  min-width: min(100%, 280px);
+  max-width: 400px;
+}
+
+.email-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+
+  .label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.full {
+  width: 100%;
+}
+
+.form-error {
+  color: var(--mat-sys-error);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+}
+
+.btn-spinner {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.role-readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.35rem;
+  padding: 0.65rem 0 0.35rem;
+}
+
+.role-readonly__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.role-readonly__value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.role-readonly__hint {
+  font-size: 0.8rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.35;
+}
+
+.password-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline) 35%, transparent);
+}
+
+.field-hint {
+  font-size: 0.875rem;
+  margin: 0 0 0.15rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.4;
+}

@@ -1,0 +1,43 @@
+<div class="head">
+  <div>
+    <h1 class="page-title">Agenda</h1>
+    <p class="muted">
+      Vista combinada o por veterinario. Con <strong>todos</strong>, las citas a la misma hora se muestran en columnas
+      separadas; la raya al borde y la etiqueta indican al veterinario (nombre corto).
+      Al filtrar un vet, solo ves su agenda.
+    </p>
+  </div>
+  <div class="head-actions">
+    @if (vetOptions().length) {
+      <mat-form-field appearance="outline" class="vet-filter" subscriptSizing="dynamic">
+        <mat-label>Veterinario</mat-label>
+        <mat-select [value]="vetFilterSelectValue()" (selectionChange)="onVetFilterChange($event.value)">
+          <mat-option value="">Todos (agenda compartida)</mat-option>
+          @for (v of vetOptions(); track v.id) {
+            <mat-option [value]="v.id">{{ v.name }}</mat-option>
+          }
+        </mat-select>
+        <mat-hint>Solo este vet en el calendario</mat-hint>
+      </mat-form-field>
+    }
+    <button mat-flat-button color="primary" type="button" (click)="newAppointment()">
+      <mat-icon>add</mat-icon>
+      Nueva cita
+    </button>
+  </div>
+</div>
+
+<div class="legend">
+  @for (s of ['Agendada', 'Confirmada', 'Completada', 'Cancelada', 'NoShow']; track s) {
+    <span class="leg-item">
+      <span class="dot" [style.background]="s === 'Agendada' ? '#5c6bc0' : s === 'Confirmada' ? '#00897b' : s === 'Completada' ? '#43a047' : s === 'Cancelada' ? '#757575' : '#e53935'"></span>
+      {{ s }}
+    </span>
+  }
+</div>
+
+@if (showCalendar) {
+  <full-calendar [options]="calendarOptions()"></full-calendar>
+} @else {
+  <p class="muted">Abre la agenda en el navegador para ver el calendario.</p>
+}

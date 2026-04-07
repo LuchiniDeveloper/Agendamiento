@@ -1,0 +1,16 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.65rem;
+  min-width: 260px;
+}
+
+.full {
+  width: 100%;
+}
+
+.err {
+  color: var(--mat-sys-error);
+  font-size: 0.875rem;
+}

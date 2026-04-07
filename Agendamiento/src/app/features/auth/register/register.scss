@@ -1,0 +1,11 @@
+@use '../login/login.scss';
+
+.info-banner {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-on-surface);
+}

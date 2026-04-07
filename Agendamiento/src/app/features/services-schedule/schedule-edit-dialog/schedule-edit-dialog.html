@@ -1,0 +1,75 @@
+<h2 mat-dialog-title>{{ data.row ? 'Editar franja' : 'Añadir franjas' }}</h2>
+<mat-dialog-content class="sched-dialog">
+  <form [formGroup]="form" class="sched-form">
+    <section class="sched-block sched-block--days">
+      <div class="sched-block__head">
+        <span class="sched-block__title" id="day-picker-label">{{ isEditMode ? 'Día' : 'Días' }}</span>
+        @if (!isEditMode) {
+          <span class="sched-block__subtitle">Varios a la vez; mismo horario y servicio.</span>
+        }
+      </div>
+      <div
+        class="day-picker"
+        role="group"
+        aria-labelledby="day-picker-label"
+      >
+        @for (item of dayPicker; track item.dow) {
+          <button
+            type="button"
+            class="day-picker__btn"
+            [class.day-picker__btn--selected]="isDaySelected(item.dow)"
+            [class.day-picker__btn--taken]="isDayOptionDisabled(item.dow) && !isDaySelected(item.dow)"
+            [disabled]="isDayButtonDisabled(item.dow)"
+            [attr.aria-pressed]="isDaySelected(item.dow)"
+            [matTooltip]="dayPillTooltip(item.dow)"
+            matTooltipPosition="above"
+            [matTooltipDisabled]="!dayPillTooltip(item.dow)"
+            (click)="toggleDay(item.dow)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="sched-block sched-block--times">
+      <span class="sched-block__title">Horario</span>
+      <div class="sched-times">
+        <mat-form-field appearance="outline" class="sched-field">
+          <mat-label>Inicio</mat-label>
+          <input matInput type="time" formControlName="start_time" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="sched-field">
+          <mat-label>Fin</mat-label>
+          <input matInput type="time" formControlName="end_time" />
+        </mat-form-field>
+      </div>
+    </section>
+
+    <section class="sched-block">
+      <div class="sched-block__head">
+        <span class="sched-block__title">Servicio</span>
+        <span class="sched-block__subtitle">Opcional. «Cualquiera» aplica a cualquier tipo de cita.</span>
+      </div>
+      <mat-form-field appearance="outline" class="sched-field sched-field--wide">
+        <mat-label>Servicio (opc.)</mat-label>
+        <mat-select formControlName="service_id">
+          <mat-option value="" [disabled]="isCualquieraDisabled()">Cualquiera</mat-option>
+          @for (s of data.services; track s.id) {
+            <mat-option [value]="s.id" [disabled]="isServiceOptionDisabled(s.id)">{{ s.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    @if (error()) {
+      <div class="sched-alert" role="alert">{{ error() }}</div>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="saving() || !canSave()" (click)="save()">
+    Guardar
+  </button>
+</mat-dialog-actions>

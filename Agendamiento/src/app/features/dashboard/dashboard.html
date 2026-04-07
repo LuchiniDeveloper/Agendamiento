@@ -1,0 +1,638 @@
+<header class="dash-hero app-reveal">
+  <div class="dash-hero-text">
+    <p class="dash-kicker">Panel del día</p>
+    <h1 class="page-title">Inicio</h1>
+    <p class="muted">
+      Respuestas rápidas: ingresos, agenda, alertas y operación de tu clínica.
+      @if (newCustomersRegistered30() > 0) {
+        <span class="dash-inline-stat"
+          >{{ newCustomersRegistered30() }} clientes nuevos de alta en los últimos 30 días.</span
+        >
+      }
+    </p>
+  </div>
+  <div
+    class="day-score"
+    [ngClass]="{
+      'day-score--good': dayScore() === 'good',
+      'day-score--mid': dayScore() === 'mid',
+      'day-score--bad': dayScore() === 'bad',
+    }"
+  >
+    <span class="day-score-label">Score del día</span>
+    <span class="day-score-value">
+      @switch (dayScore()) {
+        @case ('good') {
+          <mat-icon>sentiment_satisfied</mat-icon> Saludable
+        }
+        @case ('mid') {
+          <mat-icon>sentiment_neutral</mat-icon> Regular
+        }
+        @default {
+          <mat-icon>sentiment_dissatisfied</mat-icon> Crítico
+        }
+      }
+    </span>
+  </div>
+</header>
+
+@if (recommendation()) {
+  <div class="reco-banner app-reveal">
+    <mat-icon class="reco-icon">tips_and_updates</mat-icon>
+    <p>{{ recommendation() }}</p>
+  </div>
+}
+
+@if (loading()) {
+  <div class="center">
+    <mat-spinner diameter="44" />
+    <p class="muted load-hint">Sincronizando métricas…</p>
+  </div>
+} @else {
+  <div class="dashboard-shell">
+  <section class="kpi-strip" aria-label="Indicadores del día">
+    <article class="kpi-card kpi-card--money app-reveal">
+      <div class="kpi-card-glow" aria-hidden="true"></div>
+      <div class="kpi-top">
+        <span class="kpi-icon-wrap kpi-icon-wrap--money">
+          <mat-icon>payments</mat-icon>
+        </span>
+        <span class="kpi-label">Ingresos hoy</span>
+      </div>
+      <p class="kpi-value kpi-value--money">{{ todayRevenue() | copCurrency }}</p>
+      @if (revDelta() !== null) {
+        <p
+          class="kpi-delta"
+          [class.kpi-delta--pos]="(revDelta() ?? 0) >= 0"
+          [class.kpi-delta--neg]="(revDelta() ?? 0) < 0"
+        >
+          @if ((revDelta() ?? 0) >= 0) {
+            +{{ revDelta() }}%
+          } @else {
+            {{ revDelta() }}%
+          }
+          vs ayer
+        </p>
+      } @else {
+        <p class="kpi-delta kpi-delta--muted">Sin comparación (ayer)</p>
+      }
+    </article>
+
+    <article class="kpi-card kpi-card--visits app-reveal">
+      <div class="kpi-card-glow" aria-hidden="true"></div>
+      <div class="kpi-top">
+        <span class="kpi-icon-wrap">
+          <mat-icon>event</mat-icon>
+        </span>
+        <span class="kpi-label">Citas hoy</span>
+      </div>
+      <p class="kpi-value">{{ todayAppointments() }}</p>
+      @if (aptDelta() !== null) {
+        <p
+          class="kpi-delta"
+          [class.kpi-delta--pos]="(aptDelta() ?? 0) >= 0"
+          [class.kpi-delta--neg]="(aptDelta() ?? 0) < 0"
+        >
+          @if ((aptDelta() ?? 0) >= 0) {
+            +{{ aptDelta() }}%
+          } @else {
+            {{ aptDelta() }}%
+          }
+          vs ayer
+        </p>
+      } @else {
+        <p class="kpi-delta kpi-delta--muted">Sin comparación (ayer)</p>
+      }
+    </article>
+
+    <article class="kpi-card kpi-card--ok app-reveal">
+      <div class="kpi-card-glow" aria-hidden="true"></div>
+      <div class="kpi-top">
+        <span class="kpi-icon-wrap kpi-icon-wrap--ok">
+          <mat-icon>task_alt</mat-icon>
+        </span>
+        <span class="kpi-label">Completadas</span>
+      </div>
+      <p class="kpi-value">{{ todayCompleted() }}</p>
+      @if (completedDelta() !== null) {
+        <p
+          class="kpi-delta"
+          [class.kpi-delta--pos]="(completedDelta() ?? 0) >= 0"
+          [class.kpi-delta--neg]="(completedDelta() ?? 0) < 0"
+        >
+          @if ((completedDelta() ?? 0) >= 0) {
+            +{{ completedDelta() }}%
+          } @else {
+            {{ completedDelta() }}%
+          }
+          vs ayer
+        </p>
+      } @else {
+        <p class="kpi-delta kpi-delta--muted">Sin comparación (ayer)</p>
+      }
+    </article>
+
+    <article class="kpi-card kpi-card--bad app-reveal">
+      <div class="kpi-card-glow" aria-hidden="true"></div>
+      <div class="kpi-top">
+        <span class="kpi-icon-wrap kpi-icon-wrap--bad">
+          <mat-icon>event_busy</mat-icon>
+        </span>
+        <span class="kpi-label">Canceladas / NoShow</span>
+      </div>
+      <p class="kpi-value">{{ todayCancelled() + todayNoShow() }}</p>
+      @if (badEventsDelta() !== null) {
+        <p
+          class="kpi-delta"
+          [class.kpi-delta--pos]="badEventsDelta()! <= 0"
+          [class.kpi-delta--neg]="badEventsDelta()! > 0"
+        >
+          @if ((badEventsDelta() ?? 0) >= 0) {
+            +{{ badEventsDelta() }}%
+          } @else {
+            {{ badEventsDelta() }}%
+          }
+          vs ayer
+        </p>
+      } @else {
+        <p class="kpi-delta kpi-delta--muted">Sin comparación (ayer)</p>
+      }
+      <p class="kpi-sub">{{ todayCancelled() }} cancel. · {{ todayNoShow() }} inasist.</p>
+    </article>
+
+    <article class="kpi-card kpi-card--pets app-reveal">
+      <div class="kpi-card-glow" aria-hidden="true"></div>
+      <div class="kpi-top">
+        <span class="kpi-icon-wrap kpi-icon-wrap--pets">
+          <mat-icon>pets</mat-icon>
+        </span>
+        <span class="kpi-label">Mascotas atendidas</span>
+      </div>
+      <p class="kpi-value">{{ petsAttendedToday() }}</p>
+      @if (petsDelta() !== null) {
+        <p
+          class="kpi-delta"
+          [class.kpi-delta--pos]="(petsDelta() ?? 0) >= 0"
+          [class.kpi-delta--neg]="(petsDelta() ?? 0) < 0"
+        >
+          @if ((petsDelta() ?? 0) >= 0) {
+            +{{ petsDelta() }}%
+          } @else {
+            {{ petsDelta() }}%
+          }
+          vs ayer
+        </p>
+      } @else {
+        <p class="kpi-delta kpi-delta--muted">Sin comparación (ayer)</p>
+      }
+    </article>
+  </section>
+
+  <div class="dash-global-period app-reveal">
+    <span class="dash-global-period-label">Período del panel</span>
+    <mat-button-toggle-group
+      class="dash-global-toggles"
+      [value]="chartPeriod()"
+      (change)="onPeriodChange($event.value)"
+      hideSingleSelectionIndicator
+    >
+      <mat-button-toggle value="1">1 día</mat-button-toggle>
+      <mat-button-toggle value="7">7 días</mat-button-toggle>
+      <mat-button-toggle value="30">30 días</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <!-- Facturación -->
+  <section class="dash-section dash-section--fact">
+    <h2 class="dash-section-title">
+      <mat-icon>account_balance</mat-icon>
+      Facturación
+    </h2>
+
+    <mat-card class="chart-card chart-card--brand app-card-lift">
+      <mat-card-header>
+        <mat-card-title>
+          <span class="card-title-row">
+            <mat-icon class="card-title-icon">show_chart</mat-icon>
+            Ingresos por día
+          </span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (revenueByDay().length) {
+          <div
+            class="line-chart"
+            [class.line-chart--dense]="chartPeriod() === '1'"
+            role="img"
+            [attr.aria-label]="'Ingresos según período ' + chartPeriod()"
+          >
+            <svg class="line-chart-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="revFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="var(--mat-sys-primary)" stop-opacity="0.24" />
+                  <stop offset="100%" stop-color="var(--mat-sys-primary)" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <polygon class="line-chart-fill" [attr.points]="revenueLineArea()" fill="url(#revFill)" />
+              <polyline
+                class="line-chart-line"
+                fill="none"
+                [attr.points]="revenueLinePoints()"
+                stroke="var(--mat-sys-primary)"
+                stroke-width="1.2"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+            <div class="line-chart-labels">
+              @for (p of revenueByDay(); track p.label) {
+                <span>{{ p.label }}</span>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="empty-chart">Sin pagos en este rango.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="chart-card chart-card--brand app-card-lift">
+      <mat-card-header>
+        <mat-card-title>
+          <span class="card-title-row">
+            <mat-icon class="card-title-icon">horizontal_rule</mat-icon>
+            Servicios más demandados
+          </span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (servicesBars().length) {
+          <div class="hbar-list">
+            @for (r of servicesBars(); track r.name + r.unitPrice) {
+              <div class="hbar-item">
+                <span class="hbar-name" [matTooltip]="r.name + ' — Precio lista: ' + (r.unitPrice | copCurrency)">
+                  {{ r.name }}
+                  <span class="hbar-price">· {{ r.unitPrice | copCurrency }}</span>
+                </span>
+                <div class="hbar-track">
+                  <div
+                    class="hbar-fill hbar-fill--brand"
+                    [style.width.%]="barPct(maxServiceDemand(servicesBars()), r.count)"
+                  ></div>
+                </div>
+                <span class="hbar-val">{{ r.count }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-chart">Sin datos.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <div class="dash-grid dash-grid--2 dash-grid--fact-pay">
+      <mat-card class="chart-card chart-card--brand app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="card-title-row">
+              <mat-icon class="card-title-icon">account_balance_wallet</mat-icon>
+              Ingresos por método de pago
+            </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (paymentDonut().length) {
+            <div class="pay-donut-wrap">
+              <div
+                class="donut-visual donut-visual--sm"
+                [style.background]="donutGradient(paymentDonut())"
+              ></div>
+              <ul class="donut-legend donut-legend--pay">
+                @for (s of paymentDonut(); track s.name) {
+                  <li>
+                    <span class="dot" [style.background]="s.color"></span>
+                    <span class="name">{{ payMethodLabel(s.name) }}</span>
+                    <span class="pct">{{ s.pct }}%</span>
+                    <span class="money">{{ s.count | copCurrency }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <p class="empty-chart">Sin pagos registrados.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card chart-card--brand app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="card-title-row">
+              <mat-icon class="card-title-icon">payments</mat-icon>
+              Ingresos por veterinario
+            </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (vetRevenueBars().length) {
+            <div class="hbar-list hbar-list--wide-val">
+              @for (r of vetRevenueBars(); track $index) {
+                <div class="hbar-item">
+                  <span class="hbar-name" [matTooltip]="r.name">{{ r.name }}</span>
+                  <div class="hbar-track">
+                    <div
+                      class="hbar-fill hbar-fill--brand"
+                      [style.width.%]="barPctMoney(maxAmount(vetRevenueBars()), r.amount)"
+                    ></div>
+                  </div>
+                  <span class="hbar-val hbar-val--money">{{ r.amount | copCurrency }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-chart">Sin ingresos registrados en el período.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+  <!-- Agendamiento -->
+  <section class="dash-section dash-section--agen">
+    <h2 class="dash-section-title">
+      <mat-icon>event_note</mat-icon>
+      Agendamiento
+    </h2>
+
+    <div class="dash-grid dash-grid--2">
+      <mat-card class="chart-card chart-card--brand app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="card-title-row">
+              <mat-icon class="card-title-icon">donut_large</mat-icon>
+              Citas por estado
+            </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (statusDonut().length) {
+            <div class="donut-row">
+              <div
+                class="donut-visual"
+                [style.background]="donutGradient(statusDonut())"
+                role="img"
+                aria-label="Distribución de citas por estado"
+              ></div>
+              <ul class="donut-legend">
+                @for (s of statusDonut(); track s.name) {
+                  <li>
+                    <span class="dot" [style.background]="s.color"></span>
+                    <span class="name">{{ s.name }}</span>
+                    <span class="pct">{{ s.pct }}%</span>
+                    <span class="cnt">({{ s.count }})</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <p class="empty-chart">Sin citas en el período.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card chart-card--brand app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="card-title-row">
+              <mat-icon class="card-title-icon">groups</mat-icon>
+              Citas por veterinario
+            </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (vetsBars().length) {
+            <div class="hbar-list">
+              @for (r of vetsBars(); track r.name) {
+                <div class="hbar-item">
+                  <span class="hbar-name" [matTooltip]="r.name">{{ r.name }}</span>
+                  <div class="hbar-track">
+                    <div
+                      class="hbar-fill hbar-fill--brand"
+                      [style.width.%]="barPct(maxNamed(vetsBars()), r.count)"
+                    ></div>
+                  </div>
+                  <span class="hbar-val">{{ r.count }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-chart">Sin citas.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="dash-grid dash-grid--2 dash-grid--agen-metrics">
+      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>pets</mat-icon>
+            Top mascotas frecuentes
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (topPets().length) {
+            <div class="top-pets-table top-pets-table--compact" role="table">
+              <div class="top-pets-head" role="row">
+                <span>#</span>
+                <span>Cliente</span>
+                <span>Mascota</span>
+                <span>Cel.</span>
+                <span>Nº</span>
+              </div>
+              @for (p of topPets(); track p.petName + p.customerName; let i = $index) {
+                <div class="top-pets-row" role="row">
+                  <span class="top-pets-rank">{{ i + 1 }}</span>
+                  <span class="top-pets-ellipsis">{{ p.customerName }}</span>
+                  <span class="top-pets-strong top-pets-ellipsis">{{ p.petName }}</span>
+                  <span class="top-pets-phone">{{ p.phone }}</span>
+                  <span class="top-pets-cnt">{{ p.count }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-chart mini-empty">Sin citas en el período seleccionado.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>speed</mat-icon>
+            Productividad
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <dl class="prod-dl prod-dl--compact">
+            <div>
+              <dt>Tiempo medio / cita</dt>
+              <dd>
+                @if (avgAppointmentMin() !== null) {
+                  {{ avgAppointmentMin() }} min
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Cancelación</dt>
+              <dd [class.prod-warn]="(cancelRate() ?? 0) > 20">
+                {{ cancelRate() !== null ? (cancelRate()! | number: '1.0-1') + '%' : '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt>NoShow</dt>
+              <dd [class.prod-bad]="(noShowRate() ?? 0) > 12">
+                {{ noShowRate() !== null ? (noShowRate()! | number: '1.0-1') + '%' : '—' }}
+              </dd>
+            </div>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+  <mat-divider class="section-rule" />
+
+  <!-- Administración -->
+  <section class="dash-section dash-section--admin">
+    <h2 class="dash-section-title">
+      <mat-icon>admin_panel_settings</mat-icon>
+      Administración
+    </h2>
+
+    <mat-card class="agenda-card chart-card chart-card--brand chart-card--hero app-card-lift">
+      <mat-card-header class="agenda-card-head">
+        <mat-card-title>
+          <span class="card-title-row">
+            <mat-icon class="card-title-icon">today</mat-icon>
+            Operación de hoy — Agenda de hoy
+          </span>
+        </mat-card-title>
+        <a mat-stroked-button color="primary" routerLink="/app/appointments">
+          <mat-icon>open_in_new</mat-icon>
+          Agenda completa
+        </a>
+      </mat-card-header>
+      <mat-card-content>
+        @if (agendaToday().length === 0) {
+          <div class="empty-today">
+            <mat-icon>event_available</mat-icon>
+            <p>No hay citas para hoy. ¡Buen momento para promociones!</p>
+            <a mat-flat-button color="primary" routerLink="/app/appointments">Agendar rápido</a>
+          </div>
+        } @else {
+          <div class="agenda-table" role="table">
+            <div class="agenda-head" role="row">
+              <span>Hora</span>
+              <span>Mascota</span>
+              <span>Cliente</span>
+              <span>Servicio</span>
+              <span>Estado</span>
+            </div>
+            @for (a of agendaToday(); track a.id) {
+              <div class="agenda-row" role="row">
+                <time class="agenda-time">{{ a.start_date_time | date: 'HH:mm' }}</time>
+                <span class="agenda-strong">{{ a.pet?.name ?? '—' }}</span>
+                <span>{{ a.customer?.name ?? '—' }}</span>
+                <span class="agenda-muted">{{ a.service?.name ?? '—' }}</span>
+                <span
+                  class="agenda-status"
+                  [style.color]="statusColor(a.status?.name)"
+                  >{{ a.status?.name ?? '—' }}</span
+                >
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <div class="dash-grid dash-grid--admin-triple">
+      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>schedule</mat-icon>
+            Huecos libres hoy
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (freeSlotsToday() !== null) {
+            <p class="mini-stat">
+              Te quedan <strong>{{ freeSlotsToday() }}</strong> espacios estimados (todos los vets, servicio base).
+            </p>
+          } @else {
+            <p class="mini-muted">Configura servicios y horarios para ver huecos.</p>
+          }
+          <a mat-button color="primary" routerLink="/app/appointments">
+            <mat-icon>add_circle</mat-icon>
+            Agendar rápido
+          </a>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="mini-card mini-card--alert mini-card--brand mini-card--elevated app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>warning</mat-icon>
+            Alertas
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ul class="alert-list">
+            <li>
+              <span class="alert-n">{{ alertsUnconfirmed() }}</span>
+              citas sin confirmar hoy
+            </li>
+            <li>
+              <span class="alert-n">{{ alertsReminders() }}</span>
+              recordatorios pendientes (hoy)
+            </li>
+          </ul>
+          <a mat-stroked-button routerLink="/app/reminders" class="full-btn alert-reminders-btn">
+            <mat-icon>chat</mat-icon>
+            Ir a avisos y WhatsApp
+          </a>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card chart-card--brand chart-card--follow app-card-lift">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="card-title-row">
+              <mat-icon class="card-title-icon">event_repeat</mat-icon>
+              Próximas visitas / seguimiento
+            </span>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (followUps().length) {
+            <ul class="follow-list">
+              @for (f of followUps(); track f.next_visit_date + (f.pet?.name ?? '')) {
+                <li>
+                  <span class="follow-date">{{ f.next_visit_date }}</span>
+                  <span class="follow-pet">{{ f.pet?.name ?? 'Mascota' }}</span>
+                  <span class="follow-tr">{{ f.treatment ?? '—' }}</span>
+                </li>
+              }
+            </ul>
+            <a mat-button routerLink="/app/reminders" class="full-btn">Enviar recordatorio</a>
+          } @else {
+            <p class="empty-chart">No hay próximas visitas programadas en historias.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+  </div>
+}

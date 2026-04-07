@@ -1,0 +1,64 @@
+<a mat-button routerLink="/app/customers">
+  <mat-icon>arrow_back</mat-icon>
+  Clientes
+</a>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else if (customer(); as c) {
+  <div class="head">
+    <h1>{{ c.name }}</h1>
+    <button mat-stroked-button type="button" (click)="editCustomer()">Editar datos</button>
+  </div>
+  <p class="muted">{{ c.phone ?? 'Sin teléfono' }} · {{ c.email ?? 'Sin correo' }}</p>
+
+  <mat-card class="block">
+    <mat-card-header>
+      <mat-card-title>Mascotas</mat-card-title>
+      <button mat-icon-button type="button" (click)="addPet()" aria-label="Agregar mascota">
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      @if (pets().length === 0) {
+        <p class="muted">No hay mascotas. Agrega la primera.</p>
+      } @else {
+        <ul class="pet-list">
+          @for (p of pets(); track p.id) {
+            @let av = petAvatarFromSpecies(p.species);
+            <li class="pet-block" [attr.id]="'pet-clinical-' + p.id">
+              <div class="pet-row">
+                <div
+                  class="pet-avatar"
+                  [attr.data-pet-tone]="av.tone"
+                  role="img"
+                  [attr.aria-label]="'Avatar de ' + p.name + (p.species ? ', ' + p.species : '')"
+                >
+                  <span class="pet-avatar__emoji" aria-hidden="true">{{ av.emoji }}</span>
+                </div>
+                <div class="pet-row-text">
+                  <strong>{{ p.name }}</strong>
+                  <span class="muted small">{{ p.species ?? '—' }} · {{ p.breed ?? '' }}</span>
+                </div>
+                <div class="pet-actions">
+                  <button mat-button type="button" (click)="editPet(p)">Editar</button>
+                  @if (canDeletePet(p)) {
+                    <button
+                      mat-icon-button
+                      type="button"
+                      aria-label="Eliminar mascota"
+                      (click)="deletePet(p)"
+                    >
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+              <app-medical-record-list [petId]="p.id" [petName]="p.name" />
+            </li>
+          }
+        </ul>
+      }
+    </mat-card-content>
+  </mat-card>
+}

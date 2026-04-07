@@ -1,0 +1,103 @@
+<h1 class="page-title">Personal</h1>
+<p class="muted">Crear, editar datos y activar o inactivar miembros de la clínica</p>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else {
+  <mat-card class="mb">
+    <mat-card-header class="card-head">
+      <mat-card-title>Equipo</mat-card-title>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="app-cta app-cta--primary"
+        (click)="openCreateMember()"
+      >
+        <mat-icon aria-hidden="true">person_add</mat-icon>
+        Crear miembro
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="staff-table-panel">
+        <table class="staff-table">
+          <thead>
+            <tr>
+              <th class="staff-table__th staff-table__th--state">Estado</th>
+              <th class="staff-table__th">Nombre</th>
+              <th class="staff-table__th">Correo</th>
+              <th class="staff-table__th">Rol</th>
+              <th class="staff-table__th staff-table__th--actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of staff(); track m.id) {
+              <tr class="staff-table__row" [class.staff-table__row--inactive]="!m.active">
+                <td class="staff-table__td staff-table__td--state">
+                  <div class="state-cell">
+                    <button
+                      type="button"
+                      class="status-pill"
+                      [class.status-pill--inactive]="!m.active"
+                      [disabled]="togglingId() === m.id || (!m.active ? false : !canDeactivateMember(m))"
+                      (click)="onStatusPillClick(m)"
+                      [matTooltip]="
+                        !canDeactivateMember(m) && m.active
+                          ? 'No puedes inactivar este perfil'
+                          : 'Activar o inactivar'
+                      "
+                    >
+                      {{ m.active ? 'Activo' : 'Inactivo' }}
+                    </button>
+                    <mat-slide-toggle
+                      [checked]="!!m.active"
+                      [disabled]="togglingId() === m.id || (!m.active ? false : !canDeactivateMember(m))"
+                      (change)="onSlideToggleChange(m, $event)"
+                      color="primary"
+                      [attr.aria-label]="
+                        m.active ? 'Inactivar a ' + m.name : 'Activar a ' + m.name
+                      "
+                    />
+                  </div>
+                </td>
+                <td class="staff-table__td">
+                  <span class="staff-name-row">
+                    <mat-icon class="staff-role-icon" aria-hidden="true">{{ roleIcon(m.role?.name) }}</mat-icon>
+                    <span class="staff-name">{{ m.name }}</span>
+                  </span>
+                  @if (m.phone) {
+                    <span class="staff-phone">{{ m.phone }}</span>
+                  }
+                </td>
+                <td class="staff-table__td staff-table__td--email">
+                  {{ m.email || '—' }}
+                </td>
+                <td class="staff-table__td">{{ m.role?.name ?? '—' }}</td>
+                <td class="staff-table__td staff-table__td--actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    matTooltip="Editar"
+                    [disabled]="deletingId() === m.id"
+                    (click)="openEdit(m)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    matTooltip="Eliminar usuario"
+                    [disabled]="deletingId() === m.id || !canDeleteMember(m)"
+                    (click)="deleteMember(m)"
+                  >
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+}

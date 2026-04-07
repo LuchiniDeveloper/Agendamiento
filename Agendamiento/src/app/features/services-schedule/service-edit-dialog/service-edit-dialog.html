@@ -1,0 +1,88 @@
+<h2 mat-dialog-title class="edit-title">
+  <mat-icon aria-hidden="true">edit_calendar</mat-icon>
+  Editar servicio
+</h2>
+
+<mat-dialog-content class="edit-content">
+  @if (error()) {
+    <div class="edit-banner" role="alert">{{ error() }}</div>
+  }
+  <form id="svc-edit-form" [formGroup]="form" class="edit-form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="edit-field edit-field--name">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>Obligatorio</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="edit-field edit-field--dur">
+      <mat-label>Duración (min)</mat-label>
+      <input matInput type="number" formControlName="duration_minutes" min="5" step="1" />
+      <mat-hint>Mínimo 5</mat-hint>
+      @if (form.controls.duration_minutes.invalid && form.controls.duration_minutes.touched) {
+        <mat-error>
+          @if (form.controls.duration_minutes.hasError('min')) {
+            Al menos 5 minutos
+          } @else {
+            Obligatorio
+          }
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="edit-field edit-field--price">
+      <mat-label>Precio (COP)</mat-label>
+      <input
+        matInput
+        type="text"
+        formControlName="price"
+        inputmode="numeric"
+        autocomplete="off"
+        (focus)="onPriceFocus()"
+        (input)="onPriceInput()"
+        (blur)="onPriceBlur()"
+      />
+      @if (form.controls.price.invalid && form.controls.price.touched) {
+        <mat-error>
+          @if (form.controls.price.hasError('required')) {
+            Ingresa un precio
+          } @else if (form.controls.price.hasError('min')) {
+            No puede ser negativo
+          }
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="edit-field edit-field--desc">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="description" rows="3" [maxlength]="descMax"></textarea>
+      <mat-hint align="end">
+        <span
+          class="desc-meter"
+          [ngClass]="'desc-meter--' + descCounterTone(form.controls.description.value.length)"
+        >
+          {{ form.controls.description.value.length }} / {{ descMax }}
+        </span>
+      </mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="edit-actions">
+  <button matButton="text" type="button" (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="submit"
+    form="svc-edit-form"
+    [disabled]="saving() || form.invalid"
+  >
+    @if (saving()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      <mat-icon aria-hidden="true">save</mat-icon>
+    }
+    Guardar cambios
+  </button>
+</mat-dialog-actions>

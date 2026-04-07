@@ -1,0 +1,89 @@
+.page-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.45;
+  max-width: 40rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--app-radius-md);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  box-shadow: var(--app-shadow-soft);
+
+  > .app-cta {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.big {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mt {
+  margin-top: 1rem;
+}
+
+.simple {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.92rem;
+  border-radius: var(--app-radius-md);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 50%, transparent);
+  box-shadow: var(--app-shadow-soft);
+
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mat-sys-on-surface-variant);
+    background: color-mix(in srgb, var(--mat-sys-primary) 4%, var(--mat-sys-surface-container));
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  }
+
+  tbody tr {
+    transition: background-color var(--app-transition);
+  }
+
+  tbody tr:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 4%, transparent);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}

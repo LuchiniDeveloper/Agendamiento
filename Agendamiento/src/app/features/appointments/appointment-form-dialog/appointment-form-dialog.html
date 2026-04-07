@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>Nueva cita</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Cliente</mat-label>
+      <mat-select formControlName="customer_id" (selectionChange)="onCustomerChange($event.value)">
+        @for (c of customerOptions(); track c.id) {
+          <mat-option [value]="c.id">{{ c.name }} — {{ c.phone ?? '—' }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Mascota</mat-label>
+      <mat-select formControlName="pet_id">
+        @for (p of pets(); track p.id) {
+          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Servicio</mat-label>
+      <mat-select formControlName="service_id">
+        @for (s of servicesList(); track s.id) {
+          <mat-option [value]="s.id">{{ s.name }} ({{ s.duration_minutes }} min)</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Veterinario</mat-label>
+      <mat-select formControlName="user_id">
+        @for (v of vets(); track v.id) {
+          <mat-option [value]="v.id">{{ v.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Fecha</mat-label>
+      <input matInput [matDatepicker]="dp" formControlName="date" />
+      <mat-datepicker-toggle matIconSuffix [for]="dp" />
+      <mat-datepicker #dp />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half">
+      <mat-label>Hora inicio</mat-label>
+      <mat-select formControlName="start_time">
+        @for (t of slotOptions(); track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+      @if (slotsLoading()) {
+        <mat-hint>Cargando horarios disponibles…</mat-hint>
+      } @else if (slotsError()) {
+        <mat-hint class="hint-err">{{ slotsError() }}</mat-hint>
+      } @else if (
+        form.controls.user_id.value &&
+        form.controls.service_id.value &&
+        slotOptions().length === 0
+      ) {
+        <mat-hint>No hay disponibilidad</mat-hint>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="2" formControlName="notes"></textarea>
+    </mat-form-field>
+    <mat-checkbox formControlName="create_reminder">Crear recordatorio WhatsApp</mat-checkbox>
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    [disabled]="saving() || form.invalid"
+    (click)="save()"
+  >
+    Guardar
+  </button>
+</mat-dialog-actions>

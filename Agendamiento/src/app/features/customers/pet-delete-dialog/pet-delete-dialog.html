@@ -1,0 +1,10 @@
+<h2 mat-dialog-title>Eliminar mascota</h2>
+<mat-dialog-content>
+  <p>
+    ¿Eliminar a <strong>{{ data.petName }}</strong>? Esta acción no se puede deshacer.
+  </p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="warn" type="button" (click)="confirm()">Eliminar</button>
+</mat-dialog-actions>

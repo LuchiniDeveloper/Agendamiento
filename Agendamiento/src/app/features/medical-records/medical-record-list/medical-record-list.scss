@@ -1,0 +1,158 @@
+.med-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.small {
+  font-size: 0.8rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--app-radius-md);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 48%, transparent);
+  box-shadow: var(--app-shadow-soft);
+}
+
+.filter-field {
+  flex: 1 1 140px;
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.hist-acc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+:host ::ng-deep .mat-expansion-panel-body {
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+/* El título no debe ocupar el 100% ni empujar el indicador: si no, el panel no expande/colapsa. */
+:host ::ng-deep mat-expansion-panel-header.mat-expansion-panel-header {
+  height: auto;
+  min-height: 3.35rem;
+  align-items: center;
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+}
+
+:host ::ng-deep mat-expansion-panel-header .mat-content {
+  align-items: center;
+}
+
+:host ::ng-deep mat-expansion-panel-header .mat-expansion-panel-header-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  margin-right: 0.25rem;
+  align-self: center;
+}
+
+:host ::ng-deep mat-expansion-panel-header .mat-expansion-indicator {
+  margin-top: 0;
+  align-self: center;
+}
+
+.hist-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  /* Los clics deben ir al botón del header, no quedarse en el título. */
+  pointer-events: none;
+}
+
+.hist-sum__tipo {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-primary);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.hist-sum__one-line {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--mat-sys-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-block: 0.1rem;
+}
+
+.hist-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.15rem 0 0;
+}
+
+.hist-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.hist-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+
+  p {
+    margin: 0;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+}
+
+.load-more {
+  margin-top: 0.75rem;
+}

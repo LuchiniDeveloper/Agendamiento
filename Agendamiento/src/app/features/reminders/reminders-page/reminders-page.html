@@ -1,0 +1,48 @@
+<h1 class="page-title">Recordatorios</h1>
+<p class="muted">Abre WhatsApp con el mensaje listo y marca cuando ya contactaste al cliente.</p>
+
+@if (loading()) {
+  <div class="center"><mat-spinner diameter="36" /></div>
+} @else if (rows().length === 0) {
+  <mat-card>
+    <mat-card-content>
+      <p>No hay recordatorios pendientes. Se crean al agendar citas con la opción activada.</p>
+    </mat-card-content>
+  </mat-card>
+} @else {
+  <mat-card>
+    <mat-card-content class="list">
+      @for (r of rows(); track r.id) {
+        <div class="row">
+          <div class="info">
+            <strong>{{ r.appointment?.pet?.name ?? 'Mascota' }}</strong>
+            <span class="sub">{{ r.appointment?.customer?.name ?? 'Cliente' }}</span>
+            <time>{{ r.appointment?.start_date_time | date: 'medium' }}</time>
+            <p class="preview">{{ messageFor(r) }}</p>
+          </div>
+          <div class="actions">
+            <a mat-stroked-button color="primary" [href]="waHref(r)" target="_blank" rel="noopener">
+              <mat-icon>chat</mat-icon>
+              WhatsApp
+            </a>
+            <mat-checkbox
+              [checked]="isPendingMark(r.id)"
+              (change)="togglePending(r.id, $event.checked)"
+            >
+              Ya envié
+            </mat-checkbox>
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              [disabled]="!isPendingMark(r.id)"
+              (click)="markAsSent(r)"
+            >
+              Confirmar envío
+            </button>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+}

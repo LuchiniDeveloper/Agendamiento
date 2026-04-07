@@ -1,0 +1,27 @@
+<h2 mat-dialog-title class="dlg-title">
+  <mat-icon class="dlg-title__icon" aria-hidden="true">person_off</mat-icon>
+  ¿Eliminar usuario?
+</h2>
+
+<mat-dialog-content class="dlg-body">
+  <p>
+    Se eliminará la cuenta de
+    <strong class="dlg-name">{{ data.name }}</strong>
+    @if (data.email) {
+      <span class="dlg-email">({{ data.email }})</span>
+    }
+    y no podrá volver a iniciar sesión con ese correo hasta que se cree de nuevo.
+  </p>
+  <p class="dlg-note">
+    Solo es posible si no tiene registros vinculados (por ejemplo citas asignadas). Si la eliminación falla por
+    datos relacionados, tendrás que reasignar o borrar esos registros antes.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dlg-actions">
+  <button matButton="text" type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="warn" type="button" (click)="confirm()">
+    <mat-icon aria-hidden="true">delete_forever</mat-icon>
+    Eliminar usuario
+  </button>
+</mat-dialog-actions>

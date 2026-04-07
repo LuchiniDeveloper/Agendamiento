@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>{{ existing?.id ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Correo</mat-label>
+      <input matInput type="email" formControlName="email" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Dirección</mat-label>
+      <input matInput formControlName="address" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Notas</mat-label>
+      <textarea matInput rows="2" formControlName="notes"></textarea>
+    </mat-form-field>
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="saving()" (click)="save()">
+    Guardar
+  </button>
+</mat-dialog-actions>

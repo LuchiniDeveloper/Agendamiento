@@ -1,0 +1,74 @@
+<h2 mat-dialog-title>Editar miembro</h2>
+<mat-dialog-content class="edit-content">
+  @if (dlgData.staff.email) {
+    <p class="email-line">
+      <span class="label">Correo</span>
+      <span>{{ dlgData.staff.email }}</span>
+    </p>
+  }
+  <form [formGroup]="form" class="edit-form" (ngSubmit)="save()">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>Obligatorio</mat-error>
+      }
+    </mat-form-field>
+    @if (staffIsAdmin()) {
+      <div class="role-readonly" role="status">
+        <span class="role-readonly__label">Rol</span>
+        <span class="role-readonly__value">Administrador</span>
+        <span class="role-readonly__hint">El rol administrador no se cambia desde aquí.</span>
+      </div>
+    } @else {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Rol</mat-label>
+        <mat-select formControlName="role_id">
+          @for (r of dlgData.roles; track r.id) {
+            <mat-option [value]="r.id">{{ r.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+    @if (canChangePassword()) {
+      <div class="password-block">
+        <p class="field-hint">Nueva contraseña (opcional). Solo los administradores pueden cambiarla aquí.</p>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nueva contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password_new"
+            autocomplete="new-password"
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Confirmar contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password_confirm"
+            autocomplete="new-password"
+          />
+        </mat-form-field>
+      </div>
+    }
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="saving()">
+    @if (saving()) {
+      <mat-spinner diameter="22" class="btn-spinner" />
+    } @else {
+      Guardar
+    }
+  </button>
+</mat-dialog-actions>
