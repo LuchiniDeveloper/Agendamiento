@@ -2,10 +2,16 @@
 
 .info-banner {
   font-size: 0.95rem;
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0 0 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  padding: 1rem 1.1rem;
+  border-radius: var(--app-radius-md);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 28%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--mat-sys-primary-container) 88%, transparent),
+    color-mix(in srgb, var(--mat-sys-primary) 10%, var(--mat-sys-surface-container-low))
+  );
   color: var(--mat-sys-on-surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
 }

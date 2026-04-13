@@ -1,0 +1,98 @@
+<main class="portal-page portal-page--summary">
+<mat-toolbar class="no-print portal-sum-toolbar" color="primary">
+  <a mat-button [routerLink]="['/portal', businessId()]">
+    <mat-icon>arrow_back</mat-icon>
+    Inicio
+  </a>
+  <span class="spacer"></span>
+  <button mat-flat-button type="button" color="accent" (click)="printPage()">
+    <mat-icon>picture_as_pdf</mat-icon>
+    Imprimir / PDF
+  </button>
+</mat-toolbar>
+
+@if (loading()) {
+  <div class="portal-sum-loading">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <div class="portal-sum-page">
+    <header class="portal-sum-header">
+      <h1 class="portal-sum-title">Resumen de atención</h1>
+      <p class="portal-sum-sub muted">Historial clínico asociado a esta cita (si fue registrado).</p>
+    </header>
+
+    <mat-card class="portal-sum-card">
+      <h2 class="portal-sum-h2">Cita</h2>
+      <dl class="portal-sum-dl">
+        <div>
+          <dt>Inicio</dt>
+          <dd>{{ apptStart() | date: 'full' }}</dd>
+        </div>
+        <div>
+          <dt>Fin</dt>
+          <dd>{{ apptEnd() | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Mascota</dt>
+          <dd>{{ petName() }}</dd>
+        </div>
+        <div>
+          <dt>Servicio</dt>
+          <dd>{{ serviceName() }}</dd>
+        </div>
+        <div>
+          <dt>Estado</dt>
+          <dd>{{ statusName() }}</dd>
+        </div>
+      </dl>
+    </mat-card>
+
+    <mat-card class="portal-sum-card">
+      <h2 class="portal-sum-h2">Nota clínica</h2>
+      @if (
+        diagnosis() == null &&
+        treatment() == null &&
+        observations() == null &&
+        (weight() == null || weight() === '') &&
+        nextVisit() == null
+      ) {
+        <p class="muted">No hay nota clínica vinculada a esta cita.</p>
+      } @else {
+        <dl class="portal-sum-dl portal-sum-dl--stack">
+          @if (diagnosis()) {
+            <div>
+              <dt>Diagnóstico</dt>
+              <dd>{{ diagnosis() }}</dd>
+            </div>
+          }
+          @if (treatment()) {
+            <div>
+              <dt>Tratamiento</dt>
+              <dd>{{ treatment() }}</dd>
+            </div>
+          }
+          @if (observations()) {
+            <div>
+              <dt>Observaciones</dt>
+              <dd>{{ observations() }}</dd>
+            </div>
+          }
+          @if (weight() != null && weight() !== '') {
+            <div>
+              <dt>Peso</dt>
+              <dd>{{ weight() }} kg</dd>
+            </div>
+          }
+          @if (nextVisit()) {
+            <div>
+              <dt>Próxima visita sugerida</dt>
+              <dd>{{ nextVisit() }}</dd>
+            </div>
+          }
+        </dl>
+      }
+    </mat-card>
+  </div>
+}
+</main>

@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TenantContextService } from '../../../core/tenant-context.service';
 import { MedicalData, type MedicalRecordRow } from '../medical.data';
 import { MedicalRecordDeleteDialog } from '../medical-record-delete-dialog/medical-record-delete-dialog';
@@ -40,6 +41,7 @@ function endOfDayIso(d: Date): string {
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatTooltipModule,
   ],
   templateUrl: './medical-record-list.html',
   styleUrl: './medical-record-list.scss',
@@ -98,16 +100,6 @@ export class MedicalRecordList implements OnInit {
 
   onPanelToggle(id: string, open: boolean) {
     this.expandedById.update((m) => ({ ...m, [id]: open }));
-  }
-
-  expandAll() {
-    const m: Record<string, boolean> = {};
-    for (const r of this.rows()) m[r.id] = true;
-    this.expandedById.set(m);
-  }
-
-  collapseAll() {
-    this.expandedById.set({});
   }
 
   async applyFilters() {

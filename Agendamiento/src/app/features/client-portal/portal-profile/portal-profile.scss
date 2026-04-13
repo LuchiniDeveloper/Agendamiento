@@ -1,0 +1,36 @@
+.profile-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.profile-card {
+  padding: 1.25rem 1.35rem 1.5rem;
+  max-width: 520px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.full {
+  width: 100%;
+}
+
+.profile-section-title {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.profile-section-lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+}
+
+.profile-actions {
+  margin-top: 0.75rem;
+}

@@ -1,48 +1,397 @@
-<h1 class="page-title">Recordatorios</h1>
-<p class="muted">Abre WhatsApp con el mensaje listo y marca cuando ya contactaste al cliente.</p>
+<ng-template #whatsappGlyph>
+  <svg class="wa-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+    />
+  </svg>
+</ng-template>
 
-@if (loading()) {
-  <div class="center"><mat-spinner diameter="36" /></div>
-} @else if (rows().length === 0) {
-  <mat-card>
-    <mat-card-content>
-      <p>No hay recordatorios pendientes. Se crean al agendar citas con la opción activada.</p>
-    </mat-card-content>
-  </mat-card>
-} @else {
-  <mat-card>
-    <mat-card-content class="list">
-      @for (r of rows(); track r.id) {
-        <div class="row">
-          <div class="info">
-            <strong>{{ r.appointment?.pet?.name ?? 'Mascota' }}</strong>
-            <span class="sub">{{ r.appointment?.customer?.name ?? 'Cliente' }}</span>
-            <time>{{ r.appointment?.start_date_time | date: 'medium' }}</time>
-            <p class="preview">{{ messageFor(r) }}</p>
-          </div>
-          <div class="actions">
-            <a mat-stroked-button color="primary" [href]="waHref(r)" target="_blank" rel="noopener">
-              <mat-icon>chat</mat-icon>
-              WhatsApp
-            </a>
-            <mat-checkbox
-              [checked]="isPendingMark(r.id)"
-              (change)="togglePending(r.id, $event.checked)"
-            >
-              Ya envié
-            </mat-checkbox>
-            <button
-              mat-flat-button
-              color="primary"
-              type="button"
-              [disabled]="!isPendingMark(r.id)"
-              (click)="markAsSent(r)"
-            >
-              Confirmar envío
-            </button>
-          </div>
+<div class="chat-hub">
+  <header class="chat-hub__hero app-page-hero app-reveal">
+    <div class="chat-hub__hero-main">
+      <p class="chat-hub__kicker app-page-kicker">Mensajería manual</p>
+      <h1 class="chat-hub__title page-title">Chat con clientes</h1>
+      <p class="chat-hub__lede muted">
+        Elegí el tipo de mensaje en cada tarjeta, revisá el texto y abrí WhatsApp cuando estés listo. El envío lo completás vos desde el
+        celular.
+      </p>
+    </div>
+    <aside class="chat-hub__hero-aside" aria-label="Resumen">
+      <div class="chat-hub__stat">
+        <span class="chat-hub__pulse" aria-hidden="true"></span>
+        <div class="chat-hub__stat-text">
+          <span class="chat-hub__stat-label">Flujo</span>
+          <span class="chat-hub__stat-value">Plantilla → Borrador → WhatsApp</span>
         </div>
-      }
-    </mat-card-content>
-  </mat-card>
-}
+      </div>
+    </aside>
+  </header>
+
+  <section class="chat-composer mat-elevation-z0" aria-labelledby="chat-composer-title">
+    <div class="chat-composer__row">
+      <div class="chat-composer__icon-wrap" aria-hidden="true">
+        <mat-icon class="chat-composer__ic">edit_note</mat-icon>
+      </div>
+      <div class="chat-composer__copy">
+        <h2 id="chat-composer-title" class="chat-composer__title">Mensaje personalizado</h2>
+        <p class="chat-composer__sub muted">
+          Opcional: solo se usa si tocás <strong>Personalizado</strong> en una tarjeta. El resto de plantillas se arman solas según la cita o
+          el cliente.
+        </p>
+      </div>
+    </div>
+    <mat-form-field appearance="outline" class="chat-composer__field full" subscriptSizing="dynamic">
+      <mat-label>Texto libre para plantilla «Personalizado»</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        [(ngModel)]="customMessageBody"
+        placeholder="Ej.: Hola, le escribimos para confirmar la vacuna de…"
+      ></textarea>
+    </mat-form-field>
+  </section>
+
+  <mat-tab-group
+    class="chat-hub__tabs msg-tabs"
+    animationDuration="220ms"
+    [selectedIndex]="chatTabIndex()"
+    (selectedIndexChange)="onChatTabChange($event)"
+  >
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="tab-chip">
+          <mat-icon class="tab-chip__ic">checklist</mat-icon>
+          <span class="tab-chip__txt">Cola del día</span>
+        </span>
+      </ng-template>
+
+      <div class="tab-surface">
+        <div class="chat-filters">
+          <mat-form-field appearance="outline" class="chat-filters__date" subscriptSizing="dynamic">
+            <mat-label>Día de las citas</mat-label>
+            <input matInput [matDatepicker]="queuePicker" [(ngModel)]="queueDayModel" (dateChange)="onQueueDayChange($event)" />
+            <mat-datepicker-toggle matIconSuffix [for]="queuePicker" />
+            <mat-datepicker #queuePicker />
+            <mat-hint>Citas del día sin cancelar ni completar</mat-hint>
+          </mat-form-field>
+          <button mat-flat-button type="button" class="chat-filters__today" (click)="resetQueueToToday()">
+            <mat-icon>today</mat-icon>
+            Hoy
+          </button>
+        </div>
+
+        @if (loading()) {
+          <div class="center"><mat-spinner diameter="40" /></div>
+        } @else if (queueAppointments().length === 0) {
+          <div class="chat-empty" role="status">
+            <div class="chat-empty__icon-wrap" aria-hidden="true">
+              <mat-icon class="chat-empty__icon">event_busy</mat-icon>
+            </div>
+            <h2 class="chat-empty__title">No hay citas para esta fecha</h2>
+            <p class="chat-empty__text muted">
+              No hay citas para <strong>{{ queueDayModel | date: 'mediumDate' }}</strong>. Probá otra fecha o revisá la agenda.
+            </p>
+          </div>
+        } @else {
+          <mat-card class="chat-panel">
+            <mat-card-content class="chat-panel__list">
+              @for (a of queueAppointments(); track a.id; let i = $index) {
+                <article
+                  class="chat-card"
+                  [class.chat-card--from-agenda]="focusQueueAppointmentId() === a.id"
+                  [id]="'chat-queue-appt-' + a.id"
+                  [style.--stagger]="i"
+                >
+                  <div class="chat-card__grid">
+                    <div class="chat-card__rail chat-card__rail--avatar">
+                      @let av = petAvatarFromSpecies(a.pet?.species);
+                      <span
+                        class="chat-pet-avatar chat-pet-avatar--lg"
+                        [attr.data-pet-tone]="av.tone"
+                        role="img"
+                        [attr.aria-label]="'Especie: ' + (a.pet?.species ?? 'mascota')"
+                      >
+                        <span class="chat-pet-avatar__emoji" aria-hidden="true">{{ av.emoji }}</span>
+                      </span>
+                    </div>
+
+                    <div class="chat-card__body">
+                      <div class="chat-card__headline">
+                        <h3 class="chat-card__pet">{{ a.pet?.name ?? 'Mascota' }}</h3>
+                        <p class="chat-card__customer">{{ a.customer?.name ?? 'Cliente' }}</p>
+                      </div>
+
+                      <div class="chat-card__chips">
+                        @if (a.service?.name) {
+                          <span class="chip chip--svc">
+                            <mat-icon class="chip__ic">medical_services</mat-icon>
+                            {{ a.service?.name }}
+                          </span>
+                        }
+                        @if (a.status?.name) {
+                          <span class="chip chip--status">{{ a.status?.name }}</span>
+                        }
+                      </div>
+
+                      <div class="chat-card__when">
+                        <mat-icon class="chat-card__when-ic">schedule</mat-icon>
+                        <time [attr.datetime]="a.start_date_time">{{ a.start_date_time | date: 'medium' }}</time>
+                      </div>
+
+                      <ol class="chat-card__steps" aria-label="Pasos para enviar">
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('queue', a.id)">Plantilla</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('queue', a.id)">Borrador</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="waStepActive('queue', a.id)">WhatsApp</li>
+                      </ol>
+
+                      <div class="tpl-picks" role="group" [attr.aria-label]="'Tipo de mensaje para ' + (a.customer?.name ?? 'cliente')">
+                        @for (ch of templateChoices; track ch.id) {
+                          <button
+                            type="button"
+                            mat-stroked-button
+                            class="tpl-pick"
+                            [class.tpl-pick--active]="selectedTemplate('queue', a.id) === ch.id"
+                            (click)="pickTemplate('queue', a.id, ch.id)"
+                          >
+                            {{ ch.label }}
+                          </button>
+                        }
+                      </div>
+
+                      @if (selectedTemplate('queue', a.id); as tid) {
+                        <div class="msg-draft">
+                          <p class="msg-draft__label">Vas a enviar</p>
+                          <p class="msg-draft__body">{{ composeMessage(ctxFromQueueAppointment(a), tid) }}</p>
+                        </div>
+                        <a
+                          class="wa-send-inline"
+                          matTooltip="Abrir WhatsApp con este mensaje"
+                          aria-label="Enviar por WhatsApp con el mensaje previsto"
+                          [href]="waHrefQueue(a)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [class.wa-send-inline--disabled]="waHrefQueue(a) === '#' || waSendLocked('queue', a.id, tid)"
+                          (click)="onWaSendClick('queue', a.id, tid, $event, waHrefQueue(a))"
+                        >
+                          <ng-container [ngTemplateOutlet]="whatsappGlyph" />
+                          <span class="wa-send-inline__label">Enviar</span>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                </article>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="tab-chip">
+          <mat-icon class="tab-chip__ic">event_upcoming</mat-icon>
+          <span class="tab-chip__txt">Próximas visitas</span>
+        </span>
+      </ng-template>
+
+      <div class="tab-surface">
+        <p class="tab-lede muted">
+          Próxima visita indicada en historia clínica (próximos 120 días, con teléfono del tutor).
+        </p>
+
+        @if (nextVisitsLoading()) {
+          <div class="center"><mat-spinner diameter="40" /></div>
+        } @else if (nextVisits().length === 0) {
+          <div class="chat-empty" role="status">
+            <div class="chat-empty__icon-wrap" aria-hidden="true">
+              <mat-icon class="chat-empty__icon">pets</mat-icon>
+            </div>
+            <h2 class="chat-empty__title">Nada pendiente por aquí</h2>
+            <p class="chat-empty__text muted">No hay registros con próxima visita y teléfono en este periodo.</p>
+          </div>
+        } @else {
+          <mat-card class="chat-panel">
+            <mat-card-content class="chat-panel__list">
+              @for (nv of nextVisits(); track nv.id; let i = $index) {
+                <article class="chat-card" [style.--stagger]="i">
+                  <div class="chat-card__grid">
+                    <div class="chat-card__rail chat-card__rail--avatar">
+                      @let avn = petAvatarFromSpecies(nv.pet?.species);
+                      <span
+                        class="chat-pet-avatar chat-pet-avatar--lg"
+                        [attr.data-pet-tone]="avn.tone"
+                        role="img"
+                        [attr.aria-label]="'Especie: ' + (nv.pet?.species ?? 'mascota')"
+                      >
+                        <span class="chat-pet-avatar__emoji" aria-hidden="true">{{ avn.emoji }}</span>
+                      </span>
+                    </div>
+
+                    <div class="chat-card__body">
+                      <div class="chat-card__headline">
+                        <h3 class="chat-card__pet">{{ nv.pet?.name ?? 'Mascota' }}</h3>
+                        <p class="chat-card__customer">{{ nv.pet?.customer?.name ?? 'Cliente' }}</p>
+                      </div>
+
+                      <div class="chat-card__chips">
+                        <span class="chip chip--accent">
+                          <mat-icon class="chip__ic">calendar_month</mat-icon>
+                          Próxima visita: {{ nv.next_visit_date | date: 'mediumDate' }}
+                        </span>
+                        @if (nv.appointment?.service?.name) {
+                          <span class="chip chip--svc">
+                            <mat-icon class="chip__ic">medical_services</mat-icon>
+                            {{ nv.appointment?.service?.name }}
+                          </span>
+                        }
+                      </div>
+
+                      @if (nv.appointment?.start_date_time) {
+                        <div class="chat-card__when">
+                          <mat-icon class="chat-card__when-ic">history</mat-icon>
+                          <span>Última consulta: {{ nv.appointment?.start_date_time | date: 'medium' }}</span>
+                        </div>
+                      }
+
+                      <ol class="chat-card__steps" aria-label="Pasos para enviar">
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('next', nv.id)">Plantilla</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('next', nv.id)">Borrador</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="waStepActive('next', nv.id)">WhatsApp</li>
+                      </ol>
+
+                      <div class="tpl-picks" role="group" aria-label="Tipo de mensaje">
+                        @for (ch of templateChoices; track ch.id) {
+                          <button
+                            type="button"
+                            mat-stroked-button
+                            class="tpl-pick"
+                            [class.tpl-pick--active]="selectedTemplate('next', nv.id) === ch.id"
+                            (click)="pickTemplate('next', nv.id, ch.id)"
+                          >
+                            {{ ch.label }}
+                          </button>
+                        }
+                      </div>
+
+                      @if (selectedTemplate('next', nv.id); as tid) {
+                        <div class="msg-draft">
+                          <p class="msg-draft__label">Vas a enviar</p>
+                          <p class="msg-draft__body">{{ composeMessage(ctxFromNextVisit(nv), tid) }}</p>
+                        </div>
+                        <a
+                          class="wa-send-inline"
+                          matTooltip="Abrir WhatsApp con este mensaje"
+                          aria-label="Enviar por WhatsApp con el mensaje previsto"
+                          [href]="waHrefNextVisitRow(nv)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [class.wa-send-inline--disabled]="waHrefNextVisitRow(nv) === '#' || waSendLocked('next', nv.id, tid)"
+                          (click)="onWaSendClick('next', nv.id, tid, $event, waHrefNextVisitRow(nv))"
+                        >
+                          <ng-container [ngTemplateOutlet]="whatsappGlyph" />
+                          <span class="wa-send-inline__label">Enviar</span>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                </article>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <span class="tab-chip">
+          <mat-icon class="tab-chip__ic">person_search</mat-icon>
+          <span class="tab-chip__txt">Buscar</span>
+        </span>
+      </ng-template>
+
+      <div class="tab-surface">
+        <p class="tab-lede muted">Buscá por nombre o por dígitos del teléfono (mín. 3 dígitos para filtrar por número).</p>
+
+        <mat-card class="chat-search-card">
+          <mat-card-content class="chat-search-card__row">
+            <mat-form-field appearance="outline" class="chat-search-card__field" subscriptSizing="dynamic">
+              <mat-label>Nombre o teléfono</mat-label>
+              <input matInput [(ngModel)]="searchQuery" (keydown.enter)="runSearch()" />
+              <mat-icon matPrefix class="chat-search-card__prefix">search</mat-icon>
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="button" class="chat-search-card__btn" [disabled]="searchLoading()" (click)="runSearch()">
+              {{ searchLoading() ? 'Buscando…' : 'Buscar' }}
+            </button>
+          </mat-card-content>
+        </mat-card>
+
+        @if (searchResults().length > 0) {
+          <mat-card class="chat-panel chat-panel--after-search">
+            <mat-card-content class="chat-panel__list">
+              @for (c of searchResults(); track c.id; let i = $index) {
+                <article class="chat-card" [style.--stagger]="i">
+                  <div class="chat-card__grid">
+                    <div class="chat-card__rail chat-card__rail--avatar">
+                      <span class="chat-pet-avatar chat-pet-avatar--lg chat-pet-avatar--customer" data-pet-tone="other" aria-hidden="true">
+                        <span class="chat-pet-avatar__emoji">👤</span>
+                      </span>
+                    </div>
+
+                    <div class="chat-card__body">
+                      <div class="chat-card__headline">
+                        <h3 class="chat-card__pet">{{ c.name }}</h3>
+                        <p class="chat-card__customer">{{ c.phone }}</p>
+                      </div>
+
+                      <ol class="chat-card__steps" aria-label="Pasos para enviar">
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('search', c.id)">Plantilla</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="selectedTemplate('search', c.id)">Borrador</li>
+                        <li class="chat-card__step" [class.chat-card__step--on]="waStepActive('search', c.id)">WhatsApp</li>
+                      </ol>
+
+                      <div class="tpl-picks" role="group" aria-label="Tipo de mensaje">
+                        @for (ch of templateChoices; track ch.id) {
+                          <button
+                            type="button"
+                            mat-stroked-button
+                            class="tpl-pick"
+                            [class.tpl-pick--active]="selectedTemplate('search', c.id) === ch.id"
+                            (click)="pickTemplate('search', c.id, ch.id)"
+                          >
+                            {{ ch.label }}
+                          </button>
+                        }
+                      </div>
+
+                      @if (selectedTemplate('search', c.id); as tid) {
+                        <div class="msg-draft">
+                          <p class="msg-draft__label">Vas a enviar</p>
+                          <p class="msg-draft__body">{{ composeMessage(ctxFromCustomer(c), tid) }}</p>
+                        </div>
+                        <a
+                          class="wa-send-inline"
+                          matTooltip="Abrir WhatsApp con este mensaje"
+                          aria-label="Enviar por WhatsApp con el mensaje previsto"
+                          [href]="waHrefCustomerRow(c)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [class.wa-send-inline--disabled]="waHrefCustomerRow(c) === '#' || waSendLocked('search', c.id, tid)"
+                          (click)="onWaSendClick('search', c.id, tid, $event, waHrefCustomerRow(c))"
+                        >
+                          <ng-container [ngTemplateOutlet]="whatsappGlyph" />
+                          <span class="wa-send-inline__label">Enviar</span>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                </article>
+              }
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

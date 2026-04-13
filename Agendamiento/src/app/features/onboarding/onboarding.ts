@@ -13,6 +13,24 @@ import { TenantContextService } from '../../core/tenant-context.service';
 
 export const ONBOARDING_CREATE_NEW = '__create_new__';
 
+/** Mensaje legible si Postgres rechaza staff.id → auth.users (sesión huérfana tras reset de Auth). */
+function mapOnboardingRpcError(e: unknown): string {
+  const raw =
+    e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string'
+      ? (e as { message: string }).message
+      : e instanceof Error
+        ? e.message
+        : '';
+  const low = raw.toLowerCase();
+  if (low.includes('staff_id_fkey') || (low.includes('foreign key') && low.includes('staff'))) {
+    return (
+      'Tu sesión no coincide con ningún usuario en Supabase Auth (suele pasar tras vaciar la base o borrar usuarios). ' +
+      'Cerrá sesión, registrate o iniciá sesión de nuevo con un usuario que exista en Authentication → Users, y volvé a crear la veterinaria.'
+    );
+  }
+  return raw || 'No se pudo completar el registro';
+}
+
 export interface BusinessOption {
   id: string;
   name: string;
@@ -142,13 +160,7 @@ export class Onboarding implements OnInit {
       await this.tenant.refreshProfile();
       await this.router.navigate(['/app/dashboard']);
     } catch (e: unknown) {
-      const msg =
-        e && typeof e === 'object' && 'message' in e && typeof (e as { message: string }).message === 'string'
-          ? (e as { message: string }).message
-          : e instanceof Error
-            ? e.message
-            : 'No se pudo completar el registro';
-      this.error.set(msg);
+      this.error.set(mapOnboardingRpcError(e));
     } finally {
       this.loading.set(false);
     }

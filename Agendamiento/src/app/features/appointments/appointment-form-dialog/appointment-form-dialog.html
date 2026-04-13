@@ -9,11 +9,41 @@
         }
       </mat-select>
     </mat-form-field>
-    <mat-form-field appearance="outline" class="full">
+    <mat-form-field appearance="outline" class="full pet-select-field">
       <mat-label>Mascota</mat-label>
-      <mat-select formControlName="pet_id">
+      <mat-select formControlName="pet_id" panelClass="appt-pet-select-panel">
+        <mat-select-trigger>
+          @if (selectedPet(); as sp) {
+            @let av = petAvatarFromSpecies(sp.species);
+            <span class="pet-trigger">
+              <span
+                class="pet-avatar-mini"
+                [attr.data-pet-tone]="av.tone"
+                aria-hidden="true"
+              >
+                <span class="pet-avatar-mini__emoji">{{ av.emoji }}</span>
+              </span>
+              <span class="pet-trigger__name">{{ sp.name }}</span>
+            </span>
+          } @else {
+            <span class="pet-trigger pet-trigger--placeholder">Elegí una mascota</span>
+          }
+        </mat-select-trigger>
         @for (p of pets(); track p.id) {
-          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+          @let av = petAvatarFromSpecies(p.species);
+          <mat-option [value]="p.id" class="pet-mat-option">
+            <div class="pet-opt">
+              <span class="pet-avatar-mini" [attr.data-pet-tone]="av.tone" aria-hidden="true">
+                <span class="pet-avatar-mini__emoji">{{ av.emoji }}</span>
+              </span>
+              <div class="pet-opt__text">
+                <span class="pet-opt__name">{{ p.name }}</span>
+                @if (p.species) {
+                  <span class="pet-opt__species muted">{{ p.species }}</span>
+                }
+              </div>
+            </div>
+          </mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -35,7 +65,7 @@
     </mat-form-field>
     <mat-form-field appearance="outline" class="half">
       <mat-label>Fecha</mat-label>
-      <input matInput [matDatepicker]="dp" formControlName="date" />
+      <input matInput [matDatepicker]="dp" [min]="minDate" formControlName="date" />
       <mat-datepicker-toggle matIconSuffix [for]="dp" />
       <mat-datepicker #dp />
     </mat-form-field>
@@ -62,7 +92,6 @@
       <mat-label>Notas</mat-label>
       <textarea matInput rows="2" formControlName="notes"></textarea>
     </mat-form-field>
-    <mat-checkbox formControlName="create_reminder">Crear recordatorio WhatsApp</mat-checkbox>
     @if (error()) {
       <p class="err">{{ error() }}</p>
     }

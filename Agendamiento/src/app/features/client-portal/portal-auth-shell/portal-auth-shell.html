@@ -1,0 +1,22 @@
+<div class="portal-auth" aria-labelledby="portal-auth-page-title">
+  <div class="portal-auth__canvas" aria-hidden="true">
+    <div class="portal-auth__glow portal-auth__glow--a"></div>
+    <div class="portal-auth__glow portal-auth__glow--b"></div>
+    <div class="portal-auth__glow portal-auth__glow--c"></div>
+    <div class="portal-auth__grid"></div>
+    <div class="portal-auth__grain"></div>
+  </div>
+
+  <div class="portal-auth__layout" [class.portal-auth__layout--wide]="widePanel()">
+    <header class="portal-auth__intro">
+      <ng-content select="[portal-auth-intro]" />
+    </header>
+
+    <section class="portal-auth__panel" aria-labelledby="portal-auth-form-heading">
+      <div class="portal-auth__panel-inner">
+        <div class="portal-auth__panel-accent" aria-hidden="true"></div>
+        <ng-content select="[portal-auth-panel]" />
+      </div>
+    </section>
+  </div>
+</div>

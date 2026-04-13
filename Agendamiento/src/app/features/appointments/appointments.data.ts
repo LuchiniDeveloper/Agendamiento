@@ -37,6 +37,7 @@ function dropPastSlotsIfToday(slots: string[], onDate: string): string[] {
 export class AppointmentsData {
   private readonly supabase = inject(SUPABASE_CLIENT);
   private readonly cancelledStatusId = signal<number | null | undefined>(undefined);
+  private readonly completedStatusId = signal<number | null | undefined>(undefined);
 
   statusMap() {
     if (!this.supabase) throw new Error('Supabase no configurado');
@@ -53,6 +54,7 @@ export class AppointmentsData {
         user_id,
         start_date_time,
         end_date_time,
+        attention_started_at,
         notes,
         status_id,
         customer:customer_id (id, name, phone),
@@ -70,6 +72,59 @@ export class AppointmentsData {
     return q.order('start_date_time');
   }
 
+  /**
+   * Citas en [dayStart, dayEnd) para cola de chat (excluye canceladas y completadas).
+   * Incluye especie de mascota para icono en UI.
+   */
+  async listForChatQueueDay(dayStart: Date, dayEnd: Date) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    const cancelId = await this.getCancelledStatusId();
+    const completedId = await this.getCompletedStatusId();
+    let q = this.supabase
+      .from('appointment')
+      .select(
+        `
+        id,
+        start_date_time,
+        customer:customer_id (id, name, phone),
+        pet:pet_id (id, name, species),
+        service:service_id (id, name),
+        status:status_id (name)
+      `,
+      )
+      .gte('start_date_time', dayStart.toISOString())
+      .lt('start_date_time', dayEnd.toISOString());
+    if (cancelId != null) {
+      q = q.neq('status_id', cancelId);
+    }
+    if (completedId != null) {
+      q = q.neq('status_id', completedId);
+    }
+    return q.order('start_date_time');
+  }
+
+  async listUpcomingForCustomerContact(startIso: string, endIso: string) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    const cancelId = await this.getCancelledStatusId();
+    let q = this.supabase
+      .from('appointment')
+      .select(
+        `
+        id,
+        start_date_time,
+        customer:customer_id (id, name, phone),
+        pet:pet_id (name),
+        service:service_id (name)
+      `,
+      )
+      .gte('start_date_time', startIso)
+      .lt('start_date_time', endIso);
+    if (cancelId != null) {
+      q = q.neq('status_id', cancelId);
+    }
+    return q.order('start_date_time');
+  }
+
   private async getCancelledStatusId(): Promise<number | null> {
     if (!this.supabase) throw new Error('Supabase no configurado');
     const cached = this.cancelledStatusId();
@@ -81,6 +136,20 @@ export class AppointmentsData {
       .maybeSingle();
     const id = (data?.id as number | undefined) ?? null;
     this.cancelledStatusId.set(id);
+    return id;
+  }
+
+  private async getCompletedStatusId(): Promise<number | null> {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    const cached = this.completedStatusId();
+    if (cached !== undefined) return cached;
+    const { data } = await this.supabase
+      .from('appointment_status')
+      .select('id')
+      .eq('name', 'Completada')
+      .maybeSingle();
+    const id = (data?.id as number | undefined) ?? null;
+    this.completedStatusId.set(id);
     return id;
   }
 
@@ -212,22 +281,60 @@ export class AppointmentsData {
     return this.supabase.from('appointment').update({ notes }).eq('id', id);
   }
 
-  insertReminder(appointmentId: string) {
+  /** `null` limpia el inicio de atención (cronómetro). */
+  updateAttentionStartedAt(id: string, attention_started_at: string | null) {
     if (!this.supabase) throw new Error('Supabase no configurado');
-    return this.supabase.from('reminder').insert({
+    return this.supabase.from('appointment').update({ attention_started_at }).eq('id', id);
+  }
+
+  listExtraCharges(appointmentId: string) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    return this.supabase
+      .from('appointment_extra_charge')
+      .select('id, description, amount, created_at')
+      .eq('appointment_id', appointmentId)
+      .order('created_at');
+  }
+
+  insertExtraCharge(appointmentId: string, description: string, amount: number) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    return this.supabase.from('appointment_extra_charge').insert({
       appointment_id: appointmentId,
-      sent: false,
-      method: 'WhatsApp',
+      description: description.trim(),
+      amount,
     });
   }
 
-  insertPayment(appointmentId: string, amount: number, payment_method: 'Cash' | 'Card' | 'Transfer') {
+  deleteExtraCharge(id: string) {
     if (!this.supabase) throw new Error('Supabase no configurado');
-    return this.supabase.from('payment').insert({
+    return this.supabase.from('appointment_extra_charge').delete().eq('id', id);
+  }
+
+  insertPayment(
+    appointmentId: string,
+    amount: number,
+    payment_method: 'Cash' | 'Card' | 'Transfer',
+    transfer?: { channel: string; proofCode?: string | null },
+  ) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    const row: {
+      appointment_id: string;
+      amount: number;
+      payment_method: 'Cash' | 'Card' | 'Transfer';
+      status: string;
+      transfer_channel?: string | null;
+      transfer_proof_code?: string | null;
+    } = {
       appointment_id: appointmentId,
       amount,
       payment_method,
       status: 'Completed',
-    });
+    };
+    if (payment_method === 'Transfer') {
+      row.transfer_channel = transfer?.channel?.trim() || null;
+      const code = transfer?.proofCode?.trim();
+      row.transfer_proof_code = code ? code : null;
+    }
+    return this.supabase.from('payment').insert(row);
   }
 }

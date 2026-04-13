@@ -1,0 +1,158 @@
+<main class="portal-page">
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Agenda</p>
+    <h1 class="page-title">Mis citas</h1>
+    <p class="muted">Historial de visitas y acceso al historial clínico de tus mascotas.</p>
+  </div>
+  <div class="app-page-hero-actions">
+    <a mat-flat-button color="primary" class="app-cta app-cta--primary" [routerLink]="['/portal', businessId(), 'nueva-cita']">
+      <mat-icon>add</mat-icon>
+      Nueva cita
+    </a>
+  </div>
+</header>
+
+@if (ticket(); as tk) {
+  <mat-card class="ticket-card app-card-lift app-reveal" id="portal-appt-ticket">
+    <div class="ticket-accent" aria-hidden="true"></div>
+    <div class="ticket-head">
+      <div class="ticket-brand">
+        <span class="ticket-kicker">Comprobante de cita</span>
+        <h2 class="ticket-title">{{ tk.businessName }}</h2>
+      </div>
+      <mat-icon class="ticket-check" aria-hidden="true">check_circle</mat-icon>
+    </div>
+    <p class="ticket-lede">Guardá o imprimí estos datos.</p>
+
+    <dl class="ticket-grid">
+      <div class="ticket-row">
+        <dt>Fecha y hora</dt>
+        <dd>{{ tk.startDateTime | date: 'EEEE, d MMM y, HH:mm' }} — {{ tk.endDateTime | date: 'HH:mm' }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Mascota</dt>
+        <dd>{{ tk.petName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Servicio</dt>
+        <dd>{{ tk.serviceName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Profesional</dt>
+        <dd>{{ tk.professionalName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Estado</dt>
+        <dd><span class="ticket-status">{{ tk.statusLabel }}</span></dd>
+      </div>
+      <div class="ticket-row ticket-row--mono">
+        <dt>Referencia</dt>
+        <dd>{{ tk.appointmentId }}</dd>
+      </div>
+    </dl>
+
+    <div class="ticket-actions">
+      <button mat-stroked-button type="button" class="ticket-print" (click)="printTicket()">
+        <mat-icon>print</mat-icon>
+        Imprimir / PDF
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="dismissTicket()">Cerrar</button>
+    </div>
+  </mat-card>
+} @else {
+  <mat-card class="appts-card app-card-lift app-reveal app-reveal-delay-1">
+    @if (loading()) {
+      <div class="appts-loading">
+        <mat-spinner diameter="36" />
+      </div>
+    } @else if (rows().length === 0) {
+      <div class="appts-empty">
+        <div class="appts-empty-icon" aria-hidden="true">
+          <mat-icon>calendar_today</mat-icon>
+        </div>
+        <h2 class="appts-empty-title">Todavía no tenés citas</h2>
+        <p class="muted appts-empty-text">Cuando reserves desde el portal, vas a verlas listadas acá con fecha, servicio y estado.</p>
+        <a mat-flat-button color="primary" class="app-cta app-cta--primary" [routerLink]="['/portal', businessId(), 'nueva-cita']">
+          Pedir primera cita
+        </a>
+      </div>
+    } @else {
+      <div class="appts-table-wrap">
+        <table mat-table [dataSource]="rows()" class="appts-table">
+          <ng-container matColumnDef="when">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let r">{{ r.start_date_time | date: 'short' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="pet">
+            <th mat-header-cell *matHeaderCellDef>Mascota</th>
+            <td mat-cell *matCellDef="let r">{{ petName(r) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="service">
+            <th mat-header-cell *matHeaderCellDef>Servicio</th>
+            <td mat-cell *matCellDef="let r">{{ r.serviceLabel }}</td>
+          </ng-container>
+          <ng-container matColumnDef="vet">
+            <th mat-header-cell *matHeaderCellDef>Veterinario</th>
+            <td mat-cell *matCellDef="let r">{{ r.vetLabel }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="status-pill">{{ statusName(r) }}</span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let r" class="appts-actions-cell">
+              <div class="appts-actions">
+                @if (canCancel(r)) {
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="warn"
+                    class="appt-act-btn"
+                    [disabled]="cancellingId() === r.id"
+                    (click)="cancelAppointment(r)"
+                    matTooltip="Cancelar cita"
+                    aria-label="Cancelar cita"
+                  >
+                    @if (cancellingId() === r.id) {
+                      <mat-spinner diameter="22" />
+                    } @else {
+                      <mat-icon>event_busy</mat-icon>
+                    }
+                  </button>
+                }
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="appt-act-btn"
+                  (click)="openTicket(r)"
+                  matTooltip="Ver comprobante"
+                  aria-label="Ver comprobante de la cita"
+                >
+                  <mat-icon>receipt_long</mat-icon>
+                </button>
+                @if (canClinicalHistory(r)) {
+                  <a
+                    mat-icon-button
+                    class="appt-act-btn"
+                    [routerLink]="['/portal', businessId(), 'mascota', petId(r), 'historial']"
+                    matTooltip="Historial clínico"
+                    aria-label="Ver historial clínico"
+                  >
+                    <mat-icon>assignment</mat-icon>
+                  </a>
+                }
+              </div>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    }
+  </mat-card>
+}
+</main>

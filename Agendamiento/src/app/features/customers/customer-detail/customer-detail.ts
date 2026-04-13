@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { CustomersData, type CustomerRow, type PetRow } from '../customers.data';
 import { petAvatarFromSpecies } from '../pet-avatar.util';
@@ -23,6 +27,10 @@ import { MedicalRecordList } from '../../medical-records/medical-record-list/med
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatTooltipModule,
     MedicalRecordList,
   ],
   templateUrl: './customer-detail.html',
@@ -30,6 +38,13 @@ import { MedicalRecordList } from '../../medical-records/medical-record-list/med
 })
 export class CustomerDetail implements OnInit {
   protected readonly petAvatarFromSpecies = petAvatarFromSpecies;
+
+  /** Vista compacta de notas de mascota en el encabezado del panel. */
+  protected petNotePreview(notes: string | null | undefined, max = 72): string {
+    const t = (notes ?? '').trim();
+    if (t.length <= max) return t;
+    return `${t.slice(0, max)}…`;
+  }
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -41,11 +56,45 @@ export class CustomerDetail implements OnInit {
   protected readonly customer = signal<CustomerRow | null>(null);
   protected readonly pets = signal<PetRow[]>([]);
   protected readonly petsWithHistory = signal<Set<string>>(new Set());
+  protected readonly petFilterText = signal('');
+  /** Panel de mascota abierto/cerrado (por defecto: todos abiertos si hay ≤3). */
+  protected readonly petPanelOpen = signal<Record<string, boolean>>({});
   protected customerId = '';
+
+  protected readonly filteredPets = computed(() => {
+    const q = this.petFilterText().trim().toLowerCase();
+    const list = this.pets();
+    if (!q) return list;
+    return list.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.species ?? '').toLowerCase().includes(q) ||
+        (p.breed ?? '').toLowerCase().includes(q),
+    );
+  });
 
   async ngOnInit() {
     this.customerId = this.route.snapshot.paramMap.get('id') ?? '';
     await this.reload();
+  }
+
+  onPetFilterInput(ev: Event) {
+    const v = (ev.target as HTMLInputElement).value;
+    this.petFilterText.set(v);
+  }
+
+  onPetPanelToggle(petId: string, open: boolean) {
+    this.petPanelOpen.update((m) => ({ ...m, [petId]: open }));
+  }
+
+  private syncPetPanelsFromList(list: PetRow[]) {
+    const n = list.length;
+    const prev = this.petPanelOpen();
+    const next: Record<string, boolean> = {};
+    for (const p of list) {
+      next[p.id] = prev[p.id] ?? n <= 3;
+    }
+    this.petPanelOpen.set(next);
   }
 
   async reload() {
@@ -61,6 +110,7 @@ export class CustomerDetail implements OnInit {
       if (e2) throw e2;
       const petRows = (p ?? []) as PetRow[];
       this.pets.set(petRows);
+      this.syncPetPanelsFromList(petRows);
       const ids = petRows.map((x) => x.id);
       try {
         const hist = await this.data.petIdsWithMedicalHistory(ids);
@@ -78,6 +128,8 @@ export class CustomerDetail implements OnInit {
   private scrollToPetFromQuery() {
     const petId = this.route.snapshot.queryParamMap.get('pet');
     if (!petId) return;
+    if (!this.pets().some((p) => p.id === petId)) return;
+    this.petPanelOpen.update((m) => ({ ...m, [petId]: true }));
     const el = document.getElementById(`pet-clinical-${petId}`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

@@ -1,16 +1,38 @@
-<a mat-button routerLink="/app/customers">
+<a
+  mat-icon-button
+  routerLink="/app/customers"
+  matTooltip="Volver a clientes"
+  aria-label="Volver a clientes"
+  class="back-link"
+>
   <mat-icon>arrow_back</mat-icon>
-  Clientes
 </a>
 
 @if (loading()) {
   <div class="center"><mat-spinner diameter="36" /></div>
 } @else if (customer(); as c) {
-  <div class="head">
-    <h1>{{ c.name }}</h1>
-    <button mat-stroked-button type="button" (click)="editCustomer()">Editar datos</button>
-  </div>
-  <p class="muted">{{ c.phone ?? 'Sin teléfono' }} · {{ c.email ?? 'Sin correo' }}</p>
+  <header class="app-page-hero app-reveal customer-detail__hero">
+    <div>
+      <p class="app-page-kicker">Ficha del cliente</p>
+      <div class="head">
+        <h1 class="page-title">{{ c.name }}</h1>
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Editar datos del cliente"
+          aria-label="Editar datos del cliente"
+          (click)="editCustomer()"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+      </div>
+      <p class="muted contact-line">{{ c.phone ?? 'Sin teléfono' }} · {{ c.email ?? 'Sin correo' }}</p>
+      @if (c.notes?.trim()) {
+        <span class="notes-callout__label">Notas del cliente</span>
+        <p class="notes-callout__text">{{ c.notes }}</p>
+      }
+    </div>
+  </header>
 
   <mat-card class="block">
     <mat-card-header>
@@ -20,44 +42,96 @@
       </button>
     </mat-card-header>
     <mat-card-content>
+      @if (pets().length > 0) {
+        <mat-form-field appearance="outline" class="pet-search" subscriptSizing="dynamic">
+          <mat-label>Buscar mascota</mat-label>
+          <input
+            matInput
+            [value]="petFilterText()"
+            (input)="onPetFilterInput($event)"
+            autocomplete="off"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      }
+
       @if (pets().length === 0) {
         <p class="muted">No hay mascotas. Agrega la primera.</p>
+      } @else if (filteredPets().length === 0) {
+        <p class="muted">Ninguna mascota coincide con la búsqueda.</p>
       } @else {
-        <ul class="pet-list">
-          @for (p of pets(); track p.id) {
-            @let av = petAvatarFromSpecies(p.species);
-            <li class="pet-block" [attr.id]="'pet-clinical-' + p.id">
-              <div class="pet-row">
-                <div
-                  class="pet-avatar"
-                  [attr.data-pet-tone]="av.tone"
-                  role="img"
-                  [attr.aria-label]="'Avatar de ' + p.name + (p.species ? ', ' + p.species : '')"
-                >
-                  <span class="pet-avatar__emoji" aria-hidden="true">{{ av.emoji }}</span>
-                </div>
-                <div class="pet-row-text">
-                  <strong>{{ p.name }}</strong>
-                  <span class="muted small">{{ p.species ?? '—' }} · {{ p.breed ?? '' }}</span>
-                </div>
-                <div class="pet-actions">
-                  <button mat-button type="button" (click)="editPet(p)">Editar</button>
-                  @if (canDeletePet(p)) {
+        <mat-accordion class="pet-accordion" multi>
+          @for (p of filteredPets(); track p.id) {
+            <mat-expansion-panel
+              class="pet-panel"
+              [expanded]="petPanelOpen()[p.id] === true"
+              (expandedChange)="onPetPanelToggle(p.id, $event)"
+            >
+              <mat-expansion-panel-header>
+                <mat-panel-title class="pet-panel-title">
+                  @let av = petAvatarFromSpecies(p.species);
+                  <span
+                    class="pet-avatar pet-avatar--sm"
+                    [attr.data-pet-tone]="av.tone"
+                    role="img"
+                    [attr.aria-label]="'Avatar de ' + p.name"
+                  >
+                    <span class="pet-avatar__emoji" aria-hidden="true">{{ av.emoji }}</span>
+                  </span>
+                  <span class="pet-panel-title__text">
+                    <strong>{{ p.name }}</strong>
+                    <span class="muted small">{{ p.species ?? '—' }} · {{ p.breed ?? '—' }}</span>
+                    @if (p.notes?.trim()) {
+                      <span
+                        class="pet-panel-title__notes muted small"
+                        [matTooltip]="p.notes"
+                        [matTooltipDisabled]="(p.notes?.trim() ?? '').length <= 72"
+                        matTooltipShowDelay="300"
+                        matTooltipPosition="below"
+                      >
+                        <span class="pet-panel-title__notes-label">Notas:</span>
+                        {{ petNotePreview(p.notes) }}
+                      </span>
+                    }
+                  </span>
+                  <span class="pet-panel-title__actions" (click)="$event.stopPropagation()">
                     <button
                       mat-icon-button
                       type="button"
-                      aria-label="Eliminar mascota"
-                      (click)="deletePet(p)"
+                      matTooltip="Editar mascota"
+                      aria-label="Editar mascota"
+                      (click)="editPet(p)"
                     >
-                      <mat-icon>delete_outline</mat-icon>
+                      <mat-icon>edit</mat-icon>
                     </button>
-                  }
-                </div>
+                    @if (canDeletePet(p)) {
+                      <button
+                        mat-icon-button
+                        type="button"
+                        matTooltip="Eliminar mascota"
+                        aria-label="Eliminar mascota"
+                        (click)="deletePet(p)"
+                      >
+                        <mat-icon>delete_outline</mat-icon>
+                      </button>
+                    }
+                  </span>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+
+              <div class="pet-panel-body" [attr.id]="'pet-clinical-' + p.id">
+                @if (p.notes?.trim()) {
+                  <div class="notes-callout notes-callout--pet">
+                    <span class="notes-callout__label">Notas de la mascota</span>
+                    <p class="notes-callout__text">{{ p.notes }}</p>
+                  </div>
+                }
+
+                <app-medical-record-list [petId]="p.id" [petName]="p.name" />
               </div>
-              <app-medical-record-list [petId]="p.id" [petName]="p.name" />
-            </li>
+            </mat-expansion-panel>
           }
-        </ul>
+        </mat-accordion>
       }
     </mat-card-content>
   </mat-card>

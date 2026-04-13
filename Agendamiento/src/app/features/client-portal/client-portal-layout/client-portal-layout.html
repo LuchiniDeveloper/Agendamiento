@@ -1,0 +1,107 @@
+<mat-sidenav-container class="shell" autosize>
+  <mat-sidenav
+    class="sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="sidenavOpened()"
+    (openedChange)="onSidenavOpenedChange($event)"
+  >
+    <div class="sidenav-head">
+      <div class="sidenav-head-main">
+        <div class="brand-mark" aria-hidden="true">
+          <mat-icon>pets</mat-icon>
+        </div>
+        <div class="brand-block">
+          <span class="brand">{{ clinicName() }}</span>
+          <span class="brand-tag">Portal de clientes</span>
+        </div>
+      </div>
+    </div>
+    <mat-nav-list class="nav-list">
+      @for (item of navItems(); track item.label) {
+        <a
+          mat-list-item
+          class="nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          (click)="onNavClick()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-canvas">
+    <mat-toolbar color="primary" class="toolbar">
+      @if (isHandset()) {
+        <button
+          mat-icon-button
+          type="button"
+          class="menu-btn"
+          (click)="toggleHandsetDrawer()"
+          aria-label="Abrir menú"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="toolbar-title">{{ clinicName() }}</span>
+      <span class="spacer"></span>
+      <div class="theme-switch" role="group" aria-label="Tema de la interfaz">
+        <button
+          mat-icon-button
+          type="button"
+          class="theme-switch-btn"
+          [class.theme-switch-active]="!theme.isDark()"
+          (click)="theme.setLight()"
+          matTooltip="Modo claro"
+          aria-label="Activar modo claro"
+        >
+          <mat-icon>light_mode</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          class="theme-switch-btn"
+          [class.theme-switch-active]="theme.isDark()"
+          (click)="theme.setDark()"
+          matTooltip="Modo oscuro"
+          aria-label="Activar modo oscuro"
+        >
+          <mat-icon>dark_mode</mat-icon>
+        </button>
+      </div>
+      <button
+        mat-icon-button
+        type="button"
+        class="logout-btn"
+        (click)="signOut()"
+        matTooltip="Cerrar sesión"
+        aria-label="Cerrar sesión"
+      >
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+    <div class="content app-content-area portal-main">
+      <router-outlet />
+    </div>
+
+    @if (isHandset()) {
+      <nav class="bottom-nav" aria-label="Navegación del portal">
+        @for (item of navItems(); track item.label) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          >
+            <span class="bottom-nav-icon-wrap">
+              <mat-icon>{{ item.icon }}</mat-icon>
+            </span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    }
+  </mat-sidenav-content>
+</mat-sidenav-container>

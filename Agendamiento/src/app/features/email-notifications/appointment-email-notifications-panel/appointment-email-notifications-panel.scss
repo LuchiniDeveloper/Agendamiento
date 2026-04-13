@@ -1,0 +1,121 @@
+.mail-panel {
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+}
+
+.mail-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.mail-panel__ic {
+  font-size: 1.15rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--mat-sys-primary);
+}
+
+.mail-panel__title {
+  margin: 0;
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.mail-panel__refresh {
+  margin-left: auto;
+  transform: scale(0.92);
+}
+
+.mail-panel__hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.45;
+}
+
+.mail-panel__loading {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.mail-panel__empty {
+  margin: 0;
+  padding: 0.35rem 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mail-panel__scroll {
+  max-height: min(320px, 42vh);
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+}
+
+.mail-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  table-layout: auto;
+}
+
+.mail-table th,
+.mail-table td {
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 35%, transparent);
+}
+
+.mail-table th {
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 92%, transparent);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  z-index: 1;
+}
+
+.mail-table th:first-child,
+.mail-table td:first-child {
+  white-space: nowrap;
+}
+
+.mail-table__detail {
+  min-width: 8rem;
+  max-width: 22rem;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.08rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-highest) 88%, transparent);
+}
+
+.pill.ok {
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 22%, transparent);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.pill.bad {
+  background: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+  color: var(--mat-sys-on-error-container);
+}
+
+.pill.warn {
+  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+}

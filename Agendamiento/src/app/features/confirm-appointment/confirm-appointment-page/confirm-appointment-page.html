@@ -1,0 +1,25 @@
+<div class="wrap">
+  @if (loading()) {
+    <div class="center">
+      <mat-spinner diameter="44" />
+      <p>Confirmando…</p>
+    </div>
+  } @else {
+    <mat-card class="card">
+      @if (ok() === true) {
+        <div class="icon ok">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h1>¡Gracias!</h1>
+        <p>{{ message() }}</p>
+      } @else {
+        <div class="icon bad">
+          <mat-icon>error_outline</mat-icon>
+        </div>
+        <h1>No se pudo confirmar</h1>
+        <p>{{ message() }}</p>
+      }
+      <a mat-stroked-button [routerLink]="clientEntryLink()">{{ clientEntryLabel() }}</a>
+    </mat-card>
+  }
+</div>

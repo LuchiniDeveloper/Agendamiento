@@ -9,15 +9,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { CustomersData } from '../../customers/customers.data';
+import { CustomersData, type PetRow } from '../../customers/customers.data';
+import { petAvatarFromSpecies } from '../../customers/pet-avatar.util';
 import { ServicesData, staffRowsForScheduling } from '../../services-schedule/services.data';
-import { AppointmentsData } from '../appointments.data';
+import { AppointmentsData, todayYmdLocal } from '../appointments.data';
 
 export interface AppointmentFormOpen {
   defaultStart?: Date;
   defaultVetId?: string | null;
 }
+
+export type AppointmentPetOption = { id: string; name: string; species: string | null };
 
 @Component({
   selector: 'app-appointment-form-dialog',
@@ -31,11 +33,12 @@ export interface AppointmentFormOpen {
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatCheckboxModule,
   ],
   templateUrl: './appointment-form-dialog.html',
 })
 export class AppointmentFormDialog implements OnInit {
+  protected readonly petAvatarFromSpecies = petAvatarFromSpecies;
+
   private readonly fb = inject(FormBuilder);
   private readonly customers = inject(CustomersData);
   private readonly services = inject(ServicesData);
@@ -49,21 +52,29 @@ export class AppointmentFormDialog implements OnInit {
   protected readonly slotsError = signal<string | null>(null);
   protected readonly slotOptions = signal<string[]>([]);
   protected readonly customerOptions = signal<{ id: string; name: string; phone: string | null }[]>([]);
-  protected readonly pets = signal<{ id: string; name: string }[]>([]);
+  protected readonly pets = signal<AppointmentPetOption[]>([]);
   protected readonly servicesList = signal<{ id: string; name: string; duration_minutes: number }[]>([]);
   protected readonly vets = signal<{ id: string; name: string }[]>([]);
   protected statusIdDefault = 1;
+
+  /** Inicio del día local (datepicker: no fechas pasadas). */
+  protected readonly minDate = AppointmentFormDialog.startOfToday();
 
   form = this.fb.nonNullable.group({
     customer_id: ['', Validators.required],
     pet_id: ['', Validators.required],
     service_id: ['', Validators.required],
     user_id: ['', Validators.required],
-    date: [new Date(), Validators.required],
+    date: [AppointmentFormDialog.startOfToday(), Validators.required],
     start_time: ['', Validators.required],
     notes: [''],
-    create_reminder: [true],
   });
+
+  private static startOfToday(): Date {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }
 
   constructor() {
     merge(
@@ -94,13 +105,57 @@ export class AppointmentFormDialog implements OnInit {
 
     const defStart = this.openData?.defaultStart ?? new Date();
     this.form.patchValue({
-      date: defStart,
+      date: this.clampDateToNotBeforeToday(defStart),
       start_time: '',
       user_id: this.openData?.defaultVetId ?? (this.vets()[0]?.id ?? ''),
     });
 
     await this.reloadCustomers();
     await this.refreshSlotOptions();
+  }
+
+  private clampDateToNotBeforeToday(d: Date): Date {
+    const min = AppointmentFormDialog.startOfToday();
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return day.getTime() < min.getTime() ? new Date(min) : day;
+  }
+
+  /**
+   * El día ya cargado no tiene huecos: busca desde el día siguiente hasta 60 días.
+   * No dispara `valueChanges` en el formulario.
+   */
+  private async advanceUntilSlotsFound(maxDaysForward = 60) {
+    const { user_id, service_id, date } = this.form.getRawValue();
+    if (!user_id || !service_id || !date) return;
+
+    let d = date instanceof Date ? new Date(date) : new Date(date);
+    d = this.clampDateToNotBeforeToday(d);
+    d.setDate(d.getDate() + 1);
+
+    for (let i = 0; i < maxDaysForward; i++) {
+      const onDate = this.localCalendarDateString(d);
+      try {
+        const slots = await this.appts.getAvailableSlots({
+          userId: user_id,
+          serviceId: service_id,
+          onDate,
+        });
+        if (slots.length > 0) {
+          const dayOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          this.form.patchValue({ date: dayOnly, start_time: slots[0]! }, { emitEvent: false });
+          this.slotOptions.set(slots);
+          return;
+        }
+      } catch {
+        return;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+
+    d.setDate(d.getDate() - 1);
+    const last = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    this.form.patchValue({ date: last, start_time: '' }, { emitEvent: false });
+    this.slotOptions.set([]);
   }
 
   /** Fecha calendario local YYYY-MM-DD (evita corrimientos por ISO/UTC del datepicker). */
@@ -120,7 +175,12 @@ export class AppointmentFormDialog implements OnInit {
     this.slotsLoading.set(true);
     this.slotsError.set(null);
     try {
-      const d = date instanceof Date ? date : new Date(date);
+      let d = date instanceof Date ? date : new Date(date);
+      const clamped = this.clampDateToNotBeforeToday(d);
+      if (this.localCalendarDateString(clamped) !== this.localCalendarDateString(d)) {
+        this.form.patchValue({ date: clamped }, { emitEvent: false });
+        d = clamped;
+      }
       const onDate = this.localCalendarDateString(d);
       const slots = await this.appts.getAvailableSlots({
         userId: user_id,
@@ -135,6 +195,9 @@ export class AppointmentFormDialog implements OnInit {
         }
       } else {
         this.form.patchValue({ start_time: '' });
+        if (onDate === todayYmdLocal()) {
+          await this.advanceUntilSlotsFound();
+        }
       }
     } catch (e) {
       console.error(e);
@@ -162,7 +225,14 @@ export class AppointmentFormDialog implements OnInit {
       return;
     }
     const { data } = await this.customers.petsForCustomer(id);
-    this.pets.set((data ?? []) as { id: string; name: string }[]);
+    const rows = (data ?? []) as PetRow[];
+    this.pets.set(rows.map((p) => ({ id: p.id, name: p.name, species: p.species ?? null })));
+  }
+
+  protected selectedPet(): AppointmentPetOption | null {
+    const id = this.form.controls.pet_id.value;
+    if (!id) return null;
+    return this.pets().find((p) => p.id === id) ?? null;
   }
 
   cancel() {
@@ -185,8 +255,14 @@ export class AppointmentFormDialog implements OnInit {
       start.setHours(hh, mm, 0, 0);
       const end = new Date(start.getTime() + durMin * 60_000);
 
+      const startDay = this.localCalendarDateString(start);
+      if (startDay < todayYmdLocal()) {
+        this.error.set('No puedes agendar en fechas pasadas.');
+        return;
+      }
+
       if (start.getTime() <= Date.now()) {
-        this.error.set('Para hoy solo puedes agendar en horarios posteriores a la hora actual.');
+        this.error.set('Elige un horario posterior a la hora actual.');
         return;
       }
 
@@ -196,7 +272,7 @@ export class AppointmentFormDialog implements OnInit {
         return;
       }
 
-      const { data, error } = await this.appts.insert({
+      const { error } = await this.appts.insert({
         customer_id: v.customer_id,
         pet_id: v.pet_id,
         service_id: v.service_id,
@@ -207,9 +283,6 @@ export class AppointmentFormDialog implements OnInit {
         notes: v.notes || null,
       });
       if (error) throw error;
-      if (v.create_reminder && data?.id) {
-        await this.appts.insertReminder(data.id as string);
-      }
       this.ref.close(true);
     } catch (e: unknown) {
       this.error.set(e instanceof Error ? e.message : 'Error al guardar');

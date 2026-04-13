@@ -1,5 +1,22 @@
-<h1 class="page-title">Personal</h1>
-<p class="muted">Crear, editar datos y activar o inactivar miembros de la clínica</p>
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Perfiles y permisos</p>
+    <h1 class="page-title">Nómina</h1>
+    <p class="muted">Crear, editar datos y activar o inactivar miembros de la clínica</p>
+  </div>
+  <div class="app-page-hero-actions">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="app-cta app-cta--primary"
+      (click)="openCreateMember()"
+    >
+      <mat-icon aria-hidden="true">person_add</mat-icon>
+      Crear miembro
+    </button>
+  </div>
+</header>
 
 @if (loading()) {
   <div class="center"><mat-spinner diameter="36" /></div>
@@ -7,16 +24,6 @@
   <mat-card class="mb">
     <mat-card-header class="card-head">
       <mat-card-title>Equipo</mat-card-title>
-      <button
-        mat-flat-button
-        color="primary"
-        type="button"
-        class="app-cta app-cta--primary"
-        (click)="openCreateMember()"
-      >
-        <mat-icon aria-hidden="true">person_add</mat-icon>
-        Crear miembro
-      </button>
     </mat-card-header>
     <mat-card-content>
       <div class="staff-table-panel">

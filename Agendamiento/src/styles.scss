@@ -11,8 +11,8 @@ html {
         theme-type: light,
       ),
       typography: (
-        plain-family: ('Plus Jakarta Sans', system-ui, sans-serif),
-        brand-family: ('Lexend', system-ui, sans-serif),
+        plain-family: ('DM Sans', system-ui, sans-serif),
+        brand-family: ('Fraunces', Georgia, 'Times New Roman', serif),
         bold-weight: 700,
         medium-weight: 600,
         regular-weight: 400,
@@ -32,8 +32,8 @@ html.app-dark {
         theme-type: dark,
       ),
       typography: (
-        plain-family: ('Plus Jakarta Sans', system-ui, sans-serif),
-        brand-family: ('Lexend', system-ui, sans-serif),
+        plain-family: ('DM Sans', system-ui, sans-serif),
+        brand-family: ('Fraunces', Georgia, 'Times New Roman', serif),
         bold-weight: 700,
         medium-weight: 600,
         regular-weight: 400,
@@ -44,8 +44,8 @@ html.app-dark {
 }
 
 :root {
-  --app-font-display: 'Lexend', system-ui, sans-serif;
-  --app-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --app-font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --app-font-body: 'DM Sans', system-ui, sans-serif;
   --app-space-xs: 0.35rem;
   --app-space-sm: 0.5rem;
   --app-space-md: 0.75rem;
@@ -55,10 +55,11 @@ html.app-dark {
   --app-radius-md: 1rem;
   --app-radius-lg: 1.35rem;
   --app-radius-xl: 1.75rem;
-  --app-blur: 18px;
-  --app-transition: 180ms cubic-bezier(0.33, 1, 0.68, 1);
-  --app-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.055), 0 12px 40px -12px rgba(30, 58, 95, 0.09);
-  --app-shadow-lift: 0 4px 16px color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+  --app-blur: 20px;
+  --app-transition: 200ms cubic-bezier(0.33, 1, 0.68, 1);
+  --app-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.06), 0 14px 44px -14px rgba(22, 45, 72, 0.11);
+  --app-shadow-lift: 0 6px 22px color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
+  --app-surface-glass: color-mix(in srgb, var(--mat-sys-surface-container-low) 78%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -82,26 +83,46 @@ html {
 }
 
 body {
+  position: relative;
+  isolation: isolate;
   font-family: var(--app-font-body);
+  font-optical-sizing: auto;
   color: var(--mat-sys-on-surface);
   background-color: var(--mat-sys-surface);
   background-image:
     radial-gradient(
       ellipse 110% 75% at 100% -18%,
-      color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+      color-mix(in srgb, var(--mat-sys-primary) 14%, transparent),
       transparent 58%
     ),
     radial-gradient(
       ellipse 72% 48% at 0% 102%,
-      color-mix(in srgb, var(--mat-sys-tertiary) 9%, transparent),
+      color-mix(in srgb, var(--mat-sys-tertiary) 11%, transparent),
       transparent 52%
     ),
+    radial-gradient(ellipse 50% 40% at 50% 50%, color-mix(in srgb, var(--mat-sys-primary) 4%, transparent), transparent 70%),
     linear-gradient(
       168deg,
       var(--mat-sys-surface) 0%,
-      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 96%, var(--mat-sys-primary) 4%) 100%
+      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 94%, var(--mat-sys-primary) 6%) 100%
     );
   background-attachment: fixed;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.042;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+body > app-root {
+  position: relative;
+  z-index: 1;
 }
 
 html.app-dark {
@@ -113,26 +134,34 @@ html.app-dark body {
   background-image:
     radial-gradient(
       ellipse 110% 75% at 100% -18%,
-      color-mix(in srgb, var(--mat-sys-primary) 20%, transparent),
+      color-mix(in srgb, var(--mat-sys-primary) 22%, transparent),
       transparent 58%
     ),
     radial-gradient(
       ellipse 72% 48% at 0% 102%,
-      color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent),
+      color-mix(in srgb, var(--mat-sys-tertiary) 14%, transparent),
       transparent 52%
     ),
+    radial-gradient(ellipse 45% 38% at 40% 45%, color-mix(in srgb, var(--mat-sys-tertiary) 8%, transparent), transparent 65%),
     linear-gradient(
       168deg,
       var(--mat-sys-surface) 0%,
-      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 94%, var(--mat-sys-primary) 6%) 100%
+      color-mix(in srgb, var(--mat-sys-surface-container-lowest) 92%, var(--mat-sys-primary) 8%) 100%
     );
+}
+
+html.app-dark body::after {
+  opacity: 0.055;
+  mix-blend-mode: overlay;
 }
 
 // Tarjetas Material más actuales: borde sutil y sombra suave
 .mat-mdc-card {
   border-radius: var(--app-radius-lg) !important;
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
-  box-shadow: var(--app-shadow-soft) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 58%, transparent);
+  box-shadow:
+    var(--app-shadow-soft),
+    inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 40%, transparent) !important;
 }
 
 .mat-mdc-card.app-card-lift {
@@ -288,10 +317,151 @@ html.app-dark a:not(.mat-mdc-button-base):not(.mdc-list-item):hover {
 .app-content-area .page-title,
 .page-title {
   font-family: var(--app-font-display);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.22;
+  font-weight: 650;
+  font-variation-settings: 'SOFT' 45, 'WONK' 0.35;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
   margin-bottom: var(--app-space-sm);
+  color: var(--mat-sys-on-surface);
+}
+
+h1.page-title {
+  position: relative;
+  padding-bottom: 0.15rem;
+}
+
+h1.page-title::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 0.22rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--mat-sys-primary),
+    color-mix(in srgb, var(--mat-sys-tertiary) 85%, var(--mat-sys-primary))
+  );
+  opacity: 0.92;
+}
+
+.app-page-hero h1.page-title::after {
+  display: none;
+}
+
+// Cabecera de sección: bloque tipo «Chat con clientes» (gradiente + arco decorativo a la derecha)
+.app-page-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.35rem;
+  padding: 1.2rem 1.35rem 1.35rem;
+  border-radius: var(--app-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 38%, transparent);
+  background: linear-gradient(
+    128deg,
+    color-mix(in srgb, var(--mat-sys-surface-container-low) 92%, var(--mat-sys-primary) 8%),
+    color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, var(--mat-sys-tertiary) 5%)
+  );
+  box-shadow: var(--app-shadow-soft), inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 45%, transparent);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: min(520px, 90vw);
+    height: min(520px, 90vw);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--mat-sys-primary) 42%, transparent), transparent 62%),
+      radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--mat-sys-tertiary) 28%, transparent), transparent 55%);
+    opacity: 0.55;
+    filter: blur(0.5px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.app-page-kicker {
+  margin: 0 0 0.25rem;
+  font-family: var(--app-font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mat-sys-primary);
+}
+
+.app-page-hero .page-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+  font-family: var(--app-font-display, Georgia, 'Times New Roman', serif);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+
+.app-page-hero .muted {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  max-width: 40rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.app-page-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.85rem;
+
+  > .app-cta {
+    margin-bottom: 0;
+  }
+}
+
+// Agenda / Clientes: columna derecha — control arriba (filtro o búsqueda), CTA abajo
+.app-page-hero-actions--stack {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.75rem;
+
+  mat-form-field {
+    width: min(100%, 16.5rem);
+  }
+
+  button[mat-flat-button] {
+    font-weight: 600;
+    border-radius: var(--app-radius-sm) !important;
+    box-shadow: var(--app-shadow-lift);
+
+    mat-icon {
+      margin-right: 0.35rem;
+    }
+  }
+
+  @media (max-width: 639px) {
+    align-items: stretch;
+    width: 100%;
+
+    mat-form-field,
+    button[mat-flat-button] {
+      width: 100%;
+      max-width: none;
+    }
+  }
 }
 
 @keyframes app-fade-up {
@@ -414,5 +584,106 @@ html.app-dark a:not(.mat-mdc-button-base):not(.mdc-list-item):hover {
 // ——— Tablas HTML simples compartidas ———
 .app-content-area table.simple:not(.mat-mdc-table) thead th,
 .app-content-area .simple-table thead th {
-  background: color-mix(in srgb, var(--mat-sys-primary) 4%, var(--mat-sys-surface-container));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mat-sys-primary) 7%, var(--mat-sys-surface-container)),
+    color-mix(in srgb, var(--mat-sys-primary) 3%, var(--mat-sys-surface-container))
+  );
+}
+
+// ——— Superficie de diálogo ———
+.cdk-overlay-container .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  border-radius: var(--app-radius-xl) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 42%, transparent);
+  box-shadow:
+    var(--app-shadow-soft),
+    0 28px 64px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 14%, transparent) !important;
+}
+
+// Vista rápida de cita: más ancho y altura útil sin recortar el contenido
+.cdk-overlay-container .appt-quick-dialog-panel .mat-mdc-dialog-container {
+  max-height: min(92vh, 920px);
+}
+
+.cdk-overlay-container .appt-quick-dialog-panel .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  max-height: min(92vh, 920px);
+}
+
+// ——— Toggles de período / filtros ———
+.mat-button-toggle-group {
+  border-radius: var(--app-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 48%, transparent) !important;
+  overflow: hidden;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 6%, transparent);
+}
+
+.mat-button-toggle {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mat-button-toggle-checked {
+  background: color-mix(in srgb, var(--mat-sys-primary-container) 88%, transparent) !important;
+  color: var(--mat-sys-on-primary-container) !important;
+}
+
+// Avatar de mascota en select de «Nueva cita» (trigger + panel en overlay)
+.pet-avatar-mini {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid color-mix(in srgb, var(--mat-sys-outline-variant) 50%, transparent);
+}
+
+.pet-avatar-mini__emoji {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.pet-avatar-mini[data-pet-tone='perro'] {
+  background: linear-gradient(145deg, #e9a66c, #c56d2e);
+}
+
+.pet-avatar-mini[data-pet-tone='gato'] {
+  background: linear-gradient(145deg, #c4a5e8, #8b6bc9);
+}
+
+.pet-avatar-mini[data-pet-tone='aves'] {
+  background: linear-gradient(145deg, #7ec8e8, #3d9ccc);
+}
+
+.pet-avatar-mini[data-pet-tone='pequenas'] {
+  background: linear-gradient(145deg, #f0b8c8, #d47a9a);
+}
+
+.pet-avatar-mini[data-pet-tone='reptiles'] {
+  background: linear-gradient(145deg, #7dce9a, #3a9d6a);
+}
+
+.pet-avatar-mini[data-pet-tone='peces'] {
+  background: linear-gradient(145deg, #6bb3e0, #2a78b8);
+}
+
+.pet-avatar-mini[data-pet-tone='grandes'] {
+  background: linear-gradient(145deg, #d4b896, #9a7654);
+}
+
+.pet-avatar-mini[data-pet-tone='exoticas'] {
+  background: linear-gradient(145deg, #e0a8d8, #b068a8);
+}
+
+.pet-avatar-mini[data-pet-tone='other'] {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--mat-sys-primary) 35%, var(--mat-sys-surface-container-high)),
+    color-mix(in srgb, var(--mat-sys-primary) 18%, var(--mat-sys-surface-container))
+  );
+}
+
+.appt-pet-select-panel .mat-mdc-option.pet-mat-option {
+  min-height: 2.85rem;
 }

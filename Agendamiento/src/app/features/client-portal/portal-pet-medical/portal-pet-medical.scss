@@ -1,0 +1,171 @@
+.med-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.med-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.med-download-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.med-download-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 5.5rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px dashed color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+}
+
+.med-download-glyph {
+  font-size: 1.65rem;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.med-download-label {
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.med-download-sub {
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.med-download-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  max-width: 28rem;
+  line-height: 1.45;
+}
+
+.med-download-appt-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+
+  li {
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 40%, transparent);
+  }
+
+  a {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+    height: auto;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.med-empty {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.med-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-primary);
+
+  mat-icon {
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.med-empty-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.med-empty-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.med-card {
+  padding: 0.5rem 0 0.25rem;
+}
+
+.med-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.med-entry {
+  padding: 1rem 1.25rem 1.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.med-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.med-entry-ico {
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--mat-sys-primary);
+  opacity: 0.9;
+}
+
+.med-entry-when {
+  font-weight: 650;
+  font-size: 0.92rem;
+  color: var(--mat-sys-on-surface);
+}
+
+.med-line {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--mat-sys-on-surface-variant);
+
+  strong {
+    color: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+}
+
+.app-page-hero-actions a mat-icon {
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  font-size: 1.1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}

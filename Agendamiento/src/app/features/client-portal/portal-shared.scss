@@ -1,0 +1,85 @@
+// Estilos compartidos del portal de clientes (sesión autenticada).
+// Ritmo, color, sombras y layout — no definir font-family aquí.
+
+.portal-app .content.portal-main {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 100% 72% at 100% -5%, color-mix(in srgb, var(--mat-sys-primary) 9%, transparent), transparent 48%),
+    radial-gradient(ellipse 85% 55% at 0% 105%, color-mix(in srgb, var(--mat-sys-tertiary) 7%, transparent), transparent 44%),
+    linear-gradient(
+      185deg,
+      color-mix(in srgb, var(--mat-sys-surface) 94%, var(--mat-sys-primary) 6%) 0%,
+      var(--mat-sys-surface) 42%,
+      color-mix(in srgb, var(--mat-sys-surface) 97%, var(--mat-sys-surface-container-low) 3%) 100%
+    );
+}
+
+html.app-dark .portal-app .content.portal-main {
+  background:
+    radial-gradient(ellipse 100% 65% at 100% 0%, color-mix(in srgb, var(--mat-sys-primary) 12%, transparent), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 0% 100%, color-mix(in srgb, var(--mat-sys-tertiary) 9%, transparent), transparent 45%),
+    linear-gradient(185deg, color-mix(in srgb, var(--mat-sys-surface) 92%, #000 8%) 0%, var(--mat-sys-surface) 50%);
+}
+
+.portal-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.portal-page--summary {
+  gap: 0.85rem;
+}
+
+.portal-app .content.portal-main .app-page-hero {
+  margin-bottom: 0.25rem;
+  padding: 1.35rem 1.45rem 1.45rem;
+  border-radius: calc(var(--app-radius-lg) + 6px);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 42%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 70%, transparent) inset,
+    0 18px 42px -28px color-mix(in srgb, var(--mat-sys-primary) 22%, transparent),
+    var(--app-shadow-soft);
+}
+
+@media (min-width: 720px) {
+  .portal-app .content.portal-main .app-page-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+
+  .portal-app .content.portal-main .app-page-hero-actions {
+    align-self: center;
+  }
+}
+
+.portal-app .content.portal-main .app-page-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.2rem 0.65rem;
+  margin-bottom: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 11%, var(--mat-sys-surface));
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 55%, transparent) inset;
+}
+
+.portal-app .content.portal-main .mat-mdc-card.app-card-lift {
+  border-radius: calc(var(--app-radius-lg) + 4px) !important;
+  border-color: color-mix(in srgb, var(--mat-sys-outline-variant) 48%, transparent);
+  box-shadow:
+    var(--app-shadow-soft),
+    0 14px 36px -22px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 38%, transparent) !important;
+}
+
+.portal-app .content.portal-main .mat-mdc-card.app-card-lift:hover {
+  box-shadow:
+    var(--app-shadow-soft),
+    0 20px 44px -24px color-mix(in srgb, var(--mat-sys-primary) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 42%, transparent) !important;
+}

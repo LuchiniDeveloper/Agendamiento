@@ -8,38 +8,14 @@
   padding: 0 0 2.75rem;
 }
 
-.dash-hero {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.25rem;
+.dashboard-shell > .app-page-hero {
   max-width: min(1200px, 100%);
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 1.5rem;
-  padding: 1.25rem 1.35rem 1.35rem;
-  border-radius: var(--app-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 38%, transparent);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--mat-sys-surface-container-low) 92%, var(--mat-sys-primary) 8%),
-    var(--mat-sys-surface-container-low)
-  );
-  box-shadow: var(--app-shadow-soft);
 }
 
-.dash-kicker {
-  margin: 0 0 0.25rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--mat-sys-primary);
-}
-
-.dash-hero .page-title {
-  margin: 0 0 0.35rem;
+.dashboard-shell > .app-page-hero .page-title {
   font-size: clamp(1.65rem, 2.5vw, 2rem);
 }
 
@@ -556,10 +532,31 @@
   width: 100%;
 }
 
+.line-chart--dual .line-chart-plot {
+  position: relative;
+  margin-top: 0.15rem;
+  padding: 0.55rem 0.35rem 0.2rem;
+  border-radius: var(--app-radius-md);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mat-sys-surface-container) 55%, transparent) 0%,
+    color-mix(in srgb, var(--mat-sys-surface-container-low) 40%, transparent) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 32%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
+}
+
 .line-chart-svg {
   display: block;
   width: 100%;
-  height: 140px;
+  height: 152px;
+}
+
+.line-chart-grid-base {
+  stroke: color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+  stroke-width: 0.35;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
 }
 
 .line-chart-fill {
@@ -569,6 +566,115 @@
 .line-chart-line {
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.line-chart-line--citas {
+  opacity: 0.88;
+}
+
+.line-chart-line--ingresos {
+  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--mat-sys-primary) 35%, transparent));
+}
+
+.line-chart-hover-strip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  z-index: 1;
+}
+
+.line-chart-hover-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  cursor: default;
+}
+
+.dash-agenda-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: min(1200px, 100%);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dash-agenda-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.dash-agenda-status,
+.dash-agenda-top-pets {
+  min-width: 0;
+}
+
+/* Sin height: % — en flex con align-items:center el bloque padre no tiene altura definida y
+   min(9rem,100%) en altura puede colapsar a 0; aspect-ratio toma la altura del ancho. */
+.dash-agenda-status .donut-visual {
+  width: min(9rem, 100%);
+  aspect-ratio: 1;
+  height: auto;
+}
+
+.dash-agenda-vets {
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+
+  mat-card-content {
+    width: 100%;
+  }
+
+  .hbar-list {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .dash-agenda-top {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-agenda-status .donut-visual {
+    width: min(44vw, 180px);
+    aspect-ratio: 1;
+    height: auto;
+  }
+}
+
+.line-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  margin: 0.35rem 0 0.15rem;
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+}
+
+.line-chart-legend-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.line-chart-legend-dot--rev {
+  background: var(--mat-sys-primary);
+}
+
+.line-chart-legend-dot--apt {
+  background: var(--mat-sys-tertiary);
 }
 
 .line-chart-labels {
@@ -687,10 +793,12 @@
 
   .hbar-track {
     grid-column: 1;
+    grid-row: 2;
     height: 0.45rem;
     border-radius: 999px;
     background: color-mix(in srgb, var(--mat-sys-outline-variant) 35%, transparent);
     overflow: hidden;
+    min-width: 0;
   }
 
   .hbar-fill {
@@ -714,6 +822,13 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     text-align: right;
+    align-self: center;
+    color: var(--mat-sys-on-surface);
+    min-width: 0;
+  }
+
+  .hbar-val--count {
+    font-size: 0.9rem;
   }
 
   .hbar-val--money {
@@ -724,6 +839,36 @@
 
 .hbar-list--wide-val .hbar-item {
   grid-template-columns: minmax(0, 1fr) minmax(5.25rem, auto);
+}
+
+/* Barra + total en una sola fila flex (mismo patrón visual que «Servicios más demandados»). */
+.hbar-item.hbar-item--with-meter {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hbar-meter {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.hbar-item--with-meter .hbar-track {
+  flex: 1 1 auto;
+  grid-column: auto;
+  grid-row: auto;
+  min-width: 0;
+}
+
+.hbar-item--with-meter .hbar-val {
+  grid-column: auto;
+  grid-row: auto;
+  flex: 0 0 auto;
+  min-width: 2ch;
+  padding-left: 0.1rem;
 }
 
 .vbar-wrap {

@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ServicesData, type ScheduleRow, type ServiceRow } from '../services.data';
@@ -21,15 +22,23 @@ const DAY_PICKER = [
   { dow: 0, label: 'D' },
 ] as const;
 
+/** Par de franjas del mismo día y servicio (tabla agrupada); permite alternar H1/H2 en un solo modal. */
+export interface ScheduleSlotPair {
+  w1: ScheduleRow | null;
+  w2: ScheduleRow | null;
+}
+
 export interface ScheduleEditDialogData {
   row: ScheduleRow | null;
+  /** Si viene de la fila agrupada: al cambiar horario 1/2 se carga la fila correspondiente. */
+  slotPair?: ScheduleSlotPair | null;
   services: ServiceRow[];
   existing: ScheduleRow[];
   userId: string;
 }
 
-function scheduleKey(day: number, serviceId: string | null): string {
-  return `${day}:${serviceId ?? ''}`;
+function scheduleKey(day: number, serviceId: string | null, windowOrder: number): string {
+  return `${day}:${serviceId ?? ''}:${windowOrder}`;
 }
 
 @Component({
@@ -41,6 +50,7 @@ function scheduleKey(day: number, serviceId: string | null): string {
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
+    MatRadioModule,
     MatTooltipModule,
     MatSnackBarModule,
   ],
@@ -60,34 +70,51 @@ export class ScheduleEditDialog {
   /** En creación: varios días; en edición: un solo día. */
   protected readonly selectedDays = signal<Set<number>>(new Set());
   protected readonly isEditMode = !!this.data.row;
+  /** Fila que se actualiza al guardar; en modo `slotPair` cambia al alternar horario 1/2. */
+  private activeRow: ScheduleRow | null = null;
+
+  protected get dialogTitle(): string {
+    if (!this.data.row) return 'Añadir franjas';
+    if (this.data.slotPair) return 'Editar horarios';
+    return 'Editar franja';
+  }
 
   form = this.fb.nonNullable.group({
+    window_order: [1 as number, [Validators.required, Validators.min(1), Validators.max(2)]],
     start_time: ['09:00', Validators.required],
     end_time: ['17:00', Validators.required],
     service_id: ['' as string],
   });
 
   private usedKeys(): Set<string> {
-    const curId = this.data.row?.id;
+    const curId = this.activeRow?.id;
     const set = new Set<string>();
     for (const r of this.data.existing) {
       if (r.id === curId) continue;
-      set.add(scheduleKey(r.day_of_week, r.service_id));
+      const wo = r.window_order ?? 1;
+      set.add(scheduleKey(r.day_of_week, r.service_id, wo));
     }
     return set;
+  }
+
+  private selectedWindowOrder(): number {
+    const w = Number(this.form.controls.window_order.value);
+    return w === 2 ? 2 : 1;
   }
 
   isDayOptionDisabled(dayIndex: number): boolean {
     const sid = this.form.controls.service_id.value;
     const serviceId = sid === '' ? null : sid;
-    return this.usedKeys().has(scheduleKey(dayIndex, serviceId));
+    return this.usedKeys().has(scheduleKey(dayIndex, serviceId, this.selectedWindowOrder()));
   }
 
   isServiceOptionDisabled(serviceId: string): boolean {
     const days = this.selectedDays();
     if (days.size === 0) return false;
+    const sid = serviceId === '' ? null : serviceId;
+    const wo = this.selectedWindowOrder();
     for (const d of days) {
-      if (!this.usedKeys().has(scheduleKey(d, serviceId))) return false;
+      if (!this.usedKeys().has(scheduleKey(d, sid, wo))) return false;
     }
     return true;
   }
@@ -95,18 +122,54 @@ export class ScheduleEditDialog {
   isCualquieraDisabled(): boolean {
     const days = this.selectedDays();
     if (days.size === 0) return false;
+    const wo = this.selectedWindowOrder();
     for (const d of days) {
-      if (!this.usedKeys().has(scheduleKey(d, null))) return false;
+      if (!this.usedKeys().has(scheduleKey(d, null, wo))) return false;
     }
     return true;
   }
 
+  /** En edición con par agrupado: deshabilitar el radio del hueco vacío. */
+  protected isWindowOrderOptionDisabled(wo: 1 | 2): boolean {
+    const p = this.data.slotPair;
+    if (!this.isEditMode || !p) return false;
+    if (wo === 1) return !p.w1;
+    return !p.w2;
+  }
+
+  protected windowOrderOptionTooltip(wo: 1 | 2): string {
+    if (!this.isWindowOrderOptionDisabled(wo)) return '';
+    return wo === 1
+      ? 'No hay horario 1 en esta fila. Podés crearlo con «Añadir franja».'
+      : 'No hay horario 2 en esta fila. Podés crearlo con «Añadir franja».';
+  }
+
+  private syncActiveRowFromSlotPair(): void {
+    const p = this.data.slotPair;
+    if (!p || !this.isEditMode) return;
+    const wo = this.selectedWindowOrder();
+    const next = wo === 2 ? p.w2 : p.w1;
+    if (!next) return;
+    this.activeRow = next;
+    this.form.patchValue(
+      {
+        window_order: wo,
+        start_time: next.start_time.slice(0, 5),
+        end_time: next.end_time.slice(0, 5),
+        service_id: next.service_id ?? '',
+      },
+      { emitEvent: false },
+    );
+  }
+
   constructor() {
     const dr = inject(DestroyRef);
+    this.activeRow = this.data.row;
     const r = this.data.row;
     if (r) {
       this.selectedDays.set(new Set([r.day_of_week]));
       this.form.patchValue({
+        window_order: r.window_order === 2 ? 2 : 1,
         start_time: r.start_time.slice(0, 5),
         end_time: r.end_time.slice(0, 5),
         service_id: r.service_id ?? '',
@@ -119,6 +182,15 @@ export class ScheduleEditDialog {
     this.form.controls.service_id.valueChanges.pipe(takeUntilDestroyed(dr)).subscribe(() => {
       if (this.isEditMode) return;
       this.pruneInvalidSelectedDays();
+    });
+    this.form.controls.window_order.valueChanges.pipe(takeUntilDestroyed(dr)).subscribe(() => {
+      if (this.isEditMode && this.data.slotPair) {
+        this.syncActiveRowFromSlotPair();
+        return;
+      }
+      if (!this.isEditMode) {
+        this.pruneInvalidSelectedDays();
+      }
     });
   }
 
@@ -190,6 +262,7 @@ export class ScheduleEditDialog {
     this.error.set(null);
     const v = this.form.getRawValue();
     const sid = v.service_id === '' ? null : v.service_id;
+    const wo = v.window_order === 2 ? 2 : 1;
     const dowOrder = (d: number) => (d === 0 ? 7 : d);
     const daysSorted = [...this.selectedDays()].sort((a, b) => dowOrder(a) - dowOrder(b));
 
@@ -197,14 +270,15 @@ export class ScheduleEditDialog {
     try {
       const start = v.start_time.length === 5 ? `${v.start_time}:00` : v.start_time;
       const end = v.end_time.length === 5 ? `${v.end_time}:00` : v.end_time;
-      if (this.data.row) {
+      if (this.activeRow) {
         const day = daysSorted[0];
-        if (this.usedKeys().has(scheduleKey(day, sid))) {
-          this.error.set('Ya existe una franja para ese día y servicio.');
+        if (this.usedKeys().has(scheduleKey(day, sid, wo))) {
+          this.error.set('Ya existe una franja para ese día, servicio y número de horario.');
           return;
         }
-        const { error } = await this.api.updateSchedule(this.data.row.id, {
+        const { error } = await this.api.updateSchedule(this.activeRow.id, {
           day_of_week: day,
+          window_order: wo,
           start_time: start,
           end_time: end,
           service_id: sid,
@@ -214,10 +288,10 @@ export class ScheduleEditDialog {
           return;
         }
       } else {
-        const daysToInsert = daysSorted.filter((d) => !this.usedKeys().has(scheduleKey(d, sid)));
+        const daysToInsert = daysSorted.filter((d) => !this.usedKeys().has(scheduleKey(d, sid, wo)));
         if (daysToInsert.length === 0) {
           this.error.set(
-            'Los días marcados ya tienen franja para este servicio. Quita esos días o cambia el servicio.',
+            'Los días marcados ya tienen esta franja (horario 1 u 2) para el servicio elegido. Cambiá el número de horario, el servicio o los días.',
           );
           return;
         }
@@ -226,6 +300,7 @@ export class ScheduleEditDialog {
           user_id: this.data.userId,
           service_id: sid,
           day_of_week,
+          window_order: wo,
           start_time: start,
           end_time: end,
         }));
@@ -236,7 +311,7 @@ export class ScheduleEditDialog {
         }
         if (skipped > 0) {
           const labels = daysSorted
-            .filter((d) => this.usedKeys().has(scheduleKey(d, sid)))
+            .filter((d) => this.usedKeys().has(scheduleKey(d, sid, wo)))
             .map((d) => this.dayShortLabel(d))
             .join(', ');
           this.snack.open(
@@ -254,7 +329,7 @@ export class ScheduleEditDialog {
 
   private mapErr(err: { code?: string; message?: string }): string {
     if (err.code === '23505') {
-      return 'Ya existe una franja para ese día y servicio.';
+      return 'Ya existe una franja para ese día, servicio y número de horario.';
     }
     return err.message?.trim() || 'No se pudo guardar.';
   }

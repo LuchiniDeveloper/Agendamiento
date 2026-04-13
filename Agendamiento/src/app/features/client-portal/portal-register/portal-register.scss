@@ -1,0 +1,75 @@
+.portal-reg__steps {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.portal-reg__steps-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+}
+
+.portal-reg__steps-item--active {
+  color: var(--mat-sys-on-primary-container);
+  background: color-mix(in srgb, var(--mat-sys-primary-container) 88%, transparent);
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 28%, transparent);
+}
+
+.portal-reg__steps-item--done {
+  color: var(--mat-sys-primary);
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 35%, transparent);
+}
+
+.portal-reg__steps-num {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}
+
+.portal-reg__steps-item--active .portal-reg__steps-num {
+  background: color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.portal-reg__steps-label {
+  white-space: nowrap;
+}
+
+.portal-reg__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.portal-reg__submit-primary {
+  margin-top: 0.25rem;
+}
+
+.portal-reg__secondary {
+  width: 100%;
+  height: 2.75rem;
+  border-radius: 0.75rem !important;
+}
+
+.portal-reg__back {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+}

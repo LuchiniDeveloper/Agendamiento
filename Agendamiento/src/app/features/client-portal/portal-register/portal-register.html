@@ -1,0 +1,186 @@
+<app-portal-auth-shell [widePanel]="true">
+  <div portal-auth-intro>
+    <p class="portal-auth__eyebrow">
+      <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
+      Nuevo en el portal
+    </p>
+    <h1 id="portal-auth-page-title" class="portal-auth__title">
+      Crear <em>cuenta</em>
+    </h1>
+    <p class="portal-auth__lede">
+      Dos pasos rápidos: tus datos de titular y, si querés, la ficha básica de tu mascota para futuras citas.
+    </p>
+    <ul class="portal-auth__bullets" aria-label="Beneficios">
+      <li>
+        <mat-icon aria-hidden="true">verified_user</mat-icon>
+        Acceso seguro con cédula y contraseña
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">pets</mat-icon>
+        Podés registrar la mascota ahora o más tarde desde la clínica
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">notifications_active</mat-icon>
+        Con correo cargado, avisos y seguimiento de turnos
+      </li>
+    </ul>
+  </div>
+
+  <div portal-auth-panel>
+    <ol class="portal-reg__steps" aria-label="Pasos del registro">
+      <li
+        class="portal-reg__steps-item"
+        [class.portal-reg__steps-item--active]="step() === 0"
+        [class.portal-reg__steps-item--done]="step() > 0"
+      >
+        <span class="portal-reg__steps-num" aria-hidden="true">1</span>
+        <span class="portal-reg__steps-label">Tus datos</span>
+      </li>
+      <li
+        class="portal-reg__steps-item"
+        [class.portal-reg__steps-item--active]="step() === 1"
+      >
+        <span class="portal-reg__steps-num" aria-hidden="true">2</span>
+        <span class="portal-reg__steps-label">Tu mascota</span>
+      </li>
+    </ol>
+
+    <h2 id="portal-auth-form-heading" class="portal-auth__form-title">
+      @if (step() === 0) {
+        Datos del titular
+      } @else {
+        Datos de la mascota
+      }
+    </h2>
+    <p class="portal-auth__form-sub">
+      @if (step() === 0) {
+        Correo obligatorio (avisos y recuperación). Teléfono opcional.
+      } @else {
+        Completá nombre y especie, o registrate sin mascota y cargala después con la clínica.
+      }
+    </p>
+
+    @if (step() === 0) {
+      <form class="portal-auth__form" [formGroup]="form" (ngSubmit)="goToPetStep()">
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Nombre y apellido</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Cédula</mat-label>
+          <input matInput formControlName="id_document" autocomplete="username" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="new-password" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="phone" autocomplete="tel" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <mat-error>
+              @if (form.controls.email.hasError('required')) {
+                Ingresá tu correo para continuar
+              } @else if (form.controls.email.hasError('email')) {
+                Revisá el formato del correo
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        @if (error()) {
+          <p class="portal-auth__err" role="alert">{{ error() }}</p>
+        }
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="portal-auth__submit"
+          type="submit"
+          [disabled]="saving() || !canContinueStep1()"
+        >
+          <span>Continuar</span>
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        </button>
+      </form>
+    } @else {
+      <div class="portal-auth__form" [formGroup]="form">
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Nombre de la mascota</mat-label>
+          <input matInput formControlName="pet_name" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="portal-auth__field">
+          <mat-label>Especie</mat-label>
+          <mat-select formControlName="pet_species_preset" placeholder="Seleccionar">
+            @for (g of speciesGroups; track g.label) {
+              <mat-optgroup [label]="g.label">
+                @for (opt of g.options; track opt.value) {
+                  <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                }
+              </mat-optgroup>
+            }
+            <mat-optgroup label="Otra">
+              <mat-option [value]="speciesOther">Otro</mat-option>
+            </mat-optgroup>
+          </mat-select>
+        </mat-form-field>
+        @if (form.controls.pet_species_preset.value === speciesOther) {
+          <mat-form-field appearance="outline" class="portal-auth__field">
+            <mat-label>Especifique la especie</mat-label>
+            <input matInput formControlName="pet_species_other" autocomplete="off" />
+          </mat-form-field>
+        }
+
+        @if (error()) {
+          <p class="portal-auth__err" role="alert">{{ error() }}</p>
+        }
+
+        <div class="portal-reg__actions">
+          <button
+            mat-flat-button
+            color="primary"
+            class="portal-auth__submit portal-reg__submit-primary"
+            type="button"
+            [disabled]="saving()"
+            (click)="registerWithPet()"
+          >
+            <span>{{ saving() ? 'Guardando…' : 'Crear cuenta con mascota' }}</span>
+            @if (!saving()) {
+              <mat-icon aria-hidden="true">check</mat-icon>
+            }
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            class="portal-reg__secondary"
+            [disabled]="saving()"
+            (click)="registerWithoutPet()"
+          >
+            Sin mascota por ahora
+          </button>
+          <button mat-button type="button" class="portal-reg__back" [disabled]="saving()" (click)="backToClientStep()">
+            <mat-icon aria-hidden="true">arrow_back</mat-icon>
+            Volver al paso 1
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (step() === 0) {
+      <nav class="portal-auth__nav" aria-label="Enlaces relacionados">
+        <a class="portal-auth__nav-link" [routerLink]="['/portal', businessId(), 'login']">
+          <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          Volver al inicio de sesión
+        </a>
+        <a class="portal-auth__nav-link portal-auth__nav-link--muted" [routerLink]="['/portal', businessId(), 'activate']">
+          <mat-icon aria-hidden="true">mark_email_unread</mat-icon>
+          Ya soy cliente: activar cuenta
+        </a>
+      </nav>
+    }
+  </div>
+</app-portal-auth-shell>

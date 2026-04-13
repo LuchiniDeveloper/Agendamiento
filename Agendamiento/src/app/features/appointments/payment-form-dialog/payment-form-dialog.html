@@ -1,5 +1,34 @@
 <h2 mat-dialog-title>Registrar pago</h2>
 <mat-dialog-content>
+  @if (payload.breakdown) {
+    <div class="pay-breakdown" role="group" aria-label="Desglose del cobro">
+      <p class="pay-breakdown__row">
+        <span>{{ payload.breakdown.serviceLabel }}</span>
+        <span>{{ payload.breakdown.serviceAmount | copCurrency }}</span>
+      </p>
+      @if (payload.breakdown.extrasAmount > 0) {
+        <p class="pay-breakdown__sub">Gastos adicionales</p>
+        @if (payload.breakdown.extrasLines?.length) {
+          <ul class="pay-breakdown__lines">
+            @for (line of payload.breakdown.extrasLines; track $index) {
+              <li>
+                <span>{{ line.description }}</span>
+                <span>{{ line.amount | copCurrency }}</span>
+              </li>
+            }
+          </ul>
+        }
+        <p class="pay-breakdown__row pay-breakdown__row--muted">
+          <span>Subtotal extras</span>
+          <span>{{ payload.breakdown.extrasAmount | copCurrency }}</span>
+        </p>
+      }
+      <p class="pay-breakdown__row pay-breakdown__total">
+        <span>Total a cobrar</span>
+        <strong>{{ payload.defaultAmount | copCurrency }}</strong>
+      </p>
+    </div>
+  }
   <form [formGroup]="form" class="form">
     <mat-form-field appearance="outline" class="full">
       <mat-label>Monto (COP)</mat-label>
@@ -31,6 +60,23 @@
         <mat-option value="Transfer">Transferencia</mat-option>
       </mat-select>
     </mat-form-field>
+    @if (isTransfer()) {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Medio de transferencia</mat-label>
+        <mat-select formControlName="transfer_channel">
+          @for (opt of transferChannels; track opt.value) {
+            <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.transfer_channel.invalid && form.controls.transfer_channel.touched) {
+          <mat-error>Elige el medio (Nequi, banco, etc.)</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Código de comprobante (opcional)</mat-label>
+        <input matInput formControlName="transfer_proof_code" autocomplete="off" placeholder="Referencia o código del pago" />
+      </mat-form-field>
+    }
     @if (error()) {
       <p class="err">{{ error() }}</p>
     }

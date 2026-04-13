@@ -27,6 +27,30 @@
   }
 }
 
+.auth-brand-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 70% at 10% 15%, color-mix(in srgb, var(--mat-sys-on-primary) 22%, transparent), transparent 52%),
+    radial-gradient(ellipse 80% 60% at 92% 88%, color-mix(in srgb, var(--mat-sys-tertiary) 55%, transparent), transparent 48%),
+    linear-gradient(
+      152deg,
+      color-mix(in srgb, var(--mat-sys-primary) 88%, #0a1628) 0%,
+      color-mix(in srgb, var(--mat-sys-primary) 42%, var(--mat-sys-tertiary)) 100%
+    );
+}
+
+.auth-brand-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
 .auth-brand-video-host {
   position: absolute;
   inset: 0;
@@ -130,9 +154,10 @@
   position: relative;
   background: var(--mat-sys-surface-container-low);
   background-image:
+    radial-gradient(ellipse 70% 50% at 100% 0%, color-mix(in srgb, var(--mat-sys-tertiary) 10%, transparent), transparent 55%),
     radial-gradient(
       ellipse 80% 60% at 50% -10%,
-      color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+      color-mix(in srgb, var(--mat-sys-primary) 14%, transparent),
       transparent 55%
     );
 
@@ -145,18 +170,25 @@
   width: 100%;
   max-width: 420px;
   border-radius: var(--app-radius-xl) !important;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent) !important;
+  box-shadow:
+    var(--app-shadow-soft),
+    0 24px 56px color-mix(in srgb, var(--mat-sys-primary) 9%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 50%, transparent) !important;
 
   mat-card-title {
     font-family: var(--app-font-display);
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-size: 1.55rem;
+    font-weight: 650;
+    font-variation-settings: 'SOFT' 40, 'WONK' 0.25;
+    letter-spacing: -0.03em;
   }
 
   mat-card-subtitle {
-    margin-top: 0.35rem;
-    font-size: 0.9rem;
-    line-height: 1.4;
+    margin-top: 0.4rem;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 95%, var(--mat-sys-on-surface));
   }
 }
 

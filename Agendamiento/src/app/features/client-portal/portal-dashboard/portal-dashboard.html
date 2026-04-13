@@ -1,0 +1,185 @@
+<main class="portal-page">
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Inicio</p>
+    <h1 class="page-title">Hola de nuevo</h1>
+    <p class="muted">Resumen de tus citas, tu mascota y accesos rápidos.</p>
+  </div>
+  <div class="app-page-hero-actions">
+    <a mat-flat-button color="primary" class="app-cta app-cta--primary" [routerLink]="['/portal', businessId(), 'nueva-cita']">
+      <mat-icon>add</mat-icon>
+      Agendar cita
+    </a>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="dash-loading app-reveal">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <section class="dash-stats app-reveal app-reveal-delay-1" aria-label="Resumen de citas">
+    <mat-card class="dash-stat app-card-lift">
+      <div class="dash-stat-icon" aria-hidden="true">
+        <mat-icon>event</mat-icon>
+      </div>
+      <div class="dash-stat-body">
+        <span class="dash-stat-value">{{ totalAppointments() }}</span>
+        <span class="dash-stat-label">Citas agendadas</span>
+        <span class="dash-stat-hint">Cantidad de citas generadas en el sistema</span>
+      </div>
+    </mat-card>
+    <mat-card class="dash-stat app-card-lift">
+      <div class="dash-stat-icon dash-stat-icon--accent" aria-hidden="true">
+        <mat-icon>task_alt</mat-icon>
+      </div>
+      <div class="dash-stat-body">
+        <span class="dash-stat-value">{{ completedAppointments() }}</span>
+        <span class="dash-stat-label">Citas completadas</span>
+        <span class="dash-stat-hint">Atenciones finalizadas en la clínica</span>
+      </div>
+    </mat-card>
+  </section>
+
+  @if (selectedPet(); as pet) {
+    <mat-card class="dash-pet-hero app-card-lift app-reveal app-reveal-delay-2">
+      <div class="dash-pet-hero-grid">
+        <div
+          class="dash-pet-photo"
+          [attr.data-pet-tone]="petAvatar(pet.species).tone"
+          [attr.aria-label]="'Avatar de ' + pet.name"
+        >
+          <span class="dash-pet-photo-emoji" aria-hidden="true">{{ petAvatar(pet.species).emoji }}</span>
+        </div>
+        <div class="dash-pet-hero-main">
+          <div class="dash-pet-hero-head">
+            <div>
+              <h2 class="dash-section-title dash-pet-hero-title">Resumen de la mascota</h2>
+              <p class="muted dash-section-lead">Datos clave y seguimiento.</p>
+            </div>
+            <div class="dash-pet-hero-head-actions">
+              @if (pets().length > 1) {
+                <mat-form-field appearance="outline" class="dash-pet-select" subscriptSizing="dynamic">
+                  <mat-label>Mascota</mat-label>
+                  <mat-select [value]="selectedPetId()" (selectionChange)="onPetChange($event.value)">
+                    @for (p of pets(); track p.id) {
+                      <mat-option [value]="p.id">{{ p.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+              <button mat-stroked-button type="button" class="dash-pet-edit-btn" (click)="openEditPet()">
+                <mat-icon>edit</mat-icon>
+                Editar mascota
+              </button>
+            </div>
+          </div>
+          <div class="dash-pet-meta">
+            <span class="dash-pet-meta-name">{{ pet.name }}</span>
+            <span class="dash-pet-meta-line">{{ formatPetAge(pet.birth_date) }} · {{ pet.breed?.trim() || 'Raza —' }} · {{ formatWeight(pet.weight) }}</span>
+          </div>
+          @if (petInsightsLoading()) {
+            <div class="dash-pet-insight-loading">
+              <mat-spinner diameter="28" />
+            </div>
+          } @else {
+            <p class="dash-pet-health" [class]="healthLabel(petHealth()).css">
+              <span class="dash-pet-health-ico" aria-hidden="true">{{ healthLabel(petHealth()).icon }}</span>
+              Estado actual: <strong>{{ healthLabel(petHealth()).text }}</strong>
+            </p>
+            <p class="dash-pet-last">
+              Última visita:
+              @if (lastVisitAt(); as lv) {
+                <strong>{{ lv | date: 'mediumDate' }}</strong>
+                — {{ lastVisitReason() }}
+              } @else {
+                <strong>—</strong>
+              }
+            </p>
+          }
+        </div>
+      </div>
+    </mat-card>
+  }
+
+  <mat-card class="dash-upcoming app-card-lift app-reveal app-reveal-delay-3">
+    <h2 class="dash-section-title">Próximas citas</h2>
+    <p class="muted dash-section-lead">Turnos confirmados o pendientes de confirmación.</p>
+    @if (!upcoming().length) {
+      <p class="dash-empty">No tenés citas próximas. Podés agendar desde accesos rápidos.</p>
+    } @else {
+      <ul class="dash-upcoming-list">
+        @for (row of upcoming(); track row.id) {
+          <li class="dash-upcoming-row">
+            <div class="dash-upcoming-main">
+              <span class="dash-upcoming-date">{{ row.start_date_time | date: 'medium' }}</span>
+              <span class="dash-upcoming-meta">{{ petNameRow(row) }} · {{ relName(row.service) }}</span>
+              <span class="dash-upcoming-origin">Cita origen: {{ bookingSourceLabel(row.booking_source) }}</span>
+            </div>
+            <div class="dash-upcoming-actions">
+              <button
+                mat-button
+                type="button"
+                (click)="cancelAppointment(row.id)"
+                [disabled]="cancellingId() === row.id"
+              >
+                @if (cancellingId() === row.id) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  Cancelar
+                }
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </mat-card>
+
+  <section class="dash-quick app-reveal app-reveal-delay-4" aria-label="Accesos rápidos">
+    <h2 class="dash-section-title dash-quick-title">Accesos rápidos</h2>
+    <div class="dash-quick-grid">
+      <a mat-flat-button color="primary" class="dash-quick-btn" [routerLink]="['/portal', businessId(), 'nueva-cita']">
+        <span class="dash-quick-glyph" aria-hidden="true">➕</span>
+        <span class="dash-quick-label">Agendar cita</span>
+      </a>
+      <button type="button" mat-stroked-button class="dash-quick-btn dash-quick-btn--wa" (click)="openWhatsApp()" [disabled]="!waLink()">
+        <span class="dash-quick-glyph" aria-hidden="true">📞</span>
+        <span class="dash-quick-label">Contactar veterinaria</span>
+        <span class="dash-quick-sub muted">WhatsApp</span>
+      </button>
+      <div class="dash-quick-download">
+        <span class="dash-quick-glyph" aria-hidden="true">📄</span>
+        <span class="dash-quick-label">Descargar historia clínica</span>
+        <span class="dash-quick-sub muted">Por cita completada</span>
+        @if (!completedForSummary().length) {
+          <p class="dash-quick-hint muted">Cuando tengas visitas completadas, podrás abrir un resumen imprimible.</p>
+        } @else {
+          <ul class="dash-quick-appt-list">
+            @for (c of completedForSummary(); track c.id) {
+              <li>
+                <a mat-button [routerLink]="['/portal', businessId(), 'cita', c.id, 'resumen']">
+                  {{ c.start_date_time | date: 'mediumDate' }} — {{ petNameRow(c) }} ({{ relName(c.service) }})
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </section>
+
+  <mat-card class="dash-footer-links app-card-lift app-reveal app-reveal-delay-5">
+    <div class="dash-actions-row">
+      <a mat-stroked-button [routerLink]="['/portal', businessId(), 'citas']">
+        <mat-icon>calendar_month</mat-icon>
+        Mis citas
+      </a>
+      <a mat-stroked-button [routerLink]="['/portal', businessId(), 'perfil']">
+        <mat-icon>person</mat-icon>
+        Mi perfil
+      </a>
+    </div>
+  </mat-card>
+}
+</main>

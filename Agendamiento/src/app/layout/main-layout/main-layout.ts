@@ -70,9 +70,10 @@ export class MainLayout {
     { path: '/app/appointments', label: 'Agenda', icon: 'calendar_month' },
     { path: '/app/customers', label: 'Clientes', icon: 'people' },
     { path: '/app/services', label: 'Servicios', icon: 'medical_services', roles: ['Admin', 'Veterinario'] },
-    { path: '/app/reminders', label: 'Avisos', icon: 'notifications', roles: ['Admin', 'Veterinario'] },
-    { path: '/app/reports', label: 'Reportes', icon: 'bar_chart', adminOnly: true },
-    { path: '/app/staff', label: 'Personal', icon: 'groups', adminOnly: true },
+    { path: '/app/reminders', label: 'Chat', icon: 'chat', roles: ['Admin', 'Veterinario'] },
+    { path: '/app/smtp', label: 'SMTP', icon: 'dns', adminOnly: true },
+    { path: '/app/reports', label: 'Contabilidad', icon: 'bar_chart', adminOnly: true },
+    { path: '/app/staff', label: 'Nómina', icon: 'groups', adminOnly: true },
   ];
 
   protected filteredNav() {

@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>Gastos adicionales</h2>
+<mat-dialog-content class="extra-dlg">
+  @if (loading()) {
+    <div class="extra-dlg__loading">
+      <mat-spinner diameter="36" />
+    </div>
+  } @else {
+    @if (rows().length) {
+      <ul class="extra-dlg__list">
+        @for (r of rows(); track r.id) {
+          <li class="extra-dlg__row">
+            <div class="extra-dlg__desc">{{ r.description }}</div>
+            <div class="extra-dlg__amt">{{ r.amount | copCurrency }}</div>
+            <button
+              mat-icon-button
+              type="button"
+              aria-label="Quitar línea"
+              (click)="removeRow(r.id)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="extra-dlg__empty">Aún no hay cargos extra. Agregá conceptos abajo.</p>
+    }
+
+    <p class="extra-dlg__total">
+      <span>Total extras</span>
+      <strong>{{ extrasTotal() | copCurrency }}</strong>
+    </p>
+
+    <form [formGroup]="newLine" class="extra-dlg__new">
+      <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
+        <mat-label>Concepto</mat-label>
+        <input matInput formControlName="description" autocomplete="off" maxlength="200" />
+        @if (newLine.controls.description.invalid && newLine.controls.description.touched) {
+          <mat-error>Describe el cargo</mat-error>
+        }
+      </mat-form-field>
+      <div class="extra-dlg__new-row">
+        <mat-form-field appearance="outline" class="extra-dlg__amt-field" subscriptSizing="dynamic">
+          <mat-label>Valor (COP)</mat-label>
+          <input
+            matInput
+            type="text"
+            formControlName="amount"
+            inputmode="numeric"
+            autocomplete="off"
+            (input)="onNewAmountInput()"
+          />
+        </mat-form-field>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="adding()"
+          (click)="addLine()"
+        >
+          <mat-icon>add</mat-icon>
+          Agregar
+        </button>
+      </div>
+    </form>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">Listo</button>
+</mat-dialog-actions>

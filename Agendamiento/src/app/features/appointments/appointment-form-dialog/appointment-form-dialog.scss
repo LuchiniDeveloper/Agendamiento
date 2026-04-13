@@ -27,3 +27,54 @@
   font-size: 0.8rem;
   line-height: 1.35;
 }
+
+.pet-select-field {
+  /* Altura del trigger alineada al contenido con avatar */
+  :host ::ng-deep &.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+    align-items: center;
+  }
+}
+
+.pet-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.5rem;
+
+  &--placeholder {
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 0.95rem;
+  }
+
+  &__name {
+    font-size: 0.95rem;
+  }
+}
+
+.pet-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.25rem;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  &__species {
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,29 @@
+.guest-book-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+.guest-book-form__span-2 {
+  grid-column: span 2;
+}
+
+.guest-book-form__hint {
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0.35rem 0 0.75rem;
+}
+
+.guest-book-form__hint--warn {
+  color: var(--mat-sys-error);
+}
+
+@media (max-width: 600px) {
+  .guest-book-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-book-form__span-2 {
+    grid-column: auto;
+  }
+}

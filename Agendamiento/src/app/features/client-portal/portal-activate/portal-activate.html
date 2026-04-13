@@ -1,0 +1,77 @@
+<app-portal-auth-shell>
+  <div portal-auth-intro>
+    <p class="portal-auth__eyebrow">
+      <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
+      Clientes existentes
+    </p>
+    <h1 id="portal-auth-page-title" class="portal-auth__title">
+      Activar <em>cuenta</em>
+    </h1>
+    <p class="portal-auth__lede">
+      Si ya sos cliente de la clínica y tenés cédula y correo cargados en la ficha, confirmá el mismo correo y
+      elegí una contraseña para usar el portal.
+    </p>
+    <ul class="portal-auth__bullets" aria-label="Pasos">
+      <li>
+        <mat-icon aria-hidden="true">email</mat-icon>
+        Mismo correo que en la clínica
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">lock</mat-icon>
+        Contraseña nueva solo para el portal
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">check_circle</mat-icon>
+        Acceso al instante al confirmar
+      </li>
+    </ul>
+  </div>
+
+  <div portal-auth-panel>
+    <h2 id="portal-auth-form-heading" class="portal-auth__form-title">Confirmar datos</h2>
+    <p class="portal-auth__form-sub">Cédula, correo tal cual en la ficha y contraseña nueva.</p>
+
+    <form class="portal-auth__form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="portal-auth__field">
+        <mat-label>Cédula</mat-label>
+        <input matInput formControlName="id_document" autocomplete="username" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="portal-auth__field">
+        <mat-label>Contraseña nueva</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="portal-auth__field">
+        <mat-label>Correo (tal cual en la clínica)</mat-label>
+        <input matInput type="email" formControlName="verify_email" autocomplete="email" />
+      </mat-form-field>
+
+      @if (error()) {
+        <p class="portal-auth__err" role="alert">{{ error() }}</p>
+      }
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="portal-auth__submit"
+        type="submit"
+        [disabled]="saving() || form.invalid"
+      >
+        <span>{{ saving() ? 'Activando…' : 'Activar y entrar' }}</span>
+        @if (!saving()) {
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        }
+      </button>
+    </form>
+
+    <nav class="portal-auth__nav" aria-label="Enlaces relacionados">
+      <a class="portal-auth__nav-link" [routerLink]="['/portal', businessId(), 'login']">
+        <mat-icon aria-hidden="true">arrow_back</mat-icon>
+        Volver al inicio de sesión
+      </a>
+      <a class="portal-auth__nav-link portal-auth__nav-link--muted" [routerLink]="['/portal', businessId(), 'register']">
+        <mat-icon aria-hidden="true">person_add</mat-icon>
+        Crear cuenta nueva
+      </a>
+    </nav>
+  </div>
+</app-portal-auth-shell>

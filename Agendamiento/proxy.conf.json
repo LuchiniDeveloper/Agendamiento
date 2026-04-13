@@ -1,0 +1,8 @@
+{
+  "/functions/v1": {
+    "target": "https://xxmkcmgqgprmseoviilb.supabase.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "silent"
+  }
+}

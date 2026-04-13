@@ -1,0 +1,199 @@
+<main class="portal-page">
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Reservar</p>
+    <h1 class="page-title">Nueva cita</h1>
+    <p class="muted">Elegí mascota, servicio y horario para tu próxima visita en {{ businessName() }}.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="loading app-reveal">
+    <mat-spinner diameter="40" />
+  </div>
+} @else if (ticket()) {
+  @let t = ticket()!;
+  <mat-card class="ticket-card app-card-lift app-reveal" id="portal-booking-ticket">
+    <div class="ticket-accent" aria-hidden="true"></div>
+    <div class="ticket-head">
+      <div class="ticket-brand">
+        <span class="ticket-kicker">Comprobante de reserva</span>
+        <h2 class="ticket-title">{{ t.businessName }}</h2>
+      </div>
+      <mat-icon class="ticket-check" aria-hidden="true">check_circle</mat-icon>
+    </div>
+    <p class="ticket-lede">Guardá o imprimí estos datos. También podés verlos en <strong>Mis citas</strong>.</p>
+
+    <dl class="ticket-grid">
+      <div class="ticket-row">
+        <dt>Fecha y hora</dt>
+        <dd>{{ t.startDateTime | date: 'EEEE, d MMM y, HH:mm' }} — {{ t.endDateTime | date: 'HH:mm' }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Mascota</dt>
+        <dd>{{ t.petName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Servicio</dt>
+        <dd>{{ t.serviceName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Profesional</dt>
+        <dd>{{ t.professionalName }}</dd>
+      </div>
+      <div class="ticket-row">
+        <dt>Estado</dt>
+        <dd><span class="ticket-status">{{ t.statusLabel }}</span></dd>
+      </div>
+      <div class="ticket-row ticket-row--mono">
+        <dt>Referencia</dt>
+        <dd>{{ t.appointmentId }}</dd>
+      </div>
+    </dl>
+
+    <div class="ticket-actions">
+      <button mat-stroked-button type="button" class="ticket-print" (click)="printTicket()">
+        <mat-icon>print</mat-icon>
+        Imprimir / PDF
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="dismissTicket()">
+        Agendar otra cita
+      </button>
+      <a mat-button [routerLink]="['/portal', businessId(), 'citas']">Ir a mis citas</a>
+    </div>
+  </mat-card>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="submit()" class="book-stack">
+    <mat-card class="book-card app-card-lift app-reveal app-reveal-delay-1">
+      <div class="book-card-head">
+        <span class="book-step" aria-hidden="true">1</span>
+        <div class="book-card-head-text">
+          <h2 class="book-section-title">Mascota</h2>
+          <p class="muted book-section-lead">¿Quién asiste a la consulta?</p>
+        </div>
+      </div>
+      <div class="book-form">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Mascota</mat-label>
+          <mat-select formControlName="pet_id">
+            @for (p of pets(); track p.id) {
+              <mat-option [value]="p.id">{{ p.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        @if (pets().length === 0) {
+          <p class="callout callout--warn">
+            <mat-icon>info</mat-icon>
+            <span>No tenés mascotas cargadas. Pedile a la clínica que registre tus mascotas.</span>
+          </p>
+        }
+      </div>
+    </mat-card>
+
+    <mat-card class="book-card app-card-lift app-reveal app-reveal-delay-2">
+      <div class="book-card-head">
+        <span class="book-step" aria-hidden="true">2</span>
+        <div class="book-card-head-text">
+          <h2 class="book-section-title">Servicio y profesional</h2>
+          <p class="muted book-section-lead">Tipo de consulta y veterinario.</p>
+        </div>
+      </div>
+      <div class="book-form">
+        <div class="book-grid book-grid--duo">
+          <mat-form-field appearance="outline">
+            <mat-label>Servicio</mat-label>
+            <mat-select formControlName="service_id">
+              @for (s of services(); track s.id) {
+                <mat-option [value]="s.id">{{ s.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Profesional</mat-label>
+            <mat-select formControlName="user_id">
+              @for (v of vets(); track v.id) {
+                <mat-option [value]="v.id">{{ v.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="book-card book-card--schedule app-card-lift app-reveal app-reveal-delay-3">
+      <div class="book-card-head">
+        <span class="book-step" aria-hidden="true">3</span>
+        <div class="book-card-head-text">
+          <h2 class="book-section-title">Fecha y hora</h2>
+          <p class="muted book-section-lead">Solo se muestran horarios disponibles para el servicio y profesional elegidos.</p>
+        </div>
+      </div>
+
+      <div class="book-step3">
+        <div class="book-step3-date">
+          <label class="book-step3-label" for="book-date-input">Día de la visita</label>
+          <mat-form-field appearance="outline" class="book-date-field book-date-field--hero" subscriptSizing="dynamic">
+            <mat-label>Fecha</mat-label>
+            <input id="book-date-input" matInput [matDatepicker]="picker" formControlName="date" />
+            <mat-datepicker-toggle matIconSuffix [for]="picker" />
+            <mat-datepicker #picker />
+          </mat-form-field>
+        </div>
+
+        <div class="book-step3-slots">
+          <div class="book-step3-slots-head">
+            <span class="book-step3-label">Horario</span>
+            @if (slots().length && !slotsLoading()) {
+              <span class="book-step3-count">{{ slots().length }} opciones</span>
+            }
+          </div>
+
+          <div class="slots-panel slots-panel--elevated">
+            @if (slotsLoading()) {
+              <div class="slots-loading">
+                <mat-spinner diameter="28" />
+                <span>Cargando horarios…</span>
+              </div>
+            } @else if (slots().length === 0) {
+              <p class="callout callout--muted">
+                <mat-icon>event_busy</mat-icon>
+                <span>No hay horarios para la combinación elegida. Probá otra fecha o profesional.</span>
+              </p>
+            } @else {
+              <div class="slots-chips" role="listbox" aria-label="Horarios disponibles">
+                @for (sl of slots(); track sl) {
+                  <button
+                    type="button"
+                    class="slot-chip"
+                    role="option"
+                    [attr.aria-selected]="form.controls.start_time.value === sl"
+                    [class.slot-chip--active]="form.controls.start_time.value === sl"
+                    (click)="selectSlot(sl)"
+                  >
+                    <span class="slot-chip-time">{{ sl }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="book-actions">
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          class="app-cta app-cta--primary"
+          [disabled]="saving() || form.invalid || pets().length === 0"
+        >
+          {{ saving() ? 'Reservando…' : 'Confirmar cita' }}
+        </button>
+        <a mat-stroked-button class="secondary-link" [routerLink]="['/portal', businessId(), 'citas']">
+          Ver mis citas
+        </a>
+      </div>
+    </mat-card>
+  </form>
+}
+</main>

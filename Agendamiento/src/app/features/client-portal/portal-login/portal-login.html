@@ -1,0 +1,80 @@
+<app-portal-auth-shell>
+  <div portal-auth-intro>
+    <p class="portal-auth__eyebrow">
+      <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
+      Acceso seguro
+    </p>
+    <h1 id="portal-auth-page-title" class="portal-auth__title">
+      Portal <em>de clientes</em>
+    </h1>
+    <p class="portal-auth__lede">
+      Citas, mascotas y recordatorios en un solo lugar. Ingresá con los mismos datos que te dio la clínica.
+    </p>
+    <ul class="portal-auth__bullets" aria-label="Qué podés hacer">
+      <li>
+        <mat-icon aria-hidden="true">event_available</mat-icon>
+        Gestionar turnos
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">pets</mat-icon>
+        Ver historial de mascotas
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">notifications_active</mat-icon>
+        Recibir avisos
+      </li>
+    </ul>
+  </div>
+
+  <div portal-auth-panel>
+    <h2 id="portal-auth-form-heading" class="portal-auth__form-title">Iniciar sesión</h2>
+    <p class="portal-auth__form-sub">Usá la misma cédula que figura en tu ficha de la clínica y la contraseña del portal.</p>
+
+    <form class="portal-auth__form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="portal-auth__field">
+        <mat-label>Cédula</mat-label>
+        <input matInput formControlName="id_document" autocomplete="username" inputmode="numeric" />
+        <mat-hint>Se normaliza a números (se ignoran puntos o guiones).</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="portal-auth__field">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      </mat-form-field>
+
+      @if (error()) {
+        <p class="portal-auth__err" role="alert">{{ error() }}</p>
+      }
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="portal-auth__submit"
+        type="submit"
+        [disabled]="saving() || form.invalid"
+      >
+        <span>{{ saving() ? 'Entrando…' : 'Entrar al portal' }}</span>
+        @if (!saving()) {
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        }
+      </button>
+    </form>
+
+    <nav class="portal-auth__nav" aria-label="Otras opciones del portal">
+      <a class="portal-auth__nav-link" [routerLink]="['/portal', businessId(), 'register']">
+        <mat-icon aria-hidden="true">person_add</mat-icon>
+        Crear cuenta
+      </a>
+      <a class="portal-auth__nav-link" [routerLink]="['/portal', businessId(), 'activate']">
+        <mat-icon aria-hidden="true">mark_email_unread</mat-icon>
+        Activar cuenta
+      </a>
+      <a
+        class="portal-auth__nav-link portal-auth__nav-link--muted"
+        [routerLink]="['/portal', businessId(), 'guest-book']"
+      >
+        <mat-icon aria-hidden="true">event_note</mat-icon>
+        Reservar sin cuenta (invitado)
+      </a>
+    </nav>
+  </div>
+</app-portal-auth-shell>

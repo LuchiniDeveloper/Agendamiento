@@ -1,23 +1,27 @@
-<h1 class="page-title">Clientes</h1>
-<p class="muted">Busca por teléfono o revisa los últimos registros</p>
-
-<div class="toolbar">
-  <mat-form-field appearance="outline" class="search">
-    <mat-label>Teléfono o nombre</mat-label>
-    <input matInput [formControl]="search" />
-    <mat-icon matSuffix>search</mat-icon>
-  </mat-form-field>
-  <button
-    mat-flat-button
-    color="primary"
-    type="button"
-    class="app-cta app-cta--primary"
-    (click)="openNew()"
-  >
-    <mat-icon aria-hidden="true">person_add</mat-icon>
-    Nuevo cliente
-  </button>
-</div>
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Pacientes y tutores</p>
+    <h1 class="page-title">Clientes</h1>
+    <p class="muted">Busca por teléfono o revisa los últimos registros</p>
+  </div>
+  <div class="app-page-hero-actions app-page-hero-actions--stack">
+    <mat-form-field appearance="outline" class="search">
+      <mat-label>Teléfono o nombre</mat-label>
+      <input matInput [formControl]="search" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="app-cta app-cta--primary"
+      (click)="openNew()"
+    >
+      <mat-icon aria-hidden="true">person_add</mat-icon>
+      Nuevo cliente
+    </button>
+  </div>
+</header>
 
 @if (loading()) {
   <div class="center"><mat-spinner diameter="36" /></div>
@@ -28,16 +32,50 @@
         <thead>
           <tr>
             <th>Nombre</th>
+            <th class="col-email">Correo</th>
             <th>Teléfono</th>
+            <th class="col-portal">Portal</th>
+            <th class="col-mascotas">Mascotas</th>
             <th class="col-nota">Nota</th>
-            <th></th>
+            <th class="col-actions"></th>
           </tr>
         </thead>
         <tbody>
           @for (c of rows(); track c.id) {
             <tr>
               <td>{{ c.name }}</td>
+              <td class="col-email">
+                <span class="cell-ellipsis" [matTooltip]="c.email ?? ''" [matTooltipDisabled]="!c.email">
+                  {{ c.email?.trim() ? c.email : '—' }}
+                </span>
+              </td>
               <td>{{ c.phone ?? '—' }}</td>
+              <td class="col-portal">
+                @if (hasPortalAccount(c)) {
+                  <span
+                    class="portal-cell portal-cell--yes"
+                    matTooltip="Registrado en el portal para agendar citas"
+                    aria-label="Portal de citas: sí"
+                  >
+                    <mat-icon aria-hidden="true">check_circle</mat-icon>
+                    <span class="portal-cell__txt" aria-hidden="true">Sí</span>
+                  </span>
+                } @else {
+                  <span
+                    class="portal-cell portal-cell--no"
+                    matTooltip="Sin cuenta en el portal de citas"
+                    aria-label="Portal de citas: no"
+                  >
+                    <mat-icon aria-hidden="true">highlight_off</mat-icon>
+                    <span class="portal-cell__txt" aria-hidden="true">No</span>
+                  </span>
+                }
+              </td>
+              <td class="col-mascotas">
+                <span class="pet-sum" [matTooltip]="petSummaries().get(c.id) ?? ''">
+                  {{ petSummaries().get(c.id) ?? '—' }}
+                </span>
+              </td>
               <td class="col-nota">
                 <span
                   class="note-preview"
@@ -48,8 +86,26 @@
                   {{ notePreview(c.notes) }}
                 </span>
               </td>
-              <td>
-                <a mat-button [routerLink]="['/app/customers', c.id]">Ver</a>
+              <td class="col-actions">
+                <div class="row-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    matTooltip="Editar cliente"
+                    aria-label="Editar cliente"
+                    (click)="openEdit(c)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <a
+                    mat-icon-button
+                    matTooltip="Ver ficha"
+                    aria-label="Ver ficha del cliente"
+                    [routerLink]="['/app/customers', c.id]"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </a>
+                </div>
               </td>
             </tr>
           }

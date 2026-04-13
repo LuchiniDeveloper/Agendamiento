@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -38,14 +38,10 @@ interface ServiceDemandRow {
   unitPrice: number;
 }
 
-interface NamedAmount {
-  name: string;
-  amount: number;
-}
-
 interface DayPoint {
   label: string;
-  value: number;
+  revenue: number;
+  appointments: number;
 }
 
 interface DonutSlice {
@@ -98,12 +94,6 @@ interface RawPayment {
   payment_method: string;
 }
 
-interface RawPaymentVet {
-  amount: number | string;
-  created_at: string;
-  appointment: { user_id: string; business_id: string } | null;
-}
-
 function startOfLocalDay(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -141,7 +131,6 @@ const STATUS_COLORS: Record<string, string> = {
   selector: 'app-dashboard',
   imports: [
     DatePipe,
-    DecimalPipe,
     NgClass,
     RouterLink,
     MatCardModule,
@@ -162,7 +151,7 @@ export class Dashboard implements OnInit {
   private readonly appts = inject(AppointmentsData);
   protected readonly tenant = inject(TenantContextService);
 
-  /** Rango global del panel: gráficas, top mascotas y productividad (KPIs del día y score usan ventanas fijas). */
+  /** Rango global del panel: gráficas y top mascotas (KPIs del día y score usan ventanas fijas). */
   protected readonly chartPeriod = signal<'1' | '7' | '30'>('7');
 
   /** Tasas a 30 días solo para score del día y recomendaciones (no cambian al alternar 1|7|30). */
@@ -170,7 +159,6 @@ export class Dashboard implements OnInit {
   private scoreNoShowRatePct = 0;
 
   private paymentsRaw: RawPayment[] = [];
-  private paymentsVetRaw: RawPaymentVet[] = [];
   private apptsRaw: RawAppointment[] = [];
   private staffNameById = new Map<string, string>();
   private serviceMetaCache = new Map<string, { name: string; price: number }>();
@@ -196,20 +184,15 @@ export class Dashboard implements OnInit {
   protected readonly vetsBars = signal<NamedCount[]>([]);
   protected readonly servicesBars = signal<ServiceDemandRow[]>([]);
   protected readonly paymentDonut = signal<DonutSlice[]>([]);
-  protected readonly vetRevenueBars = signal<NamedAmount[]>([]);
-
   protected readonly agendaToday = signal<AgendaRow[]>([]);
   protected readonly freeSlotsToday = signal<number | null>(null);
   protected readonly alertsUnconfirmed = signal(0);
   protected readonly alertsReminders = signal(0);
+  protected readonly alertsEmailFailed = signal(0);
   protected readonly followUps = signal<FollowUpRow[]>([]);
 
   protected readonly newCustomersRegistered30 = signal(0);
   protected readonly topPets = signal<TopPetRow[]>([]);
-
-  protected readonly avgAppointmentMin = signal<number | null>(null);
-  protected readonly cancelRate = signal<number | null>(null);
-  protected readonly noShowRate = signal<number | null>(null);
 
   protected readonly dayScore = signal<'good' | 'mid' | 'bad'>('mid');
   protected readonly recommendation = signal<string | null>(null);
@@ -240,30 +223,73 @@ export class Dashboard implements OnInit {
     pctChange(this.petsAttendedToday(), this.yesterdayPetsAttended()),
   );
 
-  protected readonly revenueLinePoints = computed(() => {
+  private linePointsFor(values: number[]): string {
     const pts = this.revenueByDay();
     if (pts.length === 0) return '';
-    const max = Math.max(...pts.map((p) => p.value), 1);
+    const max = Math.max(...values, 1);
     const w = 100;
     const h = 36;
     if (pts.length === 1) {
-      const y = h - (pts[0].value / max) * h;
+      const y = h - (values[0]! / max) * h;
       return `0,${y} 100,${y}`;
     }
     return pts
-      .map((p, i) => {
+      .map((_, i) => {
         const x = (i / (pts.length - 1)) * w;
-        const y = h - (p.value / max) * h;
+        const y = h - (values[i]! / max) * h;
         return `${x},${y}`;
       })
       .join(' ');
-  });
+  }
+
+  protected readonly revenueLinePoints = computed(() =>
+    this.linePointsFor(this.revenueByDay().map((p) => p.revenue)),
+  );
+
+  protected readonly appointmentsLinePoints = computed(() =>
+    this.linePointsFor(this.revenueByDay().map((p) => p.appointments)),
+  );
 
   protected readonly revenueLineArea = computed(() => {
     const pts = this.revenueByDay();
     if (pts.length === 0) return '';
     const line = this.revenueLinePoints();
     return `${line} 100,36 0,36`;
+  });
+
+  /** Posiciones (viewBox 0–100 × 0–40) para círculos y tooltips nativos. */
+  protected readonly revenueChartMarkers = computed(() => {
+    const pts = this.revenueByDay();
+    if (!pts.length) return [] as { x: number; yRev: number; yApt: number; tip: string }[];
+    const revVals = pts.map((p) => p.revenue);
+    const aptVals = pts.map((p) => p.appointments);
+    const maxR = Math.max(...revVals, 1);
+    const maxA = Math.max(...aptVals, 1);
+    const h = 36;
+    const w = 100;
+    const nf = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+    if (pts.length === 1) {
+      const tip = `Ingresos: ${nf.format(pts[0].revenue)} · Citas: ${pts[0].appointments}`;
+      return [
+        {
+          x: 50,
+          yRev: h - (pts[0].revenue / maxR) * h,
+          yApt: h - (pts[0].appointments / maxA) * h,
+          tip,
+        },
+      ];
+    }
+    return pts.map((p, i) => {
+      const x = (i / (pts.length - 1)) * w;
+      const yRev = h - (p.revenue / maxR) * h;
+      const yApt = h - (p.appointments / maxA) * h;
+      return {
+        x,
+        yRev,
+        yApt,
+        tip: `Ingresos: ${nf.format(p.revenue)} · Citas: ${p.appointments}`,
+      };
+    });
   });
 
   protected payMethodLabel(method: string): string {
@@ -281,7 +307,14 @@ export class Dashboard implements OnInit {
   }
 
   protected donutGradient(slices: DonutSlice[]): string {
-    if (!slices.length) return 'conic-gradient(var(--mat-sys-surface-variant) 0deg 360deg)';
+    if (!slices.length) {
+      return 'conic-gradient(var(--mat-sys-surface-variant) 0%, var(--mat-sys-surface-variant) 100%)';
+    }
+    // Un solo arco 0deg→360deg a veces no pinta en conic-gradient; 0%→100% sí.
+    if (slices.length === 1) {
+      const s = slices[0]!;
+      return `conic-gradient(${s.color} 0%, ${s.color} 100%)`;
+    }
     let acc = 0;
     const parts: string[] = [];
     for (const s of slices) {
@@ -306,10 +339,6 @@ export class Dashboard implements OnInit {
     return rows.reduce((m, r) => Math.max(m, r.count), 0);
   }
 
-  protected maxAmount(rows: NamedAmount[]): number {
-    return rows.reduce((m, r) => Math.max(m, r.amount), 0);
-  }
-
   async ngOnInit() {
     await this.load();
   }
@@ -320,14 +349,14 @@ export class Dashboard implements OnInit {
     return addDays(today0, -29);
   }
 
+  /** Citas agendadas en el rango calendario (incluye el resto del día de hoy, no solo hasta el instante actual). */
   private filterApptsByPeriod(
     rows: RawAppointment[],
     period: '1' | '7' | '30',
     today0: Date,
-    now: Date,
   ): RawAppointment[] {
     const from = this.chartRangeFrom(period, today0).getTime();
-    const to = now.getTime();
+    const to = addDays(today0, 1).getTime();
     return rows.filter((a) => {
       const t = new Date(a.start_date_time).getTime();
       return t >= from && t < to;
@@ -340,20 +369,6 @@ export class Dashboard implements OnInit {
     today0: Date,
     now: Date,
   ): RawPayment[] {
-    const from = this.chartRangeFrom(period, today0).getTime();
-    const to = now.getTime();
-    return rows.filter((p) => {
-      const t = new Date(p.created_at).getTime();
-      return t >= from && t <= to;
-    });
-  }
-
-  private filterPaymentsVetByPeriod(
-    rows: RawPaymentVet[],
-    period: '1' | '7' | '30',
-    today0: Date,
-    now: Date,
-  ): RawPaymentVet[] {
     const from = this.chartRangeFrom(period, today0).getTime();
     const to = now.getTime();
     return rows.filter((p) => {
@@ -406,15 +421,19 @@ export class Dashboard implements OnInit {
 
   private applyChartAggregates(now: Date, today0: Date) {
     const period = this.chartPeriod();
-    const apChart = this.filterApptsByPeriod(this.apptsRaw, period, today0, now);
+    const apChart = this.filterApptsByPeriod(this.apptsRaw, period, today0);
     const payChart = this.filterPaymentsByPeriod(this.paymentsRaw, period, today0, now);
-    const payVetChart = this.filterPaymentsVetByPeriod(this.paymentsVetRaw, period, today0, now);
 
     if (period === '1') {
-      this.revenueByDay.set(this.bucketPaymentsByHourToday(payChart, today0, now));
+      this.revenueByDay.set(this.bucketPaymentsByHourToday(payChart, apChart, today0, now));
     } else {
       this.revenueByDay.set(
-        this.bucketPaymentsByDay(payChart, this.chartRangeFrom(period, today0), now),
+        this.bucketPaymentsByDay(
+          payChart,
+          apChart,
+          this.chartRangeFrom(period, today0),
+          now,
+        ),
       );
     }
 
@@ -423,12 +442,14 @@ export class Dashboard implements OnInit {
       const n = a.status?.name ?? '—';
       statusMap.set(n, (statusMap.get(n) ?? 0) + 1);
     }
-    const stTotal = [...statusMap.values()].reduce((s, v) => s + v, 0) || 1;
+    const statusEntries = [...statusMap.entries()];
+    const stTotal = statusEntries.reduce((s, [, v]) => s + v, 0) || 1;
+    const singleStatus = statusEntries.length === 1;
     this.statusDonut.set(
-      [...statusMap.entries()].map(([name, cnt]) => ({
+      statusEntries.map(([name, cnt]) => ({
         name,
         count: cnt,
-        pct: Math.round((cnt / stTotal) * 1000) / 10,
+        pct: singleStatus ? 100 : Math.round((cnt / stTotal) * 1000) / 10,
         color: this.statusColor(name),
       })),
     );
@@ -453,8 +474,10 @@ export class Dashboard implements OnInit {
         .sort((a, b) => b.count - a.count),
     );
 
+    const completedId = this.statusByName.get('Completada');
     const svcMap = new Map<string, number>();
     for (const a of apChart) {
+      if (completedId !== undefined && a.status_id !== completedId) continue;
       svcMap.set(a.service_id, (svcMap.get(a.service_id) ?? 0) + 1);
     }
     this.servicesBars.set(
@@ -492,27 +515,6 @@ export class Dashboard implements OnInit {
         color: pmColors[name] ?? 'var(--mat-sys-tertiary)',
       })),
     );
-
-    const vetRev = new Map<string, { amount: number; label: string }>();
-    for (const p of payVetChart) {
-      const ap = p.appointment;
-      if (!ap?.user_id) continue;
-      const amt = Number(p.amount);
-      const label = (this.staffNameById.get(ap.user_id) ?? 'Veterinario').trim() || 'Veterinario';
-      const cur = vetRev.get(ap.user_id);
-      if (cur) vetRev.set(ap.user_id, { amount: cur.amount + amt, label: cur.label });
-      else vetRev.set(ap.user_id, { amount: amt, label });
-    }
-    this.vetRevenueBars.set(
-      [...vetRev.values()]
-        .map((v) => ({ name: v.label, amount: v.amount }))
-        .sort((a, b) => b.amount - a.amount),
-    );
-
-    const prod = this.computeProductivityMetrics(apChart);
-    this.avgAppointmentMin.set(prod.avgMin);
-    this.cancelRate.set(prod.cancelPct);
-    this.noShowRate.set(prod.noShowPct);
 
     const petCounts = new Map<string, number>();
     const petMeta = new Map<string, { petName: string; customerName: string; phone: string }>();
@@ -572,7 +574,6 @@ export class Dashboard implements OnInit {
         kToday,
         kYest,
         paymentsRes,
-        paymentsVetRes,
         apptsRes,
         apptsTodayList,
         petsDone,
@@ -583,20 +584,13 @@ export class Dashboard implements OnInit {
         customersCountRes,
         nextVisits,
         remindersBad,
+        emailFailedRes,
       ] = await Promise.all([
         client.rpc('get_kpis', { p_from: t0, p_to: t1 }),
         client.rpc('get_kpis', { p_from: y0, p_to: y1 }),
         client
           .from('payment')
           .select('amount, created_at, payment_method')
-          .gte('created_at', d30From.toISOString())
-          .lte('created_at', now.toISOString()),
-        client
-          .from('payment')
-          .select(
-            'amount, created_at, appointment:appointment_id!inner(user_id, business_id)',
-          )
-          .eq('appointment.business_id', bid)
           .gte('created_at', d30From.toISOString())
           .lte('created_at', now.toISOString()),
         client
@@ -618,7 +612,7 @@ export class Dashboard implements OnInit {
           )
           .eq('business_id', bid)
           .gte('start_date_time', d30From.toISOString())
-          .lt('start_date_time', now.toISOString()),
+          .lt('start_date_time', tomorrow.toISOString()),
         client
           .from('appointment')
           .select(
@@ -669,10 +663,16 @@ export class Dashboard implements OnInit {
           .from('reminder')
           .select('id, sent, appointment:appointment_id!inner(start_date_time, business_id)')
           .eq('sent', false),
+        client
+          .from('appointment_notification')
+          .select('id', { count: 'exact', head: true })
+          .eq('business_id', bid)
+          .eq('status', 'failed')
+          .gte('updated_at', t0)
+          .lt('updated_at', t1),
       ]);
 
       this.paymentsRaw = (paymentsRes.data ?? []) as RawPayment[];
-      this.paymentsVetRaw = (paymentsVetRes.data ?? []) as unknown as RawPaymentVet[];
       this.apptsRaw = (apptsRes.data ?? []) as unknown as RawAppointment[];
 
       this.serviceMetaCache.clear();
@@ -750,6 +750,8 @@ export class Dashboard implements OnInit {
         ).length,
       );
 
+      this.alertsEmailFailed.set(emailFailedRes.count ?? 0);
+
       this.followUps.set((nextVisits.data ?? []) as unknown as FollowUpRow[]);
 
       this.newCustomersRegistered30.set(customersCountRes.count ?? 0);
@@ -780,9 +782,10 @@ export class Dashboard implements OnInit {
     }
   }
 
-  /** 1 día: ingresos por hora (6h–21h) del día local. */
+  /** 1 día: ingresos por hora (6h–21h) del día local + citas con inicio en esa hora. */
   private bucketPaymentsByHourToday(
     rows: { amount: number | string; created_at: string }[],
+    apRows: RawAppointment[],
     today0: Date,
     now: Date,
   ): DayPoint[] {
@@ -790,7 +793,7 @@ export class Dashboard implements OnInit {
     const endH = 21;
     const pts: DayPoint[] = [];
     for (let h = startH; h <= endH; h++) {
-      pts.push({ label: `${h}h`, value: 0 });
+      pts.push({ label: `${h}h`, revenue: 0, appointments: 0 });
     }
     const dayStr = ymdLocal(today0);
     const endMs = now.getTime();
@@ -800,27 +803,46 @@ export class Dashboard implements OnInit {
       if (t.getTime() > endMs) continue;
       const h = t.getHours();
       if (h < startH || h > endH) continue;
-      pts[h - startH].value += Number(r.amount);
+      pts[h - startH].revenue += Number(r.amount);
+    }
+    for (const a of apRows) {
+      const t = new Date(a.start_date_time);
+      if (ymdLocal(t) !== dayStr) continue;
+      if (t.getTime() > endMs) continue;
+      const h = t.getHours();
+      if (h < startH || h > endH) continue;
+      pts[h - startH].appointments += 1;
     }
     return pts;
   }
 
   private bucketPaymentsByDay(
     rows: { amount: number | string; created_at: string }[],
+    apRows: RawAppointment[],
     from: Date,
     to: Date,
   ): DayPoint[] {
-    const map = new Map<string, number>();
+    const map = new Map<string, { revenue: number; appointments: number }>();
     for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
-      map.set(ymdLocal(d), 0);
+      map.set(ymdLocal(d), { revenue: 0, appointments: 0 });
     }
     for (const r of rows) {
       const day = ymdLocal(new Date(r.created_at));
-      if (!map.has(day)) continue;
-      map.set(day, (map.get(day) ?? 0) + Number(r.amount));
+      const cell = map.get(day);
+      if (!cell) continue;
+      cell.revenue += Number(r.amount);
+    }
+    for (const a of apRows) {
+      const day = ymdLocal(new Date(a.start_date_time));
+      const cell = map.get(day);
+      if (!cell) continue;
+      cell.appointments += 1;
     }
     const keys = [...map.keys()].sort();
-    return keys.map((label) => ({ label: label.slice(5), value: map.get(label) ?? 0 }));
+    return keys.map((full) => {
+      const c = map.get(full)!;
+      return { label: full.slice(5), revenue: c.revenue, appointments: c.appointments };
+    });
   }
 
   private computeScoreAndTip() {
@@ -834,7 +856,8 @@ export class Dashboard implements OnInit {
 
   private buildRecommendation(): string | null {
     const ns = this.scoreNoShowRatePct;
-    if (ns > 15) return 'La tasa de inasistencias es alta: refuerza recordatorios por WhatsApp el día anterior.';
+    if (ns > 15)
+      return 'La tasa de inasistencias es alta: conviene confirmar citas con más antelación (correo o contacto manual).';
     const cr = this.scoreCancelRatePct;
     if (cr > 22) return 'Muchas cancelaciones: revisa política de reserva o confirma citas con más antelación.';
     const free = this.freeSlotsToday();
@@ -854,8 +877,4 @@ export class Dashboard implements OnInit {
     this.applyChartAggregates(now, today0);
   }
 
-  protected barPctMoney(max: number, n: number): number {
-    if (max <= 0) return 0;
-    return Math.round((n / max) * 100);
-  }
 }

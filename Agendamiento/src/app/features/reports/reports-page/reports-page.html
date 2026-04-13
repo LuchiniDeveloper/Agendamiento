@@ -1,68 +1,261 @@
-<h1 class="page-title">Reportes</h1>
-<p class="muted">Ingresos y citas en el rango elegido (solo administradores).</p>
+<div class="reports-page">
+  <header class="app-page-hero app-reveal" aria-labelledby="reports-heading">
+    <div>
+      <p class="app-page-kicker">Panel de análisis · Solo administradores</p>
+      <h1 id="reports-heading" class="page-title">Contabilidad</h1>
+      <p class="muted">
+        Explora datos operativos y clínicos en tablas claras. Exporta a Excel con las mismas columnas que ves
+        aquí, sin gráficos intermedios.
+      </p>
+    </div>
+  </header>
 
-<form [formGroup]="range" class="filters" (ngSubmit)="fetch()">
-  <mat-form-field appearance="outline">
-    <mat-label>Desde</mat-label>
-    <input matInput type="date" formControlName="from" />
-  </mat-form-field>
-  <mat-form-field appearance="outline">
-    <mat-label>Hasta</mat-label>
-    <input matInput type="date" formControlName="to" />
-  </mat-form-field>
-  <button
-    mat-flat-button
-    color="primary"
-    type="submit"
-    class="app-cta app-cta--primary"
-    [disabled]="loading()"
-  >
-    <mat-icon aria-hidden="true">refresh</mat-icon>
-    Actualizar reporte
-  </button>
-</form>
+  <div class="reports-layout">
+    <aside class="reports-picker" aria-label="Catálogo de reportes">
+      <h2 class="reports-picker__heading">Elegir reporte</h2>
+      <p class="reports-picker__hint">Toca una tarjeta para configurar filtros y generar la tabla.</p>
+      <div class="reports-picker__grid" role="list">
+        @for (def of definitions; track def.id; let idx = $index) {
+          <button
+            type="button"
+            role="listitem"
+            class="picker-card"
+            [class.picker-card--active]="isSelected(def.id)"
+            [attr.data-tone]="tagTone(def.tag)"
+            (click)="selectReport(def)"
+          >
+            <span class="picker-card__meta" aria-hidden="true">
+              <span class="picker-card__index">{{ reportOrdinal(idx) }}</span>
+              <span class="picker-card__icon-wrap">
+                <mat-icon class="picker-card__icon" aria-hidden="true">{{ tagIcon(def.tag) }}</mat-icon>
+              </span>
+            </span>
+            <span class="picker-card__tag">{{ def.tag }}</span>
+            <span class="picker-card__title">{{ def.title }}</span>
+            <span class="picker-card__desc">{{ def.description }}</span>
+          </button>
+        }
+      </div>
+    </aside>
 
-@if (loading()) {
-  <div class="center"><mat-spinner diameter="36" /></div>
-} @else if (kpis(); as k) {
-  <div class="kpi-grid">
-    <mat-card>
-      <mat-card-header><mat-card-title>Ingresos (pagos)</mat-card-title></mat-card-header>
-      <mat-card-content>
-        <p class="big">{{ k.revenue ?? 0 | copCurrency }}</p>
-      </mat-card-content>
-    </mat-card>
-    <mat-card>
-      <mat-card-header><mat-card-title>Citas completadas</mat-card-title></mat-card-header>
-      <mat-card-content>
-        <p class="big">{{ k.appointments_completed ?? 0 }}</p>
-      </mat-card-content>
-    </mat-card>
-  </div>
+    <main class="reports-workspace">
+      @if (selected(); as def) {
+        <section class="workspace-panel" [attr.data-tone]="tagTone(def.tag)" aria-live="polite">
+          <div class="workspace-panel__head">
+            <div class="workspace-panel__titles">
+              <span class="workspace-panel__tag">{{ def.tag }}</span>
+              <h2 class="workspace-panel__title">{{ def.title }}</h2>
+              <p class="workspace-panel__desc">{{ def.description }}</p>
+            </div>
+            <div class="workspace-panel__actions">
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                form="reports-filter-form"
+                class="workspace-panel__btn workspace-panel__btn--primary"
+                [disabled]="loading()"
+              >
+                <mat-icon aria-hidden="true">table_chart</mat-icon>
+                Generar tabla
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                class="workspace-panel__btn"
+                [disabled]="loading() || exportBusy() || !rows().length"
+                (click)="exportExcel()"
+              >
+                <mat-icon aria-hidden="true">download</mat-icon>
+                {{ exportBusy() ? 'Exportando…' : 'Excel' }}
+              </button>
+            </div>
+          </div>
 
-  <mat-card class="mt">
-    <mat-card-header><mat-card-title>Por estado</mat-card-title></mat-card-header>
-    <mat-card-content>
-      @if (!k.appointments_by_status?.length) {
-        <p class="muted">Sin datos en el periodo.</p>
-      } @else {
-        <table class="simple">
-          <thead>
-            <tr>
-              <th>Estado</th>
-              <th>Cantidad</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of k.appointments_by_status; track row.status_name) {
-              <tr>
-                <td>{{ row.status_name }}</td>
-                <td>{{ row.cnt }}</td>
-              </tr>
+          <form id="reports-filter-form" class="filters-sheet" [formGroup]="form" (ngSubmit)="runReport()">
+            <div class="filters-sheet__grid">
+              <mat-form-field appearance="outline" class="filters-sheet__field">
+                <mat-label>Desde</mat-label>
+                <input matInput [matDatepicker]="dpFrom" formControlName="from" />
+                <mat-datepicker-toggle matIconSuffix [for]="dpFrom" />
+                <mat-datepicker #dpFrom />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="filters-sheet__field">
+                <mat-label>Hasta</mat-label>
+                <input matInput [matDatepicker]="dpTo" formControlName="to" />
+                <mat-datepicker-toggle matIconSuffix [for]="dpTo" />
+                <mat-datepicker #dpTo />
+              </mat-form-field>
+
+              @if (def.id === 'revenue_by_service') {
+                <mat-form-field appearance="outline" class="filters-sheet__field">
+                  <mat-label>Agrupar por</mat-label>
+                  <mat-select formControlName="grain">
+                    <mat-option value="day">Día</mat-option>
+                    <mat-option value="week">Semana</mat-option>
+                    <mat-option value="month">Mes</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="filters-sheet__field">
+                  <mat-label>Método de pago</mat-label>
+                  <mat-select formControlName="paymentMethod">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option value="Cash">Efectivo</mat-option>
+                    <mat-option value="Card">Tarjeta</mat-option>
+                    <mat-option value="Transfer">Transferencia</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              }
+
+              @if (def.id === 'customer_retention') {
+                <mat-form-field appearance="outline" class="filters-sheet__field">
+                  <mat-label>Mín. citas</mat-label>
+                  <input matInput type="number" formControlName="minCitas" min="0" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="filters-sheet__field">
+                  <mat-label>Días para inactivo</mat-label>
+                  <input matInput type="number" formControlName="inactiveDays" min="1" />
+                </mat-form-field>
+              }
+
+              @if (def.id === 'cancellations') {
+                <mat-form-field appearance="outline" class="filters-sheet__field">
+                  <mat-label>Estado</mat-label>
+                  <mat-select formControlName="estado">
+                    <mat-option value="Ambos">Ambos</mat-option>
+                    <mat-option value="Cancelada">Cancelada</mat-option>
+                    <mat-option value="NoShow">NoShow</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              }
+
+              @if (def.id === 'medical_history') {
+                <mat-form-field appearance="outline" class="filters-sheet__field filters-sheet__field--wide">
+                  <mat-label>Especie (opcional)</mat-label>
+                  <mat-select formControlName="speciesPreset" placeholder="Todas">
+                    <mat-option value="">Todas</mat-option>
+                    @for (g of speciesGroups; track g.label) {
+                      <mat-optgroup [label]="g.label">
+                        @for (opt of g.options; track opt.value) {
+                          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                        }
+                      </mat-optgroup>
+                    }
+                    <mat-optgroup label="Otra">
+                      <mat-option [value]="speciesOtherVal">Otro</mat-option>
+                    </mat-optgroup>
+                  </mat-select>
+                </mat-form-field>
+                @if (form.controls.speciesPreset.value === speciesOtherVal) {
+                  <mat-form-field appearance="outline" class="filters-sheet__field filters-sheet__field--wide">
+                    <mat-label>Especifique la especie</mat-label>
+                    <input matInput formControlName="speciesOther" autocomplete="off" />
+                  </mat-form-field>
+                }
+                <mat-form-field appearance="outline" class="filters-sheet__field filters-sheet__field--wide">
+                  <mat-label>Raza contiene (opcional)</mat-label>
+                  <input matInput formControlName="breed" />
+                </mat-form-field>
+              }
+
+              @if (def.id === 'agenda_occupancy') {
+                <mat-form-field appearance="outline" class="filters-sheet__field filters-sheet__field--wide">
+                  <mat-label>Staff (opcional)</mat-label>
+                  <mat-select formControlName="staffId">
+                    <mat-option value="">Todos</mat-option>
+                    @for (s of staffOptions(); track s.id) {
+                      <mat-option [value]="s.id">{{ s.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              }
+            </div>
+          </form>
+
+          <aside class="insight-card" role="note">
+            <mat-icon class="insight-card__glyph" aria-hidden="true">lightbulb</mat-icon>
+            <p class="insight-card__text">{{ def.insight }}</p>
+          </aside>
+
+          @if (def.id === 'agenda_occupancy') {
+            <p class="workspace-footnote">
+              <strong>Ocupación:</strong> slots teóricos según horarios de agenda y duración del servicio; semana ISO.
+              Ingreso potencial no realizado ≈ slots vacíos × ticket medio del staff en el período.
+            </p>
+          }
+
+          @if (error(); as err) {
+            <div class="alert alert--error" role="alert">
+              <mat-icon aria-hidden="true">error_outline</mat-icon>
+              {{ err }}
+            </div>
+          }
+
+          @if (loading()) {
+            <div class="state-block state-block--loading">
+              <mat-spinner diameter="40" />
+              <p>Generando tabla…</p>
+            </div>
+          } @else if (rows().length) {
+            <div class="table-scroller">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    @for (col of def.columns; track col.key) {
+                      <th scope="col">{{ col.label }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows(); track $index) {
+                    <tr>
+                      @for (col of def.columns; track col.key) {
+                        <td>
+                          @switch (col.format) {
+                            @case ('currency') {
+                              {{ num(row[col.key]) | copCurrency }}
+                            }
+                            @case ('percent') {
+                              {{ row[col.key] != null ? row[col.key] + '%' : '—' }}
+                            }
+                            @case ('number') {
+                              {{ row[col.key] ?? '—' }}
+                            }
+                            @default {
+                              {{ row[col.key] ?? '—' }}
+                            }
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (rows().length >= displayLimit && (def.id === 'cancellations' || def.id === 'medical_history')) {
+              <p class="limit-banner">
+                <mat-icon aria-hidden="true">info</mat-icon>
+                Vista previa: hasta {{ displayLimit }} filas. Exporta a Excel para hasta {{ exportLimit }} filas con los
+                mismos filtros.
+              </p>
             }
-          </tbody>
-        </table>
+          } @else {
+            <div class="state-block state-block--empty">
+              <mat-icon class="state-block__icon" aria-hidden="true">table_rows</mat-icon>
+              <p class="state-block__title">Sin datos aún</p>
+              <p class="state-block__sub">Ajusta los filtros y pulsa <strong>Generar tabla</strong>.</p>
+            </div>
+          }
+        </section>
+      } @else {
+        <div class="workspace-placeholder">
+          <div class="workspace-placeholder__orb" aria-hidden="true"></div>
+          <h2 class="workspace-placeholder__title">Selecciona un reporte</h2>
+          <p class="workspace-placeholder__text">
+            Elige una tarjeta en el panel izquierdo (o arriba en móvil) para ver filtros y la tabla de resultados.
+          </p>
+        </div>
       }
-    </mat-card-content>
-  </mat-card>
-}
+    </main>
+  </div>
+</div>

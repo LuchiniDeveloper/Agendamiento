@@ -16,6 +16,8 @@ export interface ScheduleRow {
   user_id: string;
   service_id: string | null;
   day_of_week: number;
+  /** 1 = primera franja, 2 = segunda (mismo día y servicio, p. ej. almuerzo). */
+  window_order: number;
   start_time: string;
   end_time: string;
 }
@@ -82,7 +84,12 @@ export class ServicesData {
 
   listSchedule(userId: string) {
     if (!this.supabase) throw new Error('Supabase no configurado');
-    return this.supabase.from('schedule').select('*').eq('user_id', userId).order('day_of_week');
+    return this.supabase
+      .from('schedule')
+      .select('*')
+      .eq('user_id', userId)
+      .order('day_of_week')
+      .order('window_order');
   }
 
   insertSchedule(row: Omit<ScheduleRow, 'id'>) {
@@ -100,7 +107,7 @@ export class ServicesData {
 
   updateSchedule(
     id: string,
-    row: Pick<ScheduleRow, 'day_of_week' | 'start_time' | 'end_time' | 'service_id'>,
+    row: Pick<ScheduleRow, 'day_of_week' | 'window_order' | 'start_time' | 'end_time' | 'service_id'>,
   ) {
     if (!this.supabase) throw new Error('Supabase no configurado');
     return this.supabase.from('schedule').update(row).eq('id', id).select('id').single();

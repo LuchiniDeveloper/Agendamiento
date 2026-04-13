@@ -17,5 +17,22 @@ export const authGuard: CanActivateFn = async () => {
     router.navigate(['/auth/login']);
     return false;
   }
+  const { data: userData, error } = await client.auth.getUser();
+  if (error) {
+    const transient =
+      typeof error.message === 'string' &&
+      /fetch|network|timeout|load failed|failed to fetch/i.test(error.message);
+    if (transient) {
+      return true;
+    }
+    await client.auth.signOut();
+    router.navigate(['/auth/login']);
+    return false;
+  }
+  if (!userData.user) {
+    await client.auth.signOut();
+    router.navigate(['/auth/login']);
+    return false;
+  }
   return true;
 };

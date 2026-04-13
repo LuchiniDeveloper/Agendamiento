@@ -1,0 +1,57 @@
+<main class="portal-page">
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Cuenta</p>
+    <h1 class="page-title">Mi perfil</h1>
+    <p class="muted">Actualizá cómo te contacta la clínica y, si querés, la contraseña del portal.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="profile-loading app-reveal">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <mat-card class="profile-card app-card-lift app-reveal app-reveal-delay-1">
+    <form [formGroup]="form" (ngSubmit)="save()" class="profile-form">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Cédula</mat-label>
+        <input matInput formControlName="id_document_display" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="phone" autocomplete="tel" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Dirección</mat-label>
+        <input matInput formControlName="address" autocomplete="street-address" />
+      </mat-form-field>
+
+      <h2 class="profile-section-title">Contraseña del portal</h2>
+      <p class="muted profile-section-lead">Dejá en blanco para mantener la contraseña actual.</p>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Nueva contraseña</mat-label>
+        <input matInput type="password" formControlName="password_new" autocomplete="new-password" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Confirmar nueva contraseña</mat-label>
+        <input matInput type="password" formControlName="password_confirm" autocomplete="new-password" />
+      </mat-form-field>
+
+      <div class="profile-actions">
+        <button mat-flat-button color="primary" type="submit" class="app-cta app-cta--primary" [disabled]="saving() || form.invalid">
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+}
+</main>

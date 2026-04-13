@@ -1,6 +1,6 @@
-<header class="dash-hero app-reveal">
-  <div class="dash-hero-text">
-    <p class="dash-kicker">Panel del día</p>
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Panel del día</p>
     <h1 class="page-title">Inicio</h1>
     <p class="muted">
       Respuestas rápidas: ingresos, agenda, alertas y operación de tu clínica.
@@ -221,28 +221,57 @@
       <mat-card-content>
         @if (revenueByDay().length) {
           <div
-            class="line-chart"
+            class="line-chart line-chart--dual"
             [class.line-chart--dense]="chartPeriod() === '1'"
             role="img"
-            [attr.aria-label]="'Ingresos según período ' + chartPeriod()"
+            [attr.aria-label]="'Ingresos y citas según período ' + chartPeriod()"
           >
-            <svg class="line-chart-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="revFill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stop-color="var(--mat-sys-primary)" stop-opacity="0.24" />
-                  <stop offset="100%" stop-color="var(--mat-sys-primary)" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <polygon class="line-chart-fill" [attr.points]="revenueLineArea()" fill="url(#revFill)" />
-              <polyline
-                class="line-chart-line"
-                fill="none"
-                [attr.points]="revenueLinePoints()"
-                stroke="var(--mat-sys-primary)"
-                stroke-width="1.2"
-                vector-effect="non-scaling-stroke"
-              />
-            </svg>
+            <div class="line-chart-plot">
+              <svg class="line-chart-svg" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="revFill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="var(--mat-sys-primary)" stop-opacity="0.22" />
+                    <stop offset="100%" stop-color="var(--mat-sys-primary)" stop-opacity="0" />
+                  </linearGradient>
+                  <linearGradient id="revStroke" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0%" stop-color="color-mix(in srgb, var(--mat-sys-primary) 85%, white)" />
+                    <stop offset="100%" stop-color="var(--mat-sys-primary)" />
+                  </linearGradient>
+                </defs>
+                <line class="line-chart-grid-base" x1="0" y1="36" x2="100" y2="36" />
+                <polygon class="line-chart-fill" [attr.points]="revenueLineArea()" fill="url(#revFill)" />
+                <polyline
+                  class="line-chart-line line-chart-line--citas"
+                  fill="none"
+                  [attr.points]="appointmentsLinePoints()"
+                  stroke="var(--mat-sys-tertiary)"
+                  stroke-width="1.35"
+                  vector-effect="non-scaling-stroke"
+                />
+                <polyline
+                  class="line-chart-line line-chart-line--ingresos"
+                  fill="none"
+                  [attr.points]="revenueLinePoints()"
+                  stroke="url(#revStroke)"
+                  stroke-width="1.65"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+              <div class="line-chart-hover-strip" role="presentation">
+                @for (m of revenueChartMarkers(); track $index) {
+                  <span class="line-chart-hover-cell" [attr.title]="m.tip"></span>
+                }
+              </div>
+            </div>
+            <div class="line-chart-legend">
+              <span
+                ><span class="line-chart-legend-dot line-chart-legend-dot--rev" aria-hidden="true"></span> Ingresos</span
+              >
+              <span
+                ><span class="line-chart-legend-dot line-chart-legend-dot--apt" aria-hidden="true"></span> Citas (por día
+                de la cita)</span
+              >
+            </div>
             <div class="line-chart-labels">
               @for (p of revenueByDay(); track p.label) {
                 <span>{{ p.label }}</span>
@@ -284,76 +313,43 @@
             }
           </div>
         } @else {
-          <p class="empty-chart">Sin datos.</p>
+          <p class="empty-chart">Sin citas completadas en este rango.</p>
         }
       </mat-card-content>
     </mat-card>
 
-    <div class="dash-grid dash-grid--2 dash-grid--fact-pay">
-      <mat-card class="chart-card chart-card--brand app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <span class="card-title-row">
-              <mat-icon class="card-title-icon">account_balance_wallet</mat-icon>
-              Ingresos por método de pago
-            </span>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (paymentDonut().length) {
-            <div class="pay-donut-wrap">
-              <div
-                class="donut-visual donut-visual--sm"
-                [style.background]="donutGradient(paymentDonut())"
-              ></div>
-              <ul class="donut-legend donut-legend--pay">
-                @for (s of paymentDonut(); track s.name) {
-                  <li>
-                    <span class="dot" [style.background]="s.color"></span>
-                    <span class="name">{{ payMethodLabel(s.name) }}</span>
-                    <span class="pct">{{ s.pct }}%</span>
-                    <span class="money">{{ s.count | copCurrency }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
-          } @else {
-            <p class="empty-chart">Sin pagos registrados.</p>
-          }
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="chart-card chart-card--brand app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <span class="card-title-row">
-              <mat-icon class="card-title-icon">payments</mat-icon>
-              Ingresos por veterinario
-            </span>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (vetRevenueBars().length) {
-            <div class="hbar-list hbar-list--wide-val">
-              @for (r of vetRevenueBars(); track $index) {
-                <div class="hbar-item">
-                  <span class="hbar-name" [matTooltip]="r.name">{{ r.name }}</span>
-                  <div class="hbar-track">
-                    <div
-                      class="hbar-fill hbar-fill--brand"
-                      [style.width.%]="barPctMoney(maxAmount(vetRevenueBars()), r.amount)"
-                    ></div>
-                  </div>
-                  <span class="hbar-val hbar-val--money">{{ r.amount | copCurrency }}</span>
-                </div>
+    <mat-card class="chart-card chart-card--brand app-card-lift">
+      <mat-card-header>
+        <mat-card-title>
+          <span class="card-title-row">
+            <mat-icon class="card-title-icon">account_balance_wallet</mat-icon>
+            Ingresos por método de pago
+          </span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (paymentDonut().length) {
+          <div class="pay-donut-wrap">
+            <div
+              class="donut-visual donut-visual--sm"
+              [style.background]="donutGradient(paymentDonut())"
+            ></div>
+            <ul class="donut-legend donut-legend--pay">
+              @for (s of paymentDonut(); track s.name) {
+                <li>
+                  <span class="dot" [style.background]="s.color"></span>
+                  <span class="name">{{ payMethodLabel(s.name) }}</span>
+                  <span class="pct">{{ s.pct }}%</span>
+                  <span class="money">{{ s.count | copCurrency }}</span>
+                </li>
               }
-            </div>
-          } @else {
-            <p class="empty-chart">Sin ingresos registrados en el período.</p>
-          }
-        </mat-card-content>
-      </mat-card>
-    </div>
+            </ul>
+          </div>
+        } @else {
+          <p class="empty-chart">Sin pagos registrados.</p>
+        }
+      </mat-card-content>
+    </mat-card>
   </section>
 
   <!-- Agendamiento -->
@@ -363,43 +359,78 @@
       Agendamiento
     </h2>
 
-    <div class="dash-grid dash-grid--2">
-      <mat-card class="chart-card chart-card--brand app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <span class="card-title-row">
-              <mat-icon class="card-title-icon">donut_large</mat-icon>
-              Citas por estado
-            </span>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (statusDonut().length) {
-            <div class="donut-row">
-              <div
-                class="donut-visual"
-                [style.background]="donutGradient(statusDonut())"
-                role="img"
-                aria-label="Distribución de citas por estado"
-              ></div>
-              <ul class="donut-legend">
-                @for (s of statusDonut(); track s.name) {
-                  <li>
-                    <span class="dot" [style.background]="s.color"></span>
-                    <span class="name">{{ s.name }}</span>
-                    <span class="pct">{{ s.pct }}%</span>
-                    <span class="cnt">({{ s.count }})</span>
-                  </li>
-                }
-              </ul>
-            </div>
-          } @else {
-            <p class="empty-chart">Sin citas en el período.</p>
-          }
-        </mat-card-content>
-      </mat-card>
+    <div class="dash-agenda-stack">
+      <div class="dash-agenda-top">
+        <mat-card class="chart-card chart-card--brand app-card-lift dash-agenda-status">
+          <mat-card-header>
+            <mat-card-title>
+              <span class="card-title-row">
+                <mat-icon class="card-title-icon">donut_large</mat-icon>
+                Citas por estado
+              </span>
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (statusDonut().length) {
+              <div class="donut-row">
+                <div
+                  class="donut-visual"
+                  [style.background]="donutGradient(statusDonut())"
+                  role="img"
+                  aria-label="Distribución de citas por estado"
+                ></div>
+                <ul class="donut-legend">
+                  @for (s of statusDonut(); track s.name) {
+                    <li>
+                      <span class="dot" [style.background]="s.color"></span>
+                      <span class="name">{{ s.name }}</span>
+                      <span class="pct">{{ s.pct }}%</span>
+                      <span class="cnt">({{ s.count }})</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <p class="empty-chart">Sin citas en el período.</p>
+            }
+          </mat-card-content>
+        </mat-card>
 
-      <mat-card class="chart-card chart-card--brand app-card-lift">
+        <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift dash-agenda-top-pets">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>pets</mat-icon>
+              Top mascotas frecuentes
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            @if (topPets().length) {
+              <div class="top-pets-table top-pets-table--compact" role="table">
+                <div class="top-pets-head" role="row">
+                  <span>#</span>
+                  <span>Cliente</span>
+                  <span>Mascota</span>
+                  <span>Cel.</span>
+                  <span>Nº</span>
+                </div>
+                @for (p of topPets(); track p.petName + p.customerName; let i = $index) {
+                  <div class="top-pets-row" role="row">
+                    <span class="top-pets-rank">{{ i + 1 }}</span>
+                    <span class="top-pets-ellipsis">{{ p.customerName }}</span>
+                    <span class="top-pets-strong top-pets-ellipsis">{{ p.petName }}</span>
+                    <span class="top-pets-phone">{{ p.phone }}</span>
+                    <span class="top-pets-cnt">{{ p.count }}</span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="empty-chart mini-empty">Sin citas en el período seleccionado.</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <mat-card class="chart-card chart-card--brand app-card-lift dash-agenda-vets">
         <mat-card-header>
           <mat-card-title>
             <span class="card-title-row">
@@ -412,91 +443,23 @@
           @if (vetsBars().length) {
             <div class="hbar-list">
               @for (r of vetsBars(); track r.name) {
-                <div class="hbar-item">
-                  <span class="hbar-name" [matTooltip]="r.name">{{ r.name }}</span>
-                  <div class="hbar-track">
-                    <div
-                      class="hbar-fill hbar-fill--brand"
-                      [style.width.%]="barPct(maxNamed(vetsBars()), r.count)"
-                    ></div>
+                <div class="hbar-item hbar-item--with-meter">
+                  <span class="hbar-name" [matTooltip]="r.name + ' — ' + r.count + ' citas'">{{ r.name }}</span>
+                  <div class="hbar-meter">
+                    <div class="hbar-track">
+                      <div
+                        class="hbar-fill hbar-fill--brand"
+                        [style.width.%]="barPct(maxNamed(vetsBars()), r.count)"
+                      ></div>
+                    </div>
+                    <span class="hbar-val hbar-val--count" aria-label="{{ r.count }} citas">{{ r.count }}</span>
                   </div>
-                  <span class="hbar-val">{{ r.count }}</span>
                 </div>
               }
             </div>
           } @else {
             <p class="empty-chart">Sin citas.</p>
           }
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <div class="dash-grid dash-grid--2 dash-grid--agen-metrics">
-      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>pets</mat-icon>
-            Top mascotas frecuentes
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (topPets().length) {
-            <div class="top-pets-table top-pets-table--compact" role="table">
-              <div class="top-pets-head" role="row">
-                <span>#</span>
-                <span>Cliente</span>
-                <span>Mascota</span>
-                <span>Cel.</span>
-                <span>Nº</span>
-              </div>
-              @for (p of topPets(); track p.petName + p.customerName; let i = $index) {
-                <div class="top-pets-row" role="row">
-                  <span class="top-pets-rank">{{ i + 1 }}</span>
-                  <span class="top-pets-ellipsis">{{ p.customerName }}</span>
-                  <span class="top-pets-strong top-pets-ellipsis">{{ p.petName }}</span>
-                  <span class="top-pets-phone">{{ p.phone }}</span>
-                  <span class="top-pets-cnt">{{ p.count }}</span>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="empty-chart mini-empty">Sin citas en el período seleccionado.</p>
-          }
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>speed</mat-icon>
-            Productividad
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <dl class="prod-dl prod-dl--compact">
-            <div>
-              <dt>Tiempo medio / cita</dt>
-              <dd>
-                @if (avgAppointmentMin() !== null) {
-                  {{ avgAppointmentMin() }} min
-                } @else {
-                  —
-                }
-              </dd>
-            </div>
-            <div>
-              <dt>Cancelación</dt>
-              <dd [class.prod-warn]="(cancelRate() ?? 0) > 20">
-                {{ cancelRate() !== null ? (cancelRate()! | number: '1.0-1') + '%' : '—' }}
-              </dd>
-            </div>
-            <div>
-              <dt>NoShow</dt>
-              <dd [class.prod-bad]="(noShowRate() ?? 0) > 12">
-                {{ noShowRate() !== null ? (noShowRate()! | number: '1.0-1') + '%' : '—' }}
-              </dd>
-            </div>
-          </dl>
         </mat-card-content>
       </mat-card>
     </div>
@@ -596,12 +559,20 @@
             </li>
             <li>
               <span class="alert-n">{{ alertsReminders() }}</span>
-              recordatorios pendientes (hoy)
+              seguimientos en cola de mensajes (cita hoy)
+            </li>
+            <li>
+              <span class="alert-n">{{ alertsEmailFailed() }}</span>
+              envíos de correo fallidos (hoy)
             </li>
           </ul>
+          <a mat-stroked-button routerLink="/app/appointments" class="full-btn">
+            <mat-icon>mark_email_read</mat-icon>
+            Ver correos por cita en la agenda
+          </a>
           <a mat-stroked-button routerLink="/app/reminders" class="full-btn alert-reminders-btn">
             <mat-icon>chat</mat-icon>
-            Ir a avisos y WhatsApp
+            Chat con clientes
           </a>
         </mat-card-content>
       </mat-card>
@@ -626,7 +597,7 @@
                 </li>
               }
             </ul>
-            <a mat-button routerLink="/app/reminders" class="full-btn">Enviar recordatorio</a>
+            <a mat-button routerLink="/app/reminders" class="full-btn">Abrir chat con clientes</a>
           } @else {
             <p class="empty-chart">No hay próximas visitas programadas en historias.</p>
           }

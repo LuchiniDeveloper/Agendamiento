@@ -34,6 +34,7 @@ interface ApptRow {
   user_id: string;
   start_date_time: string;
   end_date_time: string;
+  attention_started_at: string | null;
   status_id: number;
   customer: { id: string; name: string; phone: string | null } | null;
   pet: { id: string; name: string; species: string | null } | null;
@@ -92,6 +93,11 @@ export class AppointmentsPage {
     slotMinTime: '07:00:00',
     slotMaxTime: '21:00:00',
     allDaySlot: false,
+    /**
+     * En vista mes, el modo `auto` usa eventos tipo lista (punto) sin fondo de estado.
+     * `block` alinea el aspecto con semana/día: barra completa con backgroundColor.
+     */
+    eventDisplay: 'block',
     /** Citas simultáneas en columnas más anchas y legibles. */
     slotEventOverlap: true,
     eventMinWidth: 112,
@@ -214,18 +220,23 @@ export class AppointmentsPage {
       if (error) throw error;
       const rows = (data ?? []) as unknown as ApptRow[];
       success(
-        rows.map((r) => ({
-          id: r.id,
-          title: `${r.pet?.name ?? 'Mascota'} · ${r.customer?.name ?? 'Cliente'}`,
-          start: r.start_date_time,
-          end: r.end_date_time,
-          backgroundColor: STATUS_COLORS[r.status?.name ?? ''] ?? '#3949ab',
-          editable: r.status?.name === 'Agendada',
-          extendedProps: {
-            vetId: r.user_id,
-            raw: r,
-          },
-        })),
+        rows.map((r) => {
+          const bg = STATUS_COLORS[r.status?.name ?? ''] ?? '#3949ab';
+          return {
+            id: r.id,
+            title: `${r.pet?.name ?? 'Mascota'} · ${r.customer?.name ?? 'Cliente'}`,
+            start: r.start_date_time,
+            end: r.end_date_time,
+            backgroundColor: bg,
+            borderColor: bg,
+            textColor: '#ffffff',
+            editable: r.status?.name === 'Agendada',
+            extendedProps: {
+              vetId: r.user_id,
+              raw: r,
+            },
+          };
+        }),
       );
     } catch (e) {
       failure(e instanceof Error ? e : new Error(String(e)));
@@ -248,10 +259,12 @@ export class AppointmentsPage {
       customerPhone: r.customer?.phone ?? null,
       customerName: r.customer?.name ?? '',
       petName: r.pet?.name ?? '',
+      petSpecies: r.pet?.species ?? null,
       serviceId: r.service?.id ?? '',
       serviceName: r.service?.name?.trim() ?? '',
       serviceDurationMinutes: r.service?.duration_minutes ?? 30,
       servicePrice: Number(r.service?.price ?? 0),
+      attentionStartedAt: r.attention_started_at ?? null,
       statusId: r.status_id,
       statusName: r.status?.name ?? '',
       statuses: this.statuses(),
@@ -263,8 +276,13 @@ export class AppointmentsPage {
       startIso: r.start_date_time,
       endIso: r.end_date_time,
     };
-    this.dialog
-      .open(AppointmentQuickDialog, { width: 'min(420px, 100vw)', data: payload })
+    this.dialog.open(AppointmentQuickDialog, {
+      width: 'min(680px, calc(100vw - 32px))',
+      maxWidth: '96vw',
+      maxHeight: 'min(92vh, 920px)',
+      panelClass: 'appt-quick-dialog-panel',
+      data: payload,
+    })
       .afterClosed()
       .subscribe((ok) => {
         if (ok) this.cal()?.getApi()?.refetchEvents();

@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CustomersData, type CustomerRow } from '../customers.data';
+import { customerHasPortalAccount, CustomersData, type CustomerRow } from '../customers.data';
 import { CustomerFormDialog } from '../customer-form-dialog/customer-form-dialog';
 
 @Component({
@@ -38,6 +38,8 @@ export class CustomersList implements OnInit {
 
   protected readonly loading = signal(true);
   protected readonly rows = signal<(CustomerRow & { created_at?: string })[]>([]);
+  /** id cliente → texto resumen de mascotas */
+  protected readonly petSummaries = signal<Map<string, string>>(new Map());
   search = new FormControl('', { nonNullable: true });
 
   constructor() {
@@ -61,6 +63,10 @@ export class CustomersList implements OnInit {
     return s.length > 0 ? s : '';
   }
 
+  protected hasPortalAccount(c: CustomerRow): boolean {
+    return customerHasPortalAccount(c);
+  }
+
   async load() {
     this.loading.set(true);
     try {
@@ -69,10 +75,16 @@ export class CustomersList implements OnInit {
         ? await this.data.searchByPhone(q)
         : await this.data.list();
       if (res.error) throw res.error;
-      this.rows.set((res.data ?? []) as (CustomerRow & { created_at?: string })[]);
+      const list = (res.data ?? []) as (CustomerRow & { created_at?: string })[];
+      const withPortal = await this.data.mergePortalAccountFlags(list);
+      this.rows.set(withPortal);
+      const ids = list.map((r) => r.id);
+      const sums = await this.data.petSummariesForCustomers(ids);
+      this.petSummaries.set(sums);
     } catch (e) {
       console.error(e);
       this.rows.set([]);
+      this.petSummaries.set(new Map());
     } finally {
       this.loading.set(false);
     }
@@ -86,5 +98,12 @@ export class CustomersList implements OnInit {
         if (id) void this.router.navigate(['/app/customers', id]);
         void this.load();
       });
+  }
+
+  openEdit(c: CustomerRow) {
+    this.dialog
+      .open(CustomerFormDialog, { width: 'min(480px, 100vw)', data: c })
+      .afterClosed()
+      .subscribe(() => void this.load());
   }
 }

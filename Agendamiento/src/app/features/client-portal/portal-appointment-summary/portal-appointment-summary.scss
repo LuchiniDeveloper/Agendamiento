@@ -1,0 +1,94 @@
+.spacer {
+  flex: 1;
+}
+
+.no-print {
+  @media print {
+    display: none !important;
+  }
+}
+
+.portal-sum-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.portal-sum-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.portal-sum-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2.5rem;
+}
+
+.portal-sum-header {
+  margin-bottom: 1.25rem;
+}
+
+.portal-sum-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.portal-sum-sub {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.portal-sum-card {
+  margin-bottom: 1rem;
+  padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.portal-sum-h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.portal-sum-dl {
+  display: grid;
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+
+  @media (min-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0.1rem 0 0;
+    font-size: 0.95rem;
+  }
+}
+
+.portal-sum-dl--stack {
+  grid-template-columns: 1fr;
+}
+
+@media print {
+  .portal-sum-page {
+    padding: 0;
+    max-width: none;
+  }
+
+  .portal-sum-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+}

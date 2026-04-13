@@ -1,38 +1,37 @@
-<div class="med-head">
-  <span class="label">Historia clínica</span>
-  @if (tenant.canEditMedical()) {
-    <button mat-stroked-button type="button" (click)="addNote()">
-      <mat-icon>add</mat-icon>
-      Nota
-    </button>
-  }
-</div>
-
-<div class="filters">
-  <mat-form-field appearance="outline" class="filter-field">
-    <mat-label>Desde</mat-label>
-    <input matInput [matDatepicker]="dpFrom" [formControl]="filterFrom" />
-    <mat-datepicker-toggle matIconSuffix [for]="dpFrom" />
-    <mat-datepicker #dpFrom />
-  </mat-form-field>
-  <mat-form-field appearance="outline" class="filter-field">
-    <mat-label>Hasta</mat-label>
-    <input matInput [matDatepicker]="dpTo" [formControl]="filterTo" />
-    <mat-datepicker-toggle matIconSuffix [for]="dpTo" />
-    <mat-datepicker #dpTo />
-  </mat-form-field>
-  <button mat-stroked-button type="button" (click)="applyFilters()">Aplicar</button>
-  <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
-</div>
-
-<div class="bulk-actions">
-  <button mat-button type="button" (click)="expandAll()" [disabled]="rows().length === 0">
-    Expandir todo
-  </button>
-  <button mat-button type="button" (click)="collapseAll()" [disabled]="rows().length === 0">
-    Colapsar todo
-  </button>
-</div>
+<section class="med-toolbar" aria-label="Historia clínica y filtros">
+  <div class="med-head">
+    <span class="label">Historia clínica</span>
+    @if (tenant.canEditMedical()) {
+      <button
+        mat-icon-button
+        type="button"
+        matTooltip="Nueva nota clínica"
+        aria-label="Nueva nota clínica"
+        (click)="addNote()"
+      >
+        <mat-icon>post_add</mat-icon>
+      </button>
+    }
+  </div>
+  <div class="filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Desde</mat-label>
+      <input matInput [matDatepicker]="dpFrom" [formControl]="filterFrom" />
+      <mat-datepicker-toggle matIconSuffix [for]="dpFrom" />
+      <mat-datepicker #dpFrom />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Hasta</mat-label>
+      <input matInput [matDatepicker]="dpTo" [formControl]="filterTo" />
+      <mat-datepicker-toggle matIconSuffix [for]="dpTo" />
+      <mat-datepicker #dpTo />
+    </mat-form-field>
+    <div class="filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="applyFilters()">Aplicar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </div>
+</section>
 
 @if (loading()) {
   <p class="muted">Cargando…</p>
@@ -89,8 +88,15 @@
     }
   </mat-accordion>
   @if (rows().length > 0 && rows().length === limit()) {
-    <button mat-stroked-button type="button" class="load-more" (click)="loadMore()">
-      Cargar más registros
+    <button
+      mat-icon-button
+      type="button"
+      class="load-more"
+      matTooltip="Cargar más registros"
+      aria-label="Cargar más registros"
+      (click)="loadMore()"
+    >
+      <mat-icon>expand_circle_down</mat-icon>
     </button>
   }
 }

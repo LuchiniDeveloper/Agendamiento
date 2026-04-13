@@ -9,3 +9,12 @@ verify_jwt = false
 
 [functions.delete-staff-member]
 verify_jwt = false
+
+[functions.send-email-notifications]
+verify_jwt = false
+
+[functions.smtp-test]
+verify_jwt = false
+
+[functions.portal-auth]
+verify_jwt = false

@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>{{ data.row ? 'Editar franja' : 'Añadir franjas' }}</h2>
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
 <mat-dialog-content class="sched-dialog">
   <form [formGroup]="form" class="sched-form">
     <section class="sched-block sched-block--days">
@@ -32,6 +32,35 @@
       </div>
     </section>
 
+    <section class="sched-block sched-block--window">
+      <div class="sched-block__head">
+        <span class="sched-block__title">Franja del día</span>
+        <span class="sched-block__subtitle">
+          Horario 1 y horario 2 comparten el mismo día y servicio; usalos por ejemplo para mañana y tarde con pausa de almuerzo.
+        </span>
+      </div>
+      <mat-radio-group formControlName="window_order" class="sched-window-radios" aria-label="Número de franja en el día">
+        <mat-radio-button
+          [value]="1"
+          [disabled]="isWindowOrderOptionDisabled(1)"
+          [matTooltip]="windowOrderOptionTooltip(1)"
+          matTooltipPosition="above"
+          [matTooltipDisabled]="!windowOrderOptionTooltip(1)"
+        >
+          Horario 1
+        </mat-radio-button>
+        <mat-radio-button
+          [value]="2"
+          [disabled]="isWindowOrderOptionDisabled(2)"
+          [matTooltip]="windowOrderOptionTooltip(2)"
+          matTooltipPosition="above"
+          [matTooltipDisabled]="!windowOrderOptionTooltip(2)"
+        >
+          Horario 2
+        </mat-radio-button>
+      </mat-radio-group>
+    </section>
+
     <section class="sched-block sched-block--times">
       <span class="sched-block__title">Horario</span>
       <div class="sched-times">
@@ -49,12 +78,12 @@
     <section class="sched-block">
       <div class="sched-block__head">
         <span class="sched-block__title">Servicio</span>
-        <span class="sched-block__subtitle">Opcional. «Cualquiera» aplica a cualquier tipo de cita.</span>
+        <span class="sched-block__subtitle">Opcional. «Todos (General)» aplica a cualquier tipo de cita.</span>
       </div>
       <mat-form-field appearance="outline" class="sched-field sched-field--wide">
         <mat-label>Servicio (opc.)</mat-label>
         <mat-select formControlName="service_id">
-          <mat-option value="" [disabled]="isCualquieraDisabled()">Cualquiera</mat-option>
+          <mat-option value="" [disabled]="isCualquieraDisabled()">Todos (General)</mat-option>
           @for (s of data.services; track s.id) {
             <mat-option [value]="s.id" [disabled]="isServiceOptionDisabled(s.id)">{{ s.name }}</mat-option>
           }

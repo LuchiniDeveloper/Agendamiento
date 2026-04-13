@@ -1,0 +1,60 @@
+.page {
+  padding: 1rem 1.25rem 2rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.page > .app-page-hero {
+  margin-bottom: 1.25rem;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  padding: 1.25rem 1.25rem 0.5rem;
+  border-radius: var(--app-radius-lg, 1rem);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .span-2 {
+    grid-column: auto;
+  }
+}
+
+.row {
+  margin-bottom: 0.75rem;
+}
+
+.actions {
+  padding: 0.5rem 0 1rem;
+}
+
+.h2-test {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.hint-test {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.45;
+}

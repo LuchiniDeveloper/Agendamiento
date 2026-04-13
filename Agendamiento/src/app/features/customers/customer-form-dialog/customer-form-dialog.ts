@@ -29,6 +29,7 @@ export class CustomerFormDialog {
 
   form = this.fb.nonNullable.group({
     name: [this.existing?.name ?? '', Validators.required],
+    id_document: [this.existing?.id_document ?? ''],
     phone: [this.existing?.phone ?? ''],
     email: [this.existing?.email ?? ''],
     address: [this.existing?.address ?? ''],

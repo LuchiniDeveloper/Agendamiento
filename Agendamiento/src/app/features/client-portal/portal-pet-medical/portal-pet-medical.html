@@ -1,0 +1,81 @@
+<main class="portal-page">
+<header class="app-page-hero app-reveal">
+  <div>
+    <p class="app-page-kicker">Historial clínico</p>
+    <h1 class="page-title">{{ petName() }}</h1>
+    <p class="muted">Registros cargados por la clínica en consultas anteriores.</p>
+  </div>
+  <div class="app-page-hero-actions">
+    <a mat-stroked-button class="app-cta" [routerLink]="['/portal', businessId()]">
+      <mat-icon>arrow_back</mat-icon>
+      Inicio
+    </a>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="med-loading app-reveal">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <div class="med-stack">
+    <mat-card class="med-download-card app-card-lift app-reveal app-reveal-delay-1">
+      <div class="med-download-inner">
+        <span class="med-download-glyph" aria-hidden="true">📄</span>
+        <span class="med-download-label">Descargar historia clínica</span>
+        <span class="med-download-sub muted">Por cita completada</span>
+        @if (!completedForDownload().length) {
+          <p class="med-download-hint muted">
+            Cuando tengas visitas completadas con esta mascota, podrás abrir un resumen imprimible (igual que en el inicio del portal).
+          </p>
+        } @else {
+          <ul class="med-download-appt-list">
+            @for (c of completedForDownload(); track c.id) {
+              <li>
+                <a mat-button [routerLink]="['/portal', businessId(), 'cita', c.id, 'resumen']">
+                  {{ c.start_date_time | date: 'mediumDate' }} — {{ petName() }} ({{ serviceName(c) }})
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </mat-card>
+
+    @if (rows().length === 0) {
+      <mat-card class="med-empty app-card-lift app-reveal app-reveal-delay-2">
+        <div class="med-empty-icon" aria-hidden="true">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <h2 class="med-empty-title">Sin registros todavía</h2>
+        <p class="muted med-empty-text">Cuando la clínica documente visitas, vas a ver diagnóstico, tratamiento y observaciones acá.</p>
+      </mat-card>
+    } @else {
+      <mat-card class="med-card app-card-lift app-reveal app-reveal-delay-2">
+        <ul class="med-list">
+          @for (r of rows(); track r.id) {
+            <li class="med-entry">
+              <div class="med-entry-head">
+                <mat-icon class="med-entry-ico" aria-hidden="true">event</mat-icon>
+                <span class="med-entry-when">{{ r.created_at | date: 'medium' }}</span>
+              </div>
+              @if (r.diagnosis) {
+                <p class="med-line"><strong>Diagnóstico:</strong> {{ r.diagnosis }}</p>
+              }
+              @if (r.treatment) {
+                <p class="med-line"><strong>Tratamiento:</strong> {{ r.treatment }}</p>
+              }
+              @if (r.observations) {
+                <p class="med-line"><strong>Observaciones:</strong> {{ r.observations }}</p>
+              }
+              @if (r.weight != null) {
+                <p class="med-line"><strong>Peso:</strong> {{ r.weight }} kg</p>
+              }
+            </li>
+          }
+        </ul>
+      </mat-card>
+    }
+  </div>
+}
+</main>

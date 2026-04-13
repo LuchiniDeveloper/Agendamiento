@@ -1,5 +1,6 @@
-<div class="head">
+<header class="app-page-hero app-reveal">
   <div>
+    <p class="app-page-kicker">Calendario de citas</p>
     <h1 class="page-title">Agenda</h1>
     <p class="muted">
       Vista combinada o por veterinario. Con <strong>todos</strong>, las citas a la misma hora se muestran en columnas
@@ -7,7 +8,7 @@
       Al filtrar un vet, solo ves su agenda.
     </p>
   </div>
-  <div class="head-actions">
+  <div class="app-page-hero-actions app-page-hero-actions--stack">
     @if (vetOptions().length) {
       <mat-form-field appearance="outline" class="vet-filter" subscriptSizing="dynamic">
         <mat-label>Veterinario</mat-label>
@@ -25,7 +26,7 @@
       Nueva cita
     </button>
   </div>
-</div>
+</header>
 
 <div class="legend">
   @for (s of ['Agendada', 'Confirmada', 'Completada', 'Cancelada', 'NoShow']; track s) {

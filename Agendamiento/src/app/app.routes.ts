@@ -8,6 +8,18 @@ import { roleGuard } from './core/role.guard';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'auth/login' },
   {
+    path: 'confirm',
+    loadComponent: () =>
+      import('./features/confirm-appointment/confirm-appointment-page/confirm-appointment-page').then(
+        (m) => m.ConfirmAppointmentPage,
+      ),
+  },
+  {
+    path: 'portal/:businessId',
+    loadChildren: () =>
+      import('./features/client-portal/client-portal.routes').then((m) => m.CLIENT_PORTAL_ROUTES),
+  },
+  {
     path: 'auth/login',
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
@@ -64,6 +76,14 @@ export const routes: Routes = [
         data: { roles: ['Admin', 'Veterinario'] },
         loadComponent: () =>
           import('./features/reminders/reminders-page/reminders-page').then((m) => m.RemindersPage),
+      },
+      {
+        path: 'smtp',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/smtp-settings/smtp-settings-page/smtp-settings-page').then(
+            (m) => m.SmtpSettingsPage,
+          ),
       },
       {
         path: 'reports',

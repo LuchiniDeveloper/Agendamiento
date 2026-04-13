@@ -6,6 +6,10 @@
       <input matInput formControlName="name" />
     </mat-form-field>
     <mat-form-field appearance="outline" class="full">
+      <mat-label>Cédula / documento</mat-label>
+      <input matInput formControlName="id_document" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="full">
       <mat-label>Teléfono</mat-label>
       <input matInput formControlName="phone" />
     </mat-form-field>
@@ -14,11 +18,11 @@
       <input matInput type="email" formControlName="email" />
     </mat-form-field>
     <mat-form-field appearance="outline" class="full">
-      <mat-label>Dirección</mat-label>
+      <mat-label>Dirección (opcional)</mat-label>
       <input matInput formControlName="address" />
     </mat-form-field>
     <mat-form-field appearance="outline" class="full">
-      <mat-label>Notas</mat-label>
+      <mat-label>Notas (opcional)</mat-label>
       <textarea matInput rows="2" formControlName="notes"></textarea>
     </mat-form-field>
     @if (error()) {

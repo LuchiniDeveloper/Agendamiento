@@ -21,6 +21,19 @@ export interface MedicalRecordRow {
   appointment?: MedicalAppointmentEmbed | null;
 }
 
+/** Fila para mensajería: HC con próxima visita sugerida por el veterinario. */
+export interface NextVisitFollowupRow {
+  id: string;
+  next_visit_date: string;
+  diagnosis: string | null;
+  pet: {
+    name: string;
+    species?: string | null;
+    customer: { id: string; name: string; phone: string | null } | null;
+  } | null;
+  appointment: MedicalAppointmentEmbed | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MedicalData {
   private readonly supabase = inject(SUPABASE_CLIENT);
@@ -95,5 +108,38 @@ export class MedicalData {
   delete(id: string) {
     if (!this.supabase) throw new Error('Supabase no configurado');
     return this.supabase.from('medical_record').delete().eq('id', id);
+  }
+
+  /**
+   * Notas clínicas con `next_visit_date` en [fromYmd, toYmd] (YYYY-MM-DD, calendario).
+   * Sirve para contactar tutores con seguimiento pendiente.
+   */
+  listNextVisitFollowups(fromYmd: string, toYmd: string) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    return this.supabase
+      .from('medical_record')
+      .select(
+        `
+        id,
+        next_visit_date,
+        diagnosis,
+        pet:pet_id (
+          name,
+          species,
+          customer:customer_id (id, name, phone)
+        ),
+        appointment:appointment_id (
+          start_date_time,
+          end_date_time,
+          vet:user_id (id, name),
+          service:service_id (id, name)
+        )
+      `,
+      )
+      .not('next_visit_date', 'is', null)
+      .gte('next_visit_date', fromYmd)
+      .lte('next_visit_date', toYmd)
+      .order('next_visit_date', { ascending: true })
+      .limit(200);
   }
 }
