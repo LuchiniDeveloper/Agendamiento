@@ -1,31 +1,54 @@
 <h2 mat-dialog-title>Registrar pago</h2>
 <mat-dialog-content>
-  @if (payload.breakdown) {
+  @if (breakdown(); as bill) {
     <div class="pay-breakdown" role="group" aria-label="Desglose del cobro">
-      <p class="pay-breakdown__row">
-        <span>{{ payload.breakdown.serviceLabel }}</span>
-        <span>{{ payload.breakdown.serviceAmount | copCurrency }}</span>
-      </p>
-      @if (payload.breakdown.extrasAmount > 0) {
-        <p class="pay-breakdown__sub">Gastos adicionales</p>
-        @if (payload.breakdown.extrasLines?.length) {
-          <ul class="pay-breakdown__lines">
-            @for (line of payload.breakdown.extrasLines; track $index) {
-              <li>
-                <span>{{ line.description }}</span>
-                <span>{{ line.amount | copCurrency }}</span>
-              </li>
+      <div class="pay-breakdown__head">
+        <div class="pay-breakdown__head-main">
+          <p class="pay-breakdown__tag">Factura preliminar</p>
+          <p class="pay-breakdown__invoice">No. {{ payload.appointmentId.slice(0, 8).toUpperCase() }}</p>
+        </div>
+        <button
+          mat-stroked-button
+          type="button"
+          class="pay-breakdown__extras-btn"
+          [disabled]="refreshingBreakdown()"
+          (click)="openExtraCharges()"
+        >
+          <mat-icon>receipt_long</mat-icon>
+          Gastos adicionales
+        </button>
+      </div>
+      <table class="pay-breakdown__table" aria-label="Detalle de factura">
+        <tbody>
+          <tr>
+            <td>{{ bill.serviceLabel }}</td>
+            <td>{{ bill.serviceAmount | copCurrency }}</td>
+          </tr>
+          @if (bill.extrasAmount > 0) {
+            <tr class="pay-breakdown__table-subhead">
+              <td colspan="2">GASTOS ADICIONALES</td>
+            </tr>
+            @if (bill.extrasLines?.length) {
+              @for (line of bill.extrasLines; track $index) {
+                <tr class="pay-breakdown__extra-line">
+                  <td>{{ line.description }}</td>
+                  <td>{{ line.amount | copCurrency }}</td>
+                </tr>
+              }
             }
-          </ul>
-        }
-        <p class="pay-breakdown__row pay-breakdown__row--muted">
-          <span>Subtotal extras</span>
-          <span>{{ payload.breakdown.extrasAmount | copCurrency }}</span>
-        </p>
+            <tr class="pay-breakdown__row--muted">
+              <td>Subtotal extras</td>
+              <td>{{ bill.extrasAmount | copCurrency }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      @if (bill.extrasAmount > 0) {
+        <p class="pay-breakdown__subhint">Detalle actualizado con gastos adicionales de esta visita.</p>
       }
       <p class="pay-breakdown__row pay-breakdown__total">
         <span>Total a cobrar</span>
-        <strong>{{ payload.defaultAmount | copCurrency }}</strong>
+        <strong>{{ totalToCharge() | copCurrency }}</strong>
       </p>
     </div>
   }

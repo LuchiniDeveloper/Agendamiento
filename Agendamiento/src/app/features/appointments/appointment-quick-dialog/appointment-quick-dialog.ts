@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -18,6 +19,7 @@ import { TenantContextService } from '../../../core/tenant-context.service';
 import { AppointmentEmailNotificationsPanel } from '../../email-notifications/appointment-email-notifications-panel/appointment-email-notifications-panel';
 import { petAvatarFromSpecies } from '../../customers/pet-avatar.util';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 
 function isoToTimeInput(iso: string): string {
   const d = new Date(iso);
@@ -92,6 +94,8 @@ export interface QuickApptPayload {
     MatTooltipModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    DatePipe,
+    CopCurrencyPipe,
     AppointmentEmailNotificationsPanel,
   ],
   templateUrl: './appointment-quick-dialog.html',
@@ -114,11 +118,23 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
   protected readonly slotOptions = signal<string[]>([]);
   /** Hay nota clínica con esta cita (solo UI; el texto no se muestra en el diálogo). */
   protected readonly hasLinkedClinicalNote = signal(false);
+  protected readonly invoiceExpanded = signal(false);
+  protected readonly invoiceLoading = signal(false);
+  protected readonly paidTotal = signal(0);
+  protected readonly paidMethod = signal<string | null>(null);
+  protected readonly paidAt = signal<string | null>(null);
+  protected readonly paidCount = signal(0);
+  protected readonly paidTransferChannel = signal<string | null>(null);
+  protected readonly paidTransferProof = signal<string | null>(null);
+  protected readonly paymentRecordId = signal<string | null>(null);
+  protected readonly invoiceBreakdown = signal<PaymentBreakdown | null>(null);
 
   protected readonly attentionStartedAt = signal<string | null>(this.data.attentionStartedAt ?? null);
   protected readonly attentionBusy = signal(false);
+  protected readonly attentionPaused = signal(false);
   private readonly clockTick = signal(0);
   private timerId: ReturnType<typeof setInterval> | null = null;
+  private attentionPausedAtMs: number | null = null;
 
   protected petAvatar() {
     return petAvatarFromSpecies(this.data.petSpecies);
@@ -133,6 +149,8 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
     this.form.patchValue({ status_id: this.data.statusId });
     void this.loadLinkedClinicalNote();
     void this.refreshSlots();
+    void this.refreshInvoiceSummary();
+    this.syncDisableClose();
     this.maybeStartClock();
   }
 
@@ -142,7 +160,7 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
 
   private maybeStartClock() {
     this.stopClock();
-    if (!this.inAttention()) return;
+    if (!this.inAttention() || this.attentionPaused()) return;
     this.timerId = setInterval(() => this.clockTick.update((n) => n + 1), 1000);
   }
 
@@ -158,6 +176,38 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
     if (this.attentionStartedAt() == null) return false;
     const n = this.data.statusName;
     return n !== 'Completada' && n !== 'Cancelada' && n !== 'NoShow';
+  }
+
+  private syncDisableClose() {
+    this.ref.disableClose = this.inAttention();
+  }
+
+  protected closeDialog() {
+    this.ref.close(false);
+  }
+
+  protected isCompleted(): boolean {
+    return this.data.statusName === 'Completada';
+  }
+
+  protected isCompletedAndPaid(): boolean {
+    return this.isCompleted() && this.paidCount() > 0;
+  }
+
+  protected showStatusField(): boolean {
+    return !this.inAttention() && !this.isCompletedAndPaid();
+  }
+
+  protected canDownloadInvoicePdf(): boolean {
+    return this.isCompletedAndPaid();
+  }
+
+  protected statusOptionsForSelect(): { id: number; name: string }[] {
+    return this.data.statuses.filter((s) => s.name !== 'Completada');
+  }
+
+  protected toggleInvoiceExpanded() {
+    this.invoiceExpanded.update((v) => !v);
   }
 
   protected canStartAttention(): boolean {
@@ -189,6 +239,7 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
   }
 
   protected attentionHint(): string {
+    if (this.attentionPaused()) return 'Atención en pausa temporal.';
     switch (this.attentionTone()) {
       case 'ok':
         return 'Dentro del tiempo agendado.';
@@ -207,10 +258,50 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
       const { error } = await this.appts.updateAttentionStartedAt(this.data.id, iso);
       if (error) throw error;
       this.attentionStartedAt.set(iso);
+      this.attentionPaused.set(false);
+      this.syncDisableClose();
       this.maybeStartClock();
       this.snack.open('Atención iniciada', 'OK', { duration: 2200 });
     } catch (e: unknown) {
       this.snack.open(e instanceof Error ? e.message : 'No se pudo iniciar la atención', 'OK', {
+        duration: 4000,
+      });
+    } finally {
+      this.attentionBusy.set(false);
+    }
+  }
+
+  protected async togglePauseAttention() {
+    if (!this.inAttention()) return;
+    const next = !this.attentionPaused();
+    if (next) {
+      this.attentionPaused.set(true);
+      this.attentionPausedAtMs = Date.now();
+      this.stopClock();
+      this.snack.open('Atención en pausa', 'OK', { duration: 1800 });
+      return;
+    }
+    const baseIso = this.attentionStartedAt();
+    const pausedAt = this.attentionPausedAtMs;
+    if (!baseIso || pausedAt == null) {
+      this.attentionPaused.set(false);
+      this.attentionPausedAtMs = null;
+      this.maybeStartClock();
+      return;
+    }
+    this.attentionBusy.set(true);
+    try {
+      const pausedMs = Math.max(0, Date.now() - pausedAt);
+      const shiftedIso = new Date(new Date(baseIso).getTime() + pausedMs).toISOString();
+      const { error } = await this.appts.updateAttentionStartedAt(this.data.id, shiftedIso);
+      if (error) throw error;
+      this.attentionStartedAt.set(shiftedIso);
+      this.attentionPaused.set(false);
+      this.attentionPausedAtMs = null;
+      this.maybeStartClock();
+      this.snack.open('Atención reanudada', 'OK', { duration: 1800 });
+    } catch (e: unknown) {
+      this.snack.open(e instanceof Error ? e.message : 'No se pudo reanudar la atención', 'OK', {
         duration: 4000,
       });
     } finally {
@@ -235,7 +326,10 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
       const { error } = await this.appts.updateAttentionStartedAt(this.data.id, null);
       if (error) throw error;
       this.stopClock();
+      this.attentionPaused.set(false);
+      this.attentionPausedAtMs = null;
       this.attentionStartedAt.set(null);
+      this.syncDisableClose();
       this.snack.open('Atención descartada', 'OK', { duration: 2200 });
     } catch (e: unknown) {
       this.snack.open(e instanceof Error ? e.message : 'No se pudo actualizar', 'OK', { duration: 4000 });
@@ -254,6 +348,206 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
       })
       .afterClosed()
       .subscribe(() => undefined);
+  }
+
+  private statusIdByName(name: string): number | null {
+    return this.data.statuses.find((s) => s.name === name)?.id ?? null;
+  }
+
+  private async buildPaymentData(apptId: string, servicePrice: number) {
+    const { data: extraRows, error: e3 } = await this.appts.listExtraCharges(apptId);
+    if (e3) throw e3;
+    const lines = (extraRows ?? []).map((r) => ({
+      description: String((r as { description?: string }).description ?? ''),
+      amount: Number((r as { amount?: unknown }).amount ?? 0),
+    }));
+    const extrasSum = lines.reduce((s, l) => s + l.amount, 0);
+    const total = servicePrice + extrasSum;
+    const breakdown: PaymentBreakdown = {
+      serviceLabel: this.data.serviceName?.trim() ? this.data.serviceName : 'Servicio',
+      serviceAmount: servicePrice,
+      extrasAmount: extrasSum,
+      extrasLines: lines.length ? lines : undefined,
+    };
+    return {
+      appointmentId: apptId,
+      defaultAmount: total,
+      breakdown,
+    };
+  }
+
+  private paymentMethodLabel(v: string | null): string {
+    if (v === 'Cash') return 'Efectivo';
+    if (v === 'Card') return 'Tarjeta';
+    if (v === 'Transfer') return 'Transferencia';
+    return v || '—';
+  }
+
+  private currencyCop(v: number): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(
+      Number(v ?? 0),
+    );
+  }
+
+  private escapeHtml(raw: string): string {
+    return raw
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  private async refreshInvoiceSummary() {
+    this.invoiceLoading.set(true);
+    try {
+      const [payRes, extrasRes] = await Promise.all([
+        this.appts.listPaymentsByAppointment(this.data.id),
+        this.appts.listExtraCharges(this.data.id),
+      ]);
+      if (payRes.error) throw payRes.error;
+      if (extrasRes.error) throw extrasRes.error;
+      const payments = (payRes.data ?? []) as {
+        id?: string | null;
+        amount?: number | string | null;
+        payment_method?: string | null;
+        created_at?: string | null;
+        transfer_channel?: string | null;
+        transfer_proof_code?: string | null;
+      }[];
+      const extrasLines = (extrasRes.data ?? []).map((r) => ({
+        description: String((r as { description?: string }).description ?? ''),
+        amount: Number((r as { amount?: unknown }).amount ?? 0),
+      }));
+      const extrasAmount = extrasLines.reduce((s, l) => s + l.amount, 0);
+      const totalPaid = payments.reduce((s, p) => s + Number(p.amount ?? 0), 0);
+      this.paidTotal.set(totalPaid);
+      this.paidCount.set(payments.length);
+      const last = payments[payments.length - 1];
+      this.paymentRecordId.set((last?.id as string | null) ?? null);
+      this.paidMethod.set(this.paymentMethodLabel((last?.payment_method as string | null) ?? null));
+      this.paidAt.set((last?.created_at as string | null) ?? null);
+      this.paidTransferChannel.set((last?.transfer_channel as string | null) ?? null);
+      this.paidTransferProof.set((last?.transfer_proof_code as string | null) ?? null);
+      this.invoiceBreakdown.set({
+        serviceLabel: this.data.serviceName?.trim() || 'Servicio',
+        serviceAmount: Number(this.data.servicePrice ?? 0),
+        extrasAmount,
+        extrasLines: extrasLines.length ? extrasLines : undefined,
+      });
+    } catch (e: unknown) {
+      this.snack.open(e instanceof Error ? e.message : 'No se pudo cargar el resumen de factura', 'OK', {
+        duration: 3500,
+      });
+    } finally {
+      this.invoiceLoading.set(false);
+    }
+  }
+
+  /** Descarga el comprobante como archivo HTML (sin ventana emergente; se puede imprimir a PDF al abrirlo). */
+  protected downloadInvoicePdf() {
+    if (!this.canDownloadInvoicePdf()) return;
+    const bill = this.invoiceBreakdown();
+    if (!bill) return;
+    const issueDate = this.paidAt() ? new Date(this.paidAt()!) : new Date();
+    const issueLabel = new Intl.DateTimeFormat('es-CO', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(issueDate);
+    const invoiceNo = `INV-${this.data.id.slice(0, 8).toUpperCase()}`;
+    const paymentLine =
+      this.paidMethod() === 'Transferencia' && this.paidTransferChannel()
+        ? `${this.paidMethod()} (${this.paidTransferChannel()})`
+        : (this.paidMethod() ?? '—');
+    const proofLine = this.paidTransferProof() || 'N/A';
+    const extrasRows = (bill.extrasLines ?? [])
+      .map(
+        (l) =>
+          `<tr><td>${this.escapeHtml(l.description)}</td><td style="text-align:right">${this.currencyCop(l.amount)}</td></tr>`,
+      )
+      .join('');
+    const total = this.paidTotal();
+    const html = `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Factura ${invoiceNo}</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;margin:0;background:#f4f6fb;color:#1e2430}
+    .sheet{max-width:840px;margin:24px auto;background:#fff;border:1px solid #d8deea;border-radius:14px;box-shadow:0 10px 24px rgba(18,24,39,.08);overflow:hidden}
+    .head{padding:22px 26px;background:linear-gradient(135deg,#0a5cc2,#0d7be7);color:#fff}
+    .head h1{margin:0 0 6px;font-size:22px}
+    .head p{margin:0;font-size:13px;opacity:.92}
+    .meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 26px;border-bottom:1px solid #e7ecf4}
+    .card{background:#f8fbff;border:1px solid #e3ebf6;border-radius:10px;padding:10px 12px}
+    .card b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#5b6780;margin-bottom:4px}
+    table{width:calc(100% - 52px);margin:18px 26px;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px solid #e8edf6;font-size:14px}
+    th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#62718f}
+    .totals{margin:0 26px 20px;border:1px solid #e4eaf5;border-radius:10px;padding:12px;background:#fbfdff}
+    .line{display:flex;justify-content:space-between;padding:4px 0}
+    .line.total{margin-top:6px;padding-top:8px;border-top:1px solid #dce5f2;font-weight:800;font-size:18px}
+    .foot{padding:14px 26px 20px;font-size:12px;color:#60708b}
+    @media print{body{background:#fff}.sheet{margin:0;border:none;box-shadow:none;border-radius:0}}
+  </style>
+</head>
+<body>
+  <article class="sheet">
+    <header class="head">
+      <h1>${this.escapeHtml(this.data.businessName || 'Clínica')}</h1>
+      <p>${this.escapeHtml(this.data.businessAddress || 'Sin dirección registrada')} · ${this.escapeHtml(this.data.businessPhone || 'Sin teléfono')}</p>
+    </header>
+    <section class="meta">
+      <div class="card">
+        <b>Factura</b>
+        ${invoiceNo}<br/>Emitida: ${issueLabel}<br/>Cita: ${this.escapeHtml(this.data.id)}
+      </div>
+      <div class="card">
+        <b>Cliente / Mascota</b>
+        ${this.escapeHtml(this.data.customerName)}<br/>Mascota: ${this.escapeHtml(this.data.petName)}<br/>Veterinario: ${this.escapeHtml(this.data.vetName || '—')}
+      </div>
+    </section>
+    <table>
+      <thead><tr><th>Concepto</th><th style="text-align:right">Valor</th></tr></thead>
+      <tbody>
+        <tr><td>${this.escapeHtml(bill.serviceLabel)}</td><td style="text-align:right">${this.currencyCop(bill.serviceAmount)}</td></tr>
+        ${extrasRows}
+      </tbody>
+    </table>
+    <section class="totals">
+      <div class="line"><span>Método de pago</span><strong>${this.escapeHtml(paymentLine)}</strong></div>
+      <div class="line"><span>Comprobante</span><strong>${this.escapeHtml(proofLine)}</strong></div>
+      <div class="line"><span>ID pago</span><strong>${this.escapeHtml(this.paymentRecordId() || '—')}</strong></div>
+      <div class="line total"><span>Total pagado</span><span>${this.currencyCop(total)}</span></div>
+    </section>
+    <footer class="foot">Documento generado desde el sistema de agenda para soporte de caja y cliente.</footer>
+  </article>
+</body>
+</html>`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const safeName = invoiceNo.replace(/[^\w.-]+/g, '_');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Factura-${safeName}.html`;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    this.snack.open('Factura descargada (archivo HTML). Para PDF, ábrela e imprime con Guardar como PDF.', 'OK', {
+      duration: 4000,
+    });
+  }
+
+  protected async completeAttention() {
+    const completedId = this.statusIdByName('Completada');
+    if (completedId == null) {
+      this.snack.open('No se encontró el estado Completada.', 'OK', { duration: 3500 });
+      return;
+    }
+    this.form.patchValue({ status_id: completedId });
+    await this.saveStatus();
   }
 
   onStatusChange() {
@@ -283,6 +577,7 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
   }
 
   protected canEditSchedule(): boolean {
+    if (this.inAttention()) return false;
     const sid = this.form.getRawValue().status_id;
     return this.data.statuses.find((s) => s.id === sid)?.name === 'Agendada';
   }
@@ -413,6 +708,9 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
         const { error: e2 } = await this.appts.updateAttentionStartedAt(this.data.id, null);
         if (e2) throw e2;
         this.stopClock();
+        this.attentionPaused.set(false);
+        this.attentionPausedAtMs = null;
+        this.syncDisableClose();
         this.attentionStartedAt.set(null);
       }
       const completed = newName === 'Completada';
@@ -421,24 +719,7 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
       let paymentData: { appointmentId: string; defaultAmount: number; breakdown: PaymentBreakdown } | null =
         null;
       if (completed) {
-        const { data: extraRows, error: e3 } = await this.appts.listExtraCharges(apptId);
-        if (e3) throw e3;
-        const lines = (extraRows ?? []).map((r) => ({
-          description: String((r as { description?: string }).description ?? ''),
-          amount: Number((r as { amount?: unknown }).amount ?? 0),
-        }));
-        const extrasSum = lines.reduce((s, l) => s + l.amount, 0);
-        const total = servicePrice + extrasSum;
-        paymentData = {
-          appointmentId: apptId,
-          defaultAmount: total,
-          breakdown: {
-            serviceLabel: this.data.serviceName?.trim() ? this.data.serviceName : 'Servicio',
-            serviceAmount: servicePrice,
-            extrasAmount: extrasSum,
-            extrasLines: lines.length ? lines : undefined,
-          },
-        };
+        paymentData = await this.buildPaymentData(apptId, servicePrice);
       }
       this.ref.close(true);
       if (paymentData) {
@@ -449,6 +730,7 @@ export class AppointmentQuickDialog implements OnInit, OnDestroy {
           });
         });
       }
+      this.data.statusName = newName;
     } catch (e: unknown) {
       this.snack.open(e instanceof Error ? e.message : 'Error', 'OK', { duration: 4000 });
     } finally {

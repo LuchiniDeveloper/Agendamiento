@@ -310,6 +310,15 @@ export class AppointmentsData {
     return this.supabase.from('appointment_extra_charge').delete().eq('id', id);
   }
 
+  listPaymentsByAppointment(appointmentId: string) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    return this.supabase
+      .from('payment')
+      .select('id, amount, payment_method, status, created_at, transfer_channel, transfer_proof_code')
+      .eq('appointment_id', appointmentId)
+      .order('created_at');
+  }
+
   insertPayment(
     appointmentId: string,
     amount: number,

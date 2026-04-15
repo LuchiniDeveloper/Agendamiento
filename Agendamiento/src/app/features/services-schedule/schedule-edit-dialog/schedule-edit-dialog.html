@@ -32,48 +32,114 @@
       </div>
     </section>
 
-    <section class="sched-block sched-block--window">
-      <div class="sched-block__head">
-        <span class="sched-block__title">Franja del día</span>
-        <span class="sched-block__subtitle">
-          Horario 1 y horario 2 comparten el mismo día y servicio; usalos por ejemplo para mañana y tarde con pausa de almuerzo.
-        </span>
-      </div>
-      <mat-radio-group formControlName="window_order" class="sched-window-radios" aria-label="Número de franja en el día">
-        <mat-radio-button
-          [value]="1"
-          [disabled]="isWindowOrderOptionDisabled(1)"
-          [matTooltip]="windowOrderOptionTooltip(1)"
-          matTooltipPosition="above"
-          [matTooltipDisabled]="!windowOrderOptionTooltip(1)"
-        >
-          Horario 1
-        </mat-radio-button>
-        <mat-radio-button
-          [value]="2"
-          [disabled]="isWindowOrderOptionDisabled(2)"
-          [matTooltip]="windowOrderOptionTooltip(2)"
-          matTooltipPosition="above"
-          [matTooltipDisabled]="!windowOrderOptionTooltip(2)"
-        >
-          Horario 2
-        </mat-radio-button>
-      </mat-radio-group>
-    </section>
+    @if (isSlotPairEditMode()) {
+      <section class="sched-block sched-block--window">
+        <div class="sched-block__head">
+          <span class="sched-block__title">Franjas del día</span>
+          <span class="sched-block__subtitle">
+            Editá horario 1 y horario 2 a la vez; un solo «Guardar» aplica los dos.
+          </span>
+        </div>
+      </section>
 
-    <section class="sched-block sched-block--times">
-      <span class="sched-block__title">Horario</span>
-      <div class="sched-times">
-        <mat-form-field appearance="outline" class="sched-field">
-          <mat-label>Inicio</mat-label>
-          <input matInput type="time" formControlName="start_time" />
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="sched-field">
-          <mat-label>Fin</mat-label>
-          <input matInput type="time" formControlName="end_time" />
-        </mat-form-field>
-      </div>
-    </section>
+      <section class="sched-block sched-block--times">
+        <span class="sched-block__title">Horario 1</span>
+        @if (!data.slotPair!.w1) {
+          <span class="sched-block__hint">Nuevo: se creará al guardar si completás inicio y fin.</span>
+        }
+        <div class="sched-times">
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Inicio</mat-label>
+            <input matInput type="time" formControlName="slot1_start" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Fin</mat-label>
+            <input matInput type="time" formControlName="slot1_end" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="sched-block sched-block--times">
+        <span class="sched-block__title">Horario 2</span>
+        @if (!data.slotPair!.w2) {
+          <span class="sched-block__hint">Nuevo: se creará al guardar si completás inicio y fin.</span>
+        }
+        <div class="sched-times">
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Inicio</mat-label>
+            <input matInput type="time" formControlName="slot2_start" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Fin</mat-label>
+            <input matInput type="time" formControlName="slot2_end" />
+          </mat-form-field>
+        </div>
+      </section>
+    } @else {
+      <section class="sched-block sched-block--window">
+        <div class="sched-block__head">
+          <span class="sched-block__title">Franja del día</span>
+          <span class="sched-block__subtitle">
+            Horario 1 y horario 2 comparten el mismo día y servicio; usalos por ejemplo para mañana y tarde con pausa de almuerzo.
+          </span>
+        </div>
+        <mat-radio-group formControlName="window_order" class="sched-window-radios" aria-label="Número de franja en el día">
+          <mat-radio-button
+            [value]="1"
+            [disabled]="isWindowOrderOptionDisabled(1)"
+            [matTooltip]="windowOrderOptionTooltip(1)"
+            matTooltipPosition="above"
+            [matTooltipDisabled]="!windowOrderOptionTooltip(1)"
+          >
+            Horario 1
+          </mat-radio-button>
+          <mat-radio-button
+            [value]="2"
+            [disabled]="isWindowOrderOptionDisabled(2)"
+            [matTooltip]="windowOrderOptionTooltip(2)"
+            matTooltipPosition="above"
+            [matTooltipDisabled]="!windowOrderOptionTooltip(2)"
+          >
+            Horario 2
+          </mat-radio-button>
+        </mat-radio-group>
+      </section>
+
+      <section class="sched-block sched-block--times">
+        <span class="sched-block__title">Horario</span>
+        <div class="sched-times">
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Inicio</mat-label>
+            <input matInput type="time" formControlName="start_time" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="sched-field">
+            <mat-label>Fin</mat-label>
+            <input matInput type="time" formControlName="end_time" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      @if (!isEditMode && form.controls.window_order.value === 1) {
+        <section class="sched-block sched-block--times sched-block--optional-w2">
+          <div class="sched-block__head">
+            <span class="sched-block__title">Segundo horario (opcional)</span>
+            <span class="sched-block__subtitle">
+              Mismo día y servicio que arriba; se guarda junto con el horario 1 al pulsar «Guardar».
+            </span>
+          </div>
+          <div class="sched-times">
+            <mat-form-field appearance="outline" class="sched-field">
+              <mat-label>Inicio</mat-label>
+              <input matInput type="time" formControlName="optional_w2_start" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="sched-field">
+              <mat-label>Fin</mat-label>
+              <input matInput type="time" formControlName="optional_w2_end" />
+            </mat-form-field>
+          </div>
+        </section>
+      }
+    }
 
     <section class="sched-block">
       <div class="sched-block__head">

@@ -24,9 +24,12 @@
 </header>
 
 @if (loading()) {
-  <div class="center"><mat-spinner diameter="36" /></div>
+  <div class="app-loading-shell customers-loading">
+    <mat-spinner diameter="40" />
+    <p class="muted load-hint">Cargando tutores y mascotas…</p>
+  </div>
 } @else {
-  <mat-card>
+  <mat-card class="app-card-lift app-table-card customers-table-card">
     <mat-card-content class="table-wrap">
       <table class="simple-table">
         <thead>
@@ -112,7 +115,15 @@
         </tbody>
       </table>
       @if (rows().length === 0) {
-        <p class="muted pad">Sin resultados. Crea un cliente o ajusta la búsqueda.</p>
+        <div class="customers-empty app-empty-state">
+          <span class="app-empty-state__icon" aria-hidden="true">
+            <mat-icon>search_off</mat-icon>
+          </span>
+          <p class="app-empty-state__title">Nadie coincide con la búsqueda</p>
+          <p class="app-empty-state__text">
+            Prueba otro teléfono o nombre, o registra un nuevo tutor para empezar su historial.
+          </p>
+        </div>
       }
     </mat-card-content>
   </mat-card>

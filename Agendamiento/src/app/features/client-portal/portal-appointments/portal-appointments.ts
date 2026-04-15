@@ -167,6 +167,10 @@ export class PortalAppointments implements OnInit {
     return this.statusName(r) === 'Completada' && !!this.petId(r);
   }
 
+  canViewInvoice(r: ApptDisplayRow): boolean {
+    return this.statusName(r) === 'Completada';
+  }
+
   openTicket(r: ApptDisplayRow): void {
     this.ticket.set({
       appointmentId: r.id,

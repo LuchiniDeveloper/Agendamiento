@@ -4,6 +4,8 @@
 .portal-app .content.portal-main {
   position: relative;
   isolation: isolate;
+  overflow: clip;
+  padding-top: clamp(0.2rem, 1.2vw, 0.8rem);
   background:
     radial-gradient(ellipse 100% 72% at 100% -5%, color-mix(in srgb, var(--mat-sys-primary) 9%, transparent), transparent 48%),
     radial-gradient(ellipse 85% 55% at 0% 105%, color-mix(in srgb, var(--mat-sys-tertiary) 7%, transparent), transparent 44%),
@@ -13,6 +15,17 @@
       var(--mat-sys-surface) 42%,
       color-mix(in srgb, var(--mat-sys-surface) 97%, var(--mat-sys-surface-container-low) 3%) 100%
     );
+}
+
+.portal-app .content.portal-main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 42% 28% at 86% 2%, color-mix(in srgb, var(--mat-sys-primary) 16%, transparent), transparent 68%),
+    radial-gradient(ellipse 36% 22% at 8% 96%, color-mix(in srgb, var(--mat-sys-tertiary) 14%, transparent), transparent 70%);
 }
 
 html.app-dark .portal-app .content.portal-main {
@@ -25,7 +38,9 @@ html.app-dark .portal-app .content.portal-main {
 .portal-page {
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
+  gap: clamp(1rem, 2.2vw, 1.6rem);
+  position: relative;
+  z-index: 1;
 }
 
 .portal-page--summary {
@@ -33,14 +48,34 @@ html.app-dark .portal-app .content.portal-main {
 }
 
 .portal-app .content.portal-main .app-page-hero {
-  margin-bottom: 0.25rem;
-  padding: 1.35rem 1.45rem 1.45rem;
-  border-radius: calc(var(--app-radius-lg) + 6px);
+  margin-bottom: 0.15rem;
+  padding: clamp(1rem, 2.2vw, 1.55rem) clamp(1rem, 2.4vw, 1.65rem) clamp(1rem, 2.4vw, 1.65rem);
+  border-radius: calc(var(--app-radius-lg) + 10px);
   border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 42%, transparent);
+  background:
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--mat-sys-surface-container-low) 94%, var(--mat-sys-primary) 6%),
+      color-mix(in srgb, var(--mat-sys-surface) 95%, var(--mat-sys-tertiary) 5%)
+    );
   box-shadow:
     0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 70%, transparent) inset,
-    0 18px 42px -28px color-mix(in srgb, var(--mat-sys-primary) 22%, transparent),
+    0 20px 46px -30px color-mix(in srgb, var(--mat-sys-primary) 22%, transparent),
     var(--app-shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-app .content.portal-main .app-page-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto -9% -58% auto;
+  width: clamp(9rem, 26vw, 15rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.45;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mat-sys-primary) 35%, transparent), transparent 68%);
 }
 
 @media (min-width: 720px) {
@@ -68,6 +103,17 @@ html.app-dark .portal-app .content.portal-main {
   box-shadow: 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 55%, transparent) inset;
 }
 
+.portal-app .content.portal-main .page-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.8vw, 2.05rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.portal-app .content.portal-main .muted {
+  font-size: clamp(0.86rem, 1.65vw, 0.95rem);
+}
+
 .portal-app .content.portal-main .mat-mdc-card.app-card-lift {
   border-radius: calc(var(--app-radius-lg) + 4px) !important;
   border-color: color-mix(in srgb, var(--mat-sys-outline-variant) 48%, transparent);
@@ -82,4 +128,29 @@ html.app-dark .portal-app .content.portal-main {
     var(--app-shadow-soft),
     0 20px 44px -24px color-mix(in srgb, var(--mat-sys-primary) 16%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--mat-sys-surface) 42%, transparent) !important;
+}
+
+.portal-app .content.portal-main .app-cta {
+  min-height: 2.7rem;
+  transition:
+    transform 0.18s ease,
+    box-shadow var(--app-transition),
+    filter 0.2s ease;
+}
+
+.portal-app .content.portal-main .app-cta:hover:not([disabled]) {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 719px) {
+  .portal-app .content.portal-main .app-page-hero-actions {
+    width: 100%;
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .portal-app .content.portal-main .app-page-hero-actions .app-cta {
+    width: 100%;
+    justify-content: center;
+  }
 }

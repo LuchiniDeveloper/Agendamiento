@@ -96,7 +96,37 @@ export type KindPayload = {
   confirmUrl?: string;
   rescheduleUrl?: string;
   diagnosisExcerpt?: string | null;
+  diagnosis?: string | null;
+  treatment?: string | null;
+  observations?: string | null;
+  weight?: number | null;
+  nextVisitDate?: string | null;
+  invoice?: {
+    invoiceNo: string;
+    issueLabel: string;
+    appointmentId: string;
+    serviceLabel: string;
+    serviceAmount: number;
+    extrasLines: { description: string; amount: number }[];
+    extrasAmount: number;
+    paymentLine: string;
+    paymentId: string | null;
+    proofLine: string;
+    totalPaid: number;
+    totalExpected: number;
+    customerName: string;
+    petName: string;
+    vetName: string;
+  };
 };
+
+function money(v: number): string {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(Number(v ?? 0));
+}
 
 export function buildEmailForKind(p: KindPayload): { subject: string; html: string; preheader: string } {
   const name = p.customerName.trim() || 'Hola';
@@ -145,10 +175,71 @@ export function buildEmailForKind(p: KindPayload): { subject: string; html: stri
       const diagBlock = diag
         ? `<p style="margin:12px 0 0 0;padding:14px 16px;background:${BRAND.surface};border-radius:12px;border-left:4px solid ${BRAND.accent};font-size:14px;line-height:1.55;color:${BRAND.onSurface};"><strong>Resumen:</strong> ${esc(diag)}</p>`
         : `<p style="margin:12px 0 0 0;font-size:15px;line-height:1.6;color:${BRAND.muted};">Dejamos registrada la consulta en la historia clínica de ${esc(pet)}. Si el equipo compartió indicaciones específicas, las encontrarás también en la clínica.</p>`;
+      const clinicalRows = [
+        p.diagnosis ? `<tr><td style="padding:8px 10px;color:${BRAND.muted};font-size:13px;">Diagnóstico</td><td style="padding:8px 10px;color:${BRAND.onSurface};font-size:13px;">${esc(p.diagnosis)}</td></tr>` : '',
+        p.treatment ? `<tr><td style="padding:8px 10px;color:${BRAND.muted};font-size:13px;">Tratamiento</td><td style="padding:8px 10px;color:${BRAND.onSurface};font-size:13px;">${esc(p.treatment)}</td></tr>` : '',
+        p.observations ? `<tr><td style="padding:8px 10px;color:${BRAND.muted};font-size:13px;">Observaciones</td><td style="padding:8px 10px;color:${BRAND.onSurface};font-size:13px;">${esc(p.observations)}</td></tr>` : '',
+        p.weight != null ? `<tr><td style="padding:8px 10px;color:${BRAND.muted};font-size:13px;">Peso</td><td style="padding:8px 10px;color:${BRAND.onSurface};font-size:13px;">${esc(String(p.weight))} kg</td></tr>` : '',
+        p.nextVisitDate ? `<tr><td style="padding:8px 10px;color:${BRAND.muted};font-size:13px;">Próxima visita sugerida</td><td style="padding:8px 10px;color:${BRAND.onSurface};font-size:13px;">${esc(p.nextVisitDate)}</td></tr>` : '',
+      ]
+        .filter(Boolean)
+        .join('');
+
+      const inv = p.invoice;
+      const extrasRows =
+        inv?.extrasLines
+          ?.map(
+            (l) =>
+              `<tr><td style="padding:8px 10px;border-bottom:1px solid #e6eef6;color:${BRAND.onSurface};font-size:13px;">${esc(l.description)}</td><td style="padding:8px 10px;border-bottom:1px solid #e6eef6;color:${BRAND.onSurface};font-size:13px;text-align:right;">${money(l.amount)}</td></tr>`,
+          )
+          .join('') ?? '';
+      const invoiceBlock = inv
+        ? `<div style="margin-top:16px;border:1px solid #dbe8f5;border-radius:12px;overflow:hidden;background:#fff;">
+            <div style="padding:14px 16px;background:linear-gradient(135deg,${BRAND.primary} 0%,${BRAND.primaryDark} 65%,${BRAND.accent} 130%);color:#fff;">
+              <p style="margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.9;">Factura</p>
+              <p style="margin:4px 0 0 0;font-size:18px;font-weight:700;">${esc(inv.invoiceNo)}</p>
+              <p style="margin:4px 0 0 0;font-size:12px;opacity:.9;">Emitida: ${esc(inv.issueLabel)} · Cita: ${esc(inv.appointmentId)}</p>
+            </div>
+            <div style="padding:12px 16px;background:#f7fbff;border-bottom:1px solid #e6eef6;font-size:13px;color:${BRAND.onSurface};">
+              <strong>${esc(inv.customerName)}</strong> · ${esc(inv.petName)} · Vet: ${esc(inv.vetName)}
+            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:${BRAND.muted};border-bottom:1px solid #e6eef6;">Concepto</th>
+                  <th style="padding:9px 10px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:${BRAND.muted};border-bottom:1px solid #e6eef6;">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td style="padding:8px 10px;border-bottom:1px solid #e6eef6;color:${BRAND.onSurface};font-size:13px;">${esc(inv.serviceLabel)}</td><td style="padding:8px 10px;border-bottom:1px solid #e6eef6;color:${BRAND.onSurface};font-size:13px;text-align:right;">${money(inv.serviceAmount)}</td></tr>
+                ${extrasRows}
+              </tbody>
+            </table>
+            <div style="padding:12px 16px;border-top:1px solid #e6eef6;background:#fbfdff;">
+              <p style="margin:0 0 6px 0;font-size:13px;color:${BRAND.muted};">Método de pago: <strong style="color:${BRAND.onSurface};">${esc(inv.paymentLine)}</strong></p>
+              <p style="margin:0 0 6px 0;font-size:13px;color:${BRAND.muted};">Comprobante: <strong style="color:${BRAND.onSurface};">${esc(inv.proofLine)}</strong></p>
+              <p style="margin:0 0 6px 0;font-size:13px;color:${BRAND.muted};">ID pago: <strong style="color:${BRAND.onSurface};">${esc(inv.paymentId ?? '—')}</strong></p>
+              <p style="margin:0 0 4px 0;font-size:13px;color:${BRAND.muted};">Total facturado: <strong style="color:${BRAND.onSurface};">${money(inv.totalExpected)}</strong></p>
+              <p style="margin:0;font-size:16px;font-weight:700;color:${BRAND.primaryDark};">Total pagado: ${money(inv.totalPaid)}</p>
+            </div>
+          </div>`
+        : '';
+      const clinicalBlock = clinicalRows
+        ? `<div style="margin-top:16px;border:1px solid #dbe8f5;border-radius:12px;overflow:hidden;background:#fff;">
+            <div style="padding:12px 16px;background:#f7fbff;border-bottom:1px solid #e6eef6;">
+              <p style="margin:0;font-size:13px;font-weight:700;color:${BRAND.onSurface};">Historial clínico de la consulta</p>
+            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              ${clinicalRows}
+            </table>
+          </div>`
+        : '';
       const inner = `
         <p style="margin:0 0 12px 0;font-size:16px;line-height:1.55;color:${BRAND.onSurface};">${esc(name)}, gracias por acompañar a ${esc(pet)}.</p>
         <p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:${BRAND.muted};">Te enviamos un breve resumen después de la visita del <strong>${esc(p.whenFormatted)}</strong>. Si algo no quedó claro o preferís comentarlo con calma, podés responder a este correo.</p>
         ${diagBlock}
+        ${invoiceBlock}
+        ${clinicalBlock}
         <p style="margin:16px 0 0 0;font-size:15px;line-height:1.6;color:${BRAND.muted};">Si notás algo que te preocupa en casa, no dudes en escribirnos: preferimos que preguntes de más antes que quedarte con la duda.</p>`;
       return {
         subject: `Después de la consulta de ${pet} · ${p.businessName}`,

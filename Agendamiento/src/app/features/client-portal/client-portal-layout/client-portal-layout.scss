@@ -17,7 +17,7 @@
 }
 
 .sidenav {
-  width: 280px;
+  width: clamp(264px, 22vw, 312px);
   border-right: none !important;
   background:
     linear-gradient(
@@ -118,11 +118,18 @@
   max-width: calc(100% - 1.3rem);
   box-sizing: border-box;
   border-radius: var(--app-radius-md) !important;
-  transition: background-color var(--app-transition), color var(--app-transition);
+  transition:
+    background-color var(--app-transition),
+    color var(--app-transition),
+    transform 0.18s ease;
 
   mat-icon {
     color: var(--mat-sys-on-surface-variant);
   }
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
 }
 
 :host ::ng-deep .sidenav .mdc-list-item__content {
@@ -165,15 +172,19 @@
   flex-wrap: nowrap;
   gap: 0.45rem;
   min-width: 0;
-  --mat-toolbar-standard-height: 56px;
-  padding-inline: 0.75rem 0.55rem;
-  padding-block: 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-primary) 12%, transparent);
+  --mat-toolbar-standard-height: 58px;
+  box-sizing: border-box;
+  width: calc(100% - (2 * clamp(0.35rem, 1.1vw, 0.8rem)));
+  padding-inline: clamp(0.65rem, 1.9vw, 1rem) clamp(0.55rem, 1.5vw, 0.85rem);
+  padding-block: 0.16rem;
+  margin: 0.7rem auto 0;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-on-primary) 12%, transparent);
+  border-radius: calc(var(--app-radius-lg) + 4px);
   box-shadow:
     0 12px 40px color-mix(in srgb, var(--mat-sys-primary) 12%, rgba(15, 23, 42, 0.08)),
     inset 0 -1px 0 color-mix(in srgb, var(--mat-sys-on-primary) 8%, transparent);
-  backdrop-filter: saturate(1.15);
-  -webkit-backdrop-filter: saturate(1.15);
+  backdrop-filter: saturate(1.15) blur(6px);
+  -webkit-backdrop-filter: saturate(1.15) blur(6px);
 }
 
 .toolbar-title {
@@ -228,9 +239,9 @@
 .content {
   flex: 1;
   min-height: 0;
-  padding: 1.65rem 1.45rem;
+  padding: clamp(1.05rem, 2.8vw, 1.8rem) clamp(0.95rem, 2.5vw, 1.8rem);
   padding-bottom: 5.75rem;
-  max-width: 1080px;
+  max-width: min(1240px, 100%);
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -243,16 +254,18 @@
 .bottom-nav {
   display: none;
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: max(0.42rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(96vw, 540px);
   z-index: 5;
-  padding: 0.4rem 0.35rem calc(0.5rem + env(safe-area-inset-bottom));
+  padding: 0.45rem 0.45rem;
   background: color-mix(in srgb, var(--mat-sys-surface-container) 92%, transparent);
   backdrop-filter: blur(var(--app-blur));
   -webkit-backdrop-filter: blur(var(--app-blur));
-  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
-  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 52%, transparent);
+  border-radius: calc(var(--app-radius-lg) + 6px);
+  box-shadow: 0 10px 38px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 16%, transparent);
   justify-content: space-around;
   align-items: stretch;
 
@@ -297,6 +310,14 @@
 }
 
 @media (max-width: 768px) {
+  .toolbar {
+    /* Evita desborde horizontal del header en móviles */
+    box-sizing: border-box;
+    width: calc(100% - 0.9rem);
+    margin-inline: auto;
+    margin-top: 0.55rem;
+  }
+
   .toolbar-title {
     flex: 1 1 0;
     text-align: center;
@@ -308,7 +329,7 @@
   }
 
   .content {
-    padding: 1.15rem 1rem 5.75rem;
+    padding: 1.05rem 0.85rem 6.1rem;
   }
 }
 
@@ -318,6 +339,6 @@
   }
 
   .content {
-    padding-bottom: 1.85rem;
+    padding-bottom: 1.9rem;
   }
 }

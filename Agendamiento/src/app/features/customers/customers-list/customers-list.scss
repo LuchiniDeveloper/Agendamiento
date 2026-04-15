@@ -12,6 +12,24 @@
   }
 }
 
+.customers-loading {
+  margin-bottom: 1.25rem;
+}
+
+.customers-table-card {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 18%, var(--mat-sys-outline-variant)) !important;
+}
+
+.customers-empty {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 2.25rem 1.25rem 2.5rem;
+}
+
 mat-card {
   overflow: hidden;
 }
@@ -28,7 +46,11 @@ mat-card {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--mat-sys-on-surface-variant);
-    background: color-mix(in srgb, var(--mat-sys-surface-container) 80%, transparent);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--mat-sys-primary) 9%, var(--mat-sys-surface-container)),
+      color-mix(in srgb, var(--mat-sys-primary) 4%, var(--mat-sys-surface-container))
+    );
     border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
   }
 
@@ -40,15 +62,19 @@ mat-card {
   }
 
   tbody tr {
-    transition: background-color var(--app-transition);
+    transition:
+      background-color var(--app-transition),
+      box-shadow var(--app-transition),
+      transform var(--app-transition);
   }
 
   tbody tr:nth-child(even) {
-    background: color-mix(in srgb, var(--mat-sys-surface-container-low) 42%, transparent);
+    background: color-mix(in srgb, var(--mat-sys-surface-container-low) 48%, transparent);
   }
 
   tbody tr:hover {
-    background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+    background: color-mix(in srgb, var(--mat-sys-primary) 7%, var(--mat-sys-surface-container-low));
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--mat-sys-tertiary) 65%, var(--mat-sys-primary));
   }
 
   tbody tr:last-child td {
@@ -122,9 +148,6 @@ mat-card {
   }
 }
 
-.pad {
-  padding: 1.25rem;
-}
 
 .center {
   display: flex;

@@ -1,0 +1,181 @@
+.no-print {
+  @media print {
+    display: none !important;
+  }
+}
+
+.inv-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.inv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.inv-download-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.inv-download-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 5.5rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px dashed color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+
+  button {
+    margin-top: 0.7rem;
+  }
+}
+
+.inv-download-glyph {
+  font-size: 1.65rem;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.inv-download-label {
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.inv-download-sub {
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.inv-card {
+  padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.inv-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+}
+
+.inv-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.inv-no {
+  margin: 0.15rem 0 0;
+  font-size: 1.18rem;
+  font-weight: 750;
+}
+
+.inv-issued {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.inv-meta {
+  display: grid;
+  gap: 0.65rem 1.1rem;
+  margin: 0.95rem 0 0;
+
+  @media (min-width: 560px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  dt {
+    font-size: 0.72rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0.1rem 0 0;
+    font-size: 0.93rem;
+  }
+}
+
+.inv-table {
+  margin-top: 1rem;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.inv-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  padding: 0.58rem 0.75rem;
+  font-size: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 32%, transparent);
+
+  &:first-child {
+    border-top: none;
+  }
+
+  span:last-child {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.inv-row--head {
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mat-sys-on-surface-variant);
+  background: color-mix(in srgb, var(--mat-sys-surface-container) 80%, transparent);
+}
+
+.inv-totals {
+  margin-top: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 70%, transparent);
+
+  p {
+    margin: 0;
+    padding: 0.36rem 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.inv-total-paid {
+  margin-top: 0.25rem !important;
+  padding-top: 0.6rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  font-size: 1rem !important;
+  font-weight: 750;
+}
+
+@media print {
+  .inv-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+}
+

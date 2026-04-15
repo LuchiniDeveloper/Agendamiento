@@ -134,11 +134,23 @@
                 >
                   <mat-icon>receipt_long</mat-icon>
                 </button>
+                @if (canViewInvoice(r)) {
+                  <a
+                    mat-icon-button
+                    class="appt-act-btn"
+                    [routerLink]="['/portal', businessId(), 'cita', r.id, 'factura']"
+                    matTooltip="Ver factura"
+                    aria-label="Ver factura de la cita"
+                  >
+                    <mat-icon>request_quote</mat-icon>
+                  </a>
+                }
                 @if (canClinicalHistory(r)) {
                   <a
                     mat-icon-button
                     class="appt-act-btn"
                     [routerLink]="['/portal', businessId(), 'mascota', petId(r), 'historial']"
+                    [queryParams]="{ appointmentId: r.id }"
                     matTooltip="Historial clínico"
                     aria-label="Ver historial clínico"
                   >

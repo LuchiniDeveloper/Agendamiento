@@ -18,7 +18,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TenantContextService } from '../../core/tenant-context.service';
 import { SUPABASE_CLIENT } from '../../core/supabase';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
-import { AppointmentsData, todayYmdLocal } from '../appointments/appointments.data';
 
 interface KpiJson {
   revenue?: number;
@@ -58,13 +57,8 @@ interface AgendaRow {
   pet: { name: string } | null;
   customer: { name: string; phone?: string | null } | null;
   service: { name: string } | null;
+  vet: { name: string } | null;
   status: { id: number; name: string } | null;
-}
-
-interface FollowUpRow {
-  next_visit_date: string;
-  treatment: string | null;
-  pet: { name: string } | null;
 }
 
 interface TopPetRow {
@@ -148,7 +142,6 @@ const STATUS_COLORS: Record<string, string> = {
 })
 export class Dashboard implements OnInit {
   private readonly supabase = inject(SUPABASE_CLIENT);
-  private readonly appts = inject(AppointmentsData);
   protected readonly tenant = inject(TenantContextService);
 
   /** Rango global del panel: gráficas y top mascotas (KPIs del día y score usan ventanas fijas). */
@@ -185,11 +178,6 @@ export class Dashboard implements OnInit {
   protected readonly servicesBars = signal<ServiceDemandRow[]>([]);
   protected readonly paymentDonut = signal<DonutSlice[]>([]);
   protected readonly agendaToday = signal<AgendaRow[]>([]);
-  protected readonly freeSlotsToday = signal<number | null>(null);
-  protected readonly alertsUnconfirmed = signal(0);
-  protected readonly alertsReminders = signal(0);
-  protected readonly alertsEmailFailed = signal(0);
-  protected readonly followUps = signal<FollowUpRow[]>([]);
 
   protected readonly newCustomersRegistered30 = signal(0);
   protected readonly topPets = signal<TopPetRow[]>([]);
@@ -580,11 +568,7 @@ export class Dashboard implements OnInit {
         petsYesterday,
         svcAllRes,
         staffAllRes,
-        svcRow,
         customersCountRes,
-        nextVisits,
-        remindersBad,
-        emailFailedRes,
       ] = await Promise.all([
         client.rpc('get_kpis', { p_from: t0, p_to: t1 }),
         client.rpc('get_kpis', { p_from: y0, p_to: y1 }),
@@ -623,6 +607,7 @@ export class Dashboard implements OnInit {
             pet:pet_id (name),
             customer:customer_id (name, phone),
             service:service_id (name),
+            vet:user_id (name),
             status:status_id (id, name)
           `,
           )
@@ -646,30 +631,11 @@ export class Dashboard implements OnInit {
           .eq('status_id', this.statusByName.get('Completada') ?? -1),
         client.from('service').select('id, name, price').eq('business_id', bid),
         client.from('staff').select('id, name, active').eq('business_id', bid),
-        client.from('service').select('id').eq('business_id', bid).eq('active', true).limit(1).maybeSingle(),
         client
           .from('customer')
           .select('id', { count: 'exact', head: true })
           .eq('business_id', bid)
           .gte('created_at', d30From.toISOString()),
-        client
-          .from('medical_record')
-          .select('next_visit_date, treatment, pet:pet_id(name)')
-          .not('next_visit_date', 'is', null)
-          .gte('next_visit_date', ymdLocal(today0))
-          .order('next_visit_date')
-          .limit(8),
-        client
-          .from('reminder')
-          .select('id, sent, appointment:appointment_id!inner(start_date_time, business_id)')
-          .eq('sent', false),
-        client
-          .from('appointment_notification')
-          .select('id', { count: 'exact', head: true })
-          .eq('business_id', bid)
-          .eq('status', 'failed')
-          .gte('updated_at', t0)
-          .lt('updated_at', t1),
       ]);
 
       this.paymentsRaw = (paymentsRes.data ?? []) as RawPayment[];
@@ -688,10 +654,6 @@ export class Dashboard implements OnInit {
         const s = row as { id: string; name: string };
         this.staffNameById.set(s.id, s.name);
       }
-      const staffActiveList = (staffAllRes.data ?? []).filter(
-        (r) => (r as { active?: boolean }).active !== false,
-      ) as { id: string; name: string }[];
-
       const jToday = (kToday.data ?? {}) as KpiJson;
       const jYest = (kYest.data ?? {}) as KpiJson;
 
@@ -734,40 +696,10 @@ export class Dashboard implements OnInit {
 
       this.applyChartAggregates(now, today0);
 
-      const unconfId = this.statusByName.get('Agendada');
       const todayRows = (apptsTodayList.data ?? []) as unknown as AgendaRow[];
       this.agendaToday.set(todayRows);
-      this.alertsUnconfirmed.set(todayRows.filter((r) => r.status?.id === unconfId).length);
-      const remRows = (remindersBad.data ?? []) as unknown as {
-        appointment?: { start_date_time: string; business_id: string };
-      }[];
-      this.alertsReminders.set(
-        remRows.filter(
-          (r) =>
-            r.appointment?.business_id === bid &&
-            r.appointment?.start_date_time >= t0 &&
-            r.appointment?.start_date_time < t1,
-        ).length,
-      );
-
-      this.alertsEmailFailed.set(emailFailedRes.count ?? 0);
-
-      this.followUps.set((nextVisits.data ?? []) as unknown as FollowUpRow[]);
 
       this.newCustomersRegistered30.set(customersCountRes.count ?? 0);
-
-      const svcId = (svcRow.data as { id: string } | null)?.id;
-      const ymd = todayYmdLocal();
-      if (svcId && staffActiveList.length) {
-        const slots = await Promise.all(
-          staffActiveList.map((s) =>
-            this.appts.getAvailableSlots({ userId: s.id, serviceId: svcId, onDate: ymd }).catch(() => []),
-          ),
-        );
-        this.freeSlotsToday.set(slots.reduce((a, b) => a + b.length, 0));
-      } else {
-        this.freeSlotsToday.set(null);
-      }
 
       const apScore = this.filterApptsLast30d(this.apptsRaw, today0, now);
       const scoreP = this.computeProductivityMetrics(apScore);
@@ -860,9 +792,6 @@ export class Dashboard implements OnInit {
       return 'La tasa de inasistencias es alta: conviene confirmar citas con más antelación (correo o contacto manual).';
     const cr = this.scoreCancelRatePct;
     if (cr > 22) return 'Muchas cancelaciones: revisa política de reserva o confirma citas con más antelación.';
-    const free = this.freeSlotsToday();
-    if (free != null && free > 8)
-      return `Tienes ${free} huecos libres hoy: conviene una campaña a clientes inactivos o promoción puntual.`;
     return null;
   }
 

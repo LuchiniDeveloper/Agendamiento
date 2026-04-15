@@ -1,13 +1,15 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
 import { AppointmentsData } from '../appointments.data';
 import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
+import { AppointmentExtraChargesDialog } from '../appointment-extra-charges-dialog/appointment-extra-charges-dialog';
 import {
   copPriceValidator,
   digitsOnly,
@@ -65,6 +67,7 @@ export const TRANSFER_CHANNEL_OPTIONS: { value: string; label: string }[] = [
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatIconModule,
     CopCurrencyPipe,
   ],
   templateUrl: './payment-form-dialog.html',
@@ -72,6 +75,7 @@ export const TRANSFER_CHANNEL_OPTIONS: { value: string; label: string }[] = [
 export class PaymentFormDialog implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly appts = inject(AppointmentsData);
+  private readonly dialog = inject(MatDialog);
   private readonly ref = inject(MatDialogRef<PaymentFormDialog>);
   protected readonly payload = inject(MAT_DIALOG_DATA) as PaymentPayload;
 
@@ -79,7 +83,10 @@ export class PaymentFormDialog implements OnInit, OnDestroy {
 
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
+  protected readonly refreshingBreakdown = signal(false);
   protected readonly transferChannels = TRANSFER_CHANNEL_OPTIONS;
+  protected readonly breakdown = signal<PaymentBreakdown | null>(this.payload.breakdown ?? null);
+  protected readonly totalToCharge = signal<number>(this.payload.defaultAmount);
 
   form = this.fb.nonNullable.group({
     amount: ['0', [copPriceValidator]],
@@ -90,12 +97,15 @@ export class PaymentFormDialog implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.form.patchValue({
-      amount: priceToFormattedInput(this.payload.defaultAmount),
+      amount: priceToFormattedInput(this.totalToCharge()),
     });
     this.applyTransferValidators(this.form.controls.payment_method.value);
     this.sub = this.form.controls.payment_method.valueChanges.subscribe((m) => {
       this.applyTransferValidators(m);
     });
+    if (this.payload.breakdown) {
+      void this.refreshBreakdownFromDb();
+    }
   }
 
   ngOnDestroy() {
@@ -143,6 +153,51 @@ export class PaymentFormDialog implements OnInit, OnDestroy {
 
   cancel() {
     this.ref.close();
+  }
+
+  private applySuggestedAmount(amount: number) {
+    this.totalToCharge.set(amount);
+    this.form.controls.amount.setValue(priceToFormattedInput(amount), { emitEvent: false });
+    this.form.controls.amount.markAsPristine();
+  }
+
+  protected async openExtraCharges() {
+    this.dialog
+      .open(AppointmentExtraChargesDialog, {
+        width: 'min(480px, 96vw)',
+        maxWidth: '96vw',
+        data: { appointmentId: this.payload.appointmentId },
+      })
+      .afterClosed()
+      .subscribe(() => void this.refreshBreakdownFromDb());
+  }
+
+  protected async refreshBreakdownFromDb() {
+    if (!this.breakdown()) return;
+    this.refreshingBreakdown.set(true);
+    this.error.set(null);
+    try {
+      const { data: rows, error } = await this.appts.listExtraCharges(this.payload.appointmentId);
+      if (error) throw error;
+      const extrasLines: PaymentBreakdownLine[] = (rows ?? []).map((r) => ({
+        description: String((r as { description?: string }).description ?? ''),
+        amount: Number((r as { amount?: unknown }).amount ?? 0),
+      }));
+      const base = this.breakdown()!;
+      const extrasAmount = extrasLines.reduce((sum, line) => sum + line.amount, 0);
+      const next: PaymentBreakdown = {
+        serviceLabel: base.serviceLabel,
+        serviceAmount: Number(base.serviceAmount ?? 0),
+        extrasAmount,
+        extrasLines: extrasLines.length ? extrasLines : undefined,
+      };
+      this.breakdown.set(next);
+      this.applySuggestedAmount(next.serviceAmount + next.extrasAmount);
+    } catch (e: unknown) {
+      this.error.set(e instanceof Error ? e.message : 'No se pudo actualizar la factura.');
+    } finally {
+      this.refreshingBreakdown.set(false);
+    }
   }
 
   async save() {

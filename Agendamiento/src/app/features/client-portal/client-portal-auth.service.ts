@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { SUPABASE_CLIENT } from '../../core/supabase';
 
-type PortalAuthOk = { ok: true; session?: Record<string, unknown>; need_manual_login?: boolean };
+type PortalAuthOk = {
+  ok: true;
+  session?: Record<string, unknown>;
+  need_manual_login?: boolean;
+  can_register?: boolean;
+};
 type PortalAuthErr = { error: string; need_activate?: boolean; error_code?: string };
 export type PortalAuthResult = PortalAuthOk | PortalAuthErr;
 
@@ -71,6 +76,10 @@ export class ClientPortalAuthService {
     pet_species?: string;
   }): Promise<PortalAuthResult> {
     return this.post({ action: 'register', ...payload });
+  }
+
+  async registerPrecheck(payload: { business_id: string; id_document: string }): Promise<PortalAuthResult> {
+    return this.post({ action: 'register_precheck', ...payload });
   }
 
   async activate(payload: {

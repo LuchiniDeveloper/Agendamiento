@@ -93,7 +93,8 @@ export const routes: Routes = [
       },
       {
         path: 'staff',
-        canActivate: [adminGuard],
+        canActivate: [roleGuard],
+        data: { roles: ['Admin', 'Veterinario'] },
         loadComponent: () =>
           import('./features/staff-admin/staff-page/staff-page').then((m) => m.StaffPage),
       },

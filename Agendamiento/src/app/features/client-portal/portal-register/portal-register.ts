@@ -66,15 +66,49 @@ export class PortalRegister {
     return name.valid && id_document.valid && password.valid && email.valid;
   }
 
-  protected goToPetStep() {
+  protected async goToPetStep() {
     const keys = ['name', 'id_document', 'password', 'email'] as const;
     for (const k of keys) {
       const c = this.form.controls[k];
       c.markAsTouched();
       if (c.invalid) return;
     }
+    const bid = this.businessId();
+    if (!bid) return;
+
+    const idDigits = this.form.controls.id_document.value.trim().replace(/\D/g, '');
+    if (idDigits.length < 5) {
+      this.error.set('La cédula debe tener al menos 5 dígitos.');
+      return;
+    }
+
     this.error.set(null);
-    this.step.set(1);
+    this.saving.set(true);
+    try {
+      const precheck = await this.portalAuth.registerPrecheck({
+        business_id: bid,
+        id_document: idDigits,
+      });
+      if ('error' in precheck) {
+        // Compatibilidad temporal: si la Edge Function vieja no soporta register_precheck,
+        // no bloqueamos el flujo y dejamos que la validación ocurra al crear la cuenta.
+        if (/acci[oó]n no v[aá]lida/i.test(precheck.error)) {
+          this.step.set(1);
+          return;
+        }
+        if (precheck.need_activate) {
+          this.error.set(
+            'La cédula ya está registrada en la clínica. Por favor usá “Ya soy cliente: activar cuenta”.',
+          );
+          return;
+        }
+        this.error.set(precheck.error);
+        return;
+      }
+      this.step.set(1);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   protected backToClientStep() {

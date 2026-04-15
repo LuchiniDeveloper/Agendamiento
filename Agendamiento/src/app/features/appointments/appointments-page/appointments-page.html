@@ -21,12 +21,39 @@
         <mat-hint>Solo este vet en el calendario</mat-hint>
       </mat-form-field>
     }
-    <button mat-flat-button color="primary" type="button" (click)="newAppointment()">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      class="app-cta app-cta--primary"
+      (click)="newAppointment()"
+    >
       <mat-icon>add</mat-icon>
       Nueva cita
     </button>
   </div>
 </header>
+
+@if (hasAttentionBanner()) {
+  <section class="attention-strip" aria-label="Citas en atención">
+    <div class="attention-strip__head">
+      <mat-icon aria-hidden="true">local_hospital</mat-icon>
+      <strong>{{ tenant.isAdmin() ? 'Citas en atención' : 'Tu cita en atención' }}</strong>
+    </div>
+    <div class="attention-strip__list">
+      @for (r of attentionBannerRows(); track r.id) {
+        <button type="button" class="attention-chip" (click)="openAttentionFromBanner(r)">
+          <span class="attention-chip__title">{{ attentionCardTitle(r) }}</span>
+          <span class="attention-chip__sub">{{ attentionCardSubtitle(r) }}</span>
+          <span class="attention-chip__meta">
+            <mat-icon aria-hidden="true">schedule</mat-icon>
+            {{ attentionElapsedLabel(r) }} · Desde {{ attentionStartLabel(r) }}
+          </span>
+        </button>
+      }
+    </div>
+  </section>
+}
 
 <div class="legend">
   @for (s of ['Agendada', 'Confirmada', 'Completada', 'Cancelada', 'NoShow']; track s) {

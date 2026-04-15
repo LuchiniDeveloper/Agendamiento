@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TenantContextService } from '../../../core/tenant-context.service';
 import { MedicalData, type MedicalRecordRow } from '../medical.data';
 import { MedicalRecordDeleteDialog } from '../medical-record-delete-dialog/medical-record-delete-dialog';
@@ -42,6 +43,7 @@ function endOfDayIso(d: Date): string {
     MatDatepickerModule,
     MatNativeDateModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './medical-record-list.html',
   styleUrl: './medical-record-list.scss',

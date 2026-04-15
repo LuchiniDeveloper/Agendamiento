@@ -1,8 +1,8 @@
 <main class="portal-page portal-page--summary">
 <mat-toolbar class="no-print portal-sum-toolbar" color="primary">
-  <a mat-button [routerLink]="['/portal', businessId()]">
+  <a mat-button [routerLink]="['/portal', businessId(), 'citas']">
     <mat-icon>arrow_back</mat-icon>
-    Inicio
+    Mis citas
   </a>
   <span class="spacer"></span>
   <button mat-flat-button type="button" color="accent" (click)="printPage()">

@@ -1,0 +1,1 @@
+{"query":"SELECT ('-- ### STORAGE MIGRATIONS' || E'\\n' ||\n  COALESCE((\n    SELECT string_agg(\n      format('INSERT INTO storage.migrations SELECT * FROM json_populate_record(NULL::storage.migrations, %L::json);', row_to_json(t)::text),\n      E'\\n'\n    )\n    FROM storage.migrations t\n  ), '')) AS part;"}

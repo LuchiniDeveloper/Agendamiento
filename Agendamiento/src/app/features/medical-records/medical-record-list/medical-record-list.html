@@ -34,9 +34,21 @@
 </section>
 
 @if (loading()) {
-  <p class="muted">Cargando…</p>
+  <div class="med-loading app-loading-shell">
+    <mat-spinner diameter="36" />
+    <p class="muted load-hint">Revisando el historial de {{ petName() || 'la mascota' }}…</p>
+  </div>
 } @else if (rows().length === 0) {
-  <p class="muted">Sin registros en este rango.</p>
+  <div class="med-empty app-empty-state">
+    <span class="app-empty-state__icon" aria-hidden="true">
+      <mat-icon>healing</mat-icon>
+    </span>
+    <p class="app-empty-state__title">Aún no hay notas en este rango</p>
+    <p class="app-empty-state__text">
+      Cuando registres consultas o notas clínicas, aparecerán aquí en orden cronológico para seguir el bienestar de
+      {{ petName() || 'tu paciente' }}.
+    </p>
+  </div>
 } @else {
   <mat-accordion class="hist-acc" multi>
     @for (r of rows(); track r.id) {
@@ -46,7 +58,7 @@
       >
         <mat-expansion-panel-header>
           <mat-panel-title class="hist-sum">
-            <span class="hist-sum__tipo">{{ recordTipo(r) }}</span>
+            <span class="hist-sum__tipo" [class.hist-sum__tipo--cita]="!!r.appointment_id">{{ recordTipo(r) }}</span>
             <span class="hist-sum__one-line">{{ summaryHeaderLine(r) }}</span>
           </mat-panel-title>
         </mat-expansion-panel-header>

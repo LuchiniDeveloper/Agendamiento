@@ -57,7 +57,7 @@ export class CustomerDetail implements OnInit {
   protected readonly pets = signal<PetRow[]>([]);
   protected readonly petsWithHistory = signal<Set<string>>(new Set());
   protected readonly petFilterText = signal('');
-  /** Panel de mascota abierto/cerrado (por defecto: todos abiertos si hay ≤3). */
+  /** Panel de mascota abierto/cerrado (por defecto: colapsados para ahorrar espacio). */
   protected readonly petPanelOpen = signal<Record<string, boolean>>({});
   protected customerId = '';
 
@@ -88,11 +88,10 @@ export class CustomerDetail implements OnInit {
   }
 
   private syncPetPanelsFromList(list: PetRow[]) {
-    const n = list.length;
     const prev = this.petPanelOpen();
     const next: Record<string, boolean> = {};
     for (const p of list) {
-      next[p.id] = prev[p.id] ?? n <= 3;
+      next[p.id] = prev[p.id] ?? false;
     }
     this.petPanelOpen.set(next);
   }

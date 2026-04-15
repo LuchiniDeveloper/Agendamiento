@@ -57,6 +57,21 @@
   margin-bottom: -0.15rem;
 }
 
+.sched-block__hint {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.92;
+  margin: -0.2rem 0 0.35rem;
+}
+
+.sched-block--optional-w2 {
+  padding: 0.85rem 1rem 1rem;
+  border-radius: var(--app-radius-md);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+}
+
 .sched-times {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -25,6 +25,7 @@ export class AppointmentEmailNotificationsPanel implements OnInit, OnDestroy {
 
   protected readonly rows = signal<NotificationListRow[]>([]);
   protected readonly loading = signal(true);
+  protected readonly collapsed = signal(true);
 
   private unsub: (() => void) | null = null;
 
@@ -75,5 +76,9 @@ export class AppointmentEmailNotificationsPanel implements OnInit, OnDestroy {
     if (s === 'failed' || s === 'skipped') return 'bad';
     if (s === 'sending') return 'warn';
     return '';
+  }
+
+  protected toggleCollapsed() {
+    this.collapsed.update((v) => !v);
   }
 }

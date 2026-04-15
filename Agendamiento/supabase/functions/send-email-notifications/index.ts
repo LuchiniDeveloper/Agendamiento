@@ -82,6 +82,8 @@ type NotificationRow = {
   payload_snapshot: { diagnosis_excerpt?: string } | null;
 };
 
+type InvoiceLine = { description: string; amount: number };
+
 async function processOne(
   admin: ReturnType<typeof createClient>,
   n: NotificationRow,
@@ -97,7 +99,7 @@ async function processOne(
       business_id,
       customer:customer_id (name, email),
       pet:pet_id (name),
-      service:service_id (name),
+      service:service_id (name, price),
       vet:user_id (name)
     `,
     )
@@ -148,7 +150,7 @@ async function processOne(
 
   const customer = appt.customer as { name: string | null; email: string | null } | null;
   const pet = appt.pet as { name: string | null } | null;
-  const service = appt.service as { name: string | null } | null;
+  const service = appt.service as { name: string | null; price?: number | string | null } | null;
   const vet = appt.vet as { name: string | null } | null;
 
   const whenFormatted = new Intl.DateTimeFormat('es-CO', {
@@ -194,16 +196,79 @@ async function processOne(
   if (n.kind === 'COMPLETED_SUMMARY') {
     const { data: med } = await admin
       .from('medical_record')
-      .select('diagnosis, treatment, observations')
+      .select('diagnosis, treatment, observations, weight, next_visit_date, created_at')
       .eq('appointment_id', n.appointment_id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    const { data: extrasRows } = await admin
+      .from('appointment_extra_charge')
+      .select('description, amount')
+      .eq('appointment_id', n.appointment_id)
+      .order('created_at', { ascending: true });
+
+    const { data: paymentRows } = await admin
+      .from('payment')
+      .select('id, amount, payment_method, created_at, transfer_channel, transfer_proof_code')
+      .eq('appointment_id', n.appointment_id)
+      .order('created_at', { ascending: true });
+
+    const extrasLines: InvoiceLine[] = (extrasRows ?? []).map((r) => ({
+      description: String((r as { description?: string | null }).description ?? '').trim() || 'Gasto adicional',
+      amount: Number((r as { amount?: unknown }).amount ?? 0),
+    }));
+    const extrasAmount = extrasLines.reduce((sum, l) => sum + l.amount, 0);
+
+    const serviceAmount = Number(service?.price ?? 0);
+    const payments = (paymentRows ?? []) as {
+      id?: string | null;
+      amount?: number | string | null;
+      payment_method?: string | null;
+      created_at?: string | null;
+      transfer_channel?: string | null;
+      transfer_proof_code?: string | null;
+    }[];
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
+    const lastPayment = payments.at(-1) ?? null;
+    const paymentMethod = paymentMethodLabel(lastPayment?.payment_method ?? null);
+    const paymentLine =
+      paymentMethod === 'Transferencia' && (lastPayment?.transfer_channel ?? '').trim()
+        ? `${paymentMethod} (${String(lastPayment?.transfer_channel).trim()})`
+        : paymentMethod;
+    const paymentId = (lastPayment?.id ?? null) as string | null;
+    const proofLine = (lastPayment?.transfer_proof_code ?? '').trim() || 'N/A';
+    const invoiceNo = `INV-${n.appointment_id.slice(0, 8).toUpperCase()}`;
+    const issuedAtIso = lastPayment?.created_at ?? (med?.created_at as string | null) ?? new Date().toISOString();
+    const issueLabel = formatDateTime(issuedAtIso);
+
     const excerpt =
       n.payload_snapshot?.diagnosis_excerpt ||
       [med?.diagnosis, med?.treatment, med?.observations].filter(Boolean).join(' · ') ||
       null;
     payload.diagnosisExcerpt = excerpt;
+    payload.diagnosis = (med?.diagnosis as string | null) ?? null;
+    payload.treatment = (med?.treatment as string | null) ?? null;
+    payload.observations = (med?.observations as string | null) ?? null;
+    payload.weight = Number.isFinite(Number(med?.weight)) ? Number(med?.weight) : null;
+    payload.nextVisitDate = (med?.next_visit_date as string | null) ?? null;
+    payload.invoice = {
+      invoiceNo,
+      issueLabel,
+      appointmentId: n.appointment_id,
+      serviceLabel: String(service?.name ?? 'Servicio'),
+      serviceAmount,
+      extrasLines,
+      extrasAmount,
+      paymentLine,
+      paymentId,
+      proofLine,
+      totalPaid,
+      totalExpected: serviceAmount + extrasAmount,
+      customerName: String(customer?.name ?? '—'),
+      petName: String(pet?.name ?? '—'),
+      vetName: String(vet?.name ?? '—'),
+    };
   }
 
   payload.confirmUrl = confirmUrl;
@@ -258,6 +323,21 @@ function json(status: number, payload: Record<string, unknown>) {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
+}
+
+function paymentMethodLabel(v: string | null): string {
+  if (v === 'Cash') return 'Efectivo';
+  if (v === 'Card') return 'Tarjeta';
+  if (v === 'Transfer') return 'Transferencia';
+  return v || '—';
+}
+
+function formatDateTime(iso: string | null | undefined): string {
+  const d = iso ? new Date(iso) : new Date();
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(d);
 }
 
 /** Texto útil a partir de campos que a veces vienen como objeto (p. ej. `message` anidado en PostgREST). */

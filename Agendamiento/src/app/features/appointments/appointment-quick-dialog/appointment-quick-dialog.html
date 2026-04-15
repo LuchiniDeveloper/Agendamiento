@@ -3,6 +3,18 @@
     <mat-icon class="appt-dlg__title-ic" aria-hidden="true">event_available</mat-icon>
     Cita
   </span>
+  @if (inAttention()) {
+    <button
+      mat-icon-button
+      type="button"
+      class="appt-dlg__close-attention"
+      aria-label="Cerrar ventana de atención"
+      matTooltip="Cerrar"
+      (click)="closeDialog()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  }
 </h2>
 <mat-dialog-content class="appt-dlg__content">
   <div class="appt-dlg__chips">
@@ -39,19 +51,6 @@
     </p>
   }
 
-  <div class="schedule-block" role="group" aria-label="Horario actual">
-    <p class="schedule-line">
-      <mat-icon class="sched-ic" aria-hidden="true">play_circle_outline</mat-icon>
-      <span class="sched-label">Inicio</span>
-      <span class="sched-value">{{ data.startLabel || '—' }}</span>
-    </p>
-    <p class="schedule-line">
-      <mat-icon class="sched-ic" aria-hidden="true">stop_circle</mat-icon>
-      <span class="sched-label">Fin</span>
-      <span class="sched-value">{{ data.endLabel || '—' }}</span>
-    </p>
-  </div>
-
   @if (canStartAttention()) {
     <div class="attention-start">
       <button
@@ -71,6 +70,106 @@
     </div>
   }
 
+  <div class="schedule-block" role="group" aria-label="Horario actual">
+    <p class="schedule-line">
+      <mat-icon class="sched-ic" aria-hidden="true">play_circle_outline</mat-icon>
+      <span class="sched-label">Inicio</span>
+      <span class="sched-value">{{ data.startLabel || '—' }}</span>
+    </p>
+    <p class="schedule-line">
+      <mat-icon class="sched-ic" aria-hidden="true">stop_circle</mat-icon>
+      <span class="sched-label">Fin</span>
+      <span class="sched-value">{{ data.endLabel || '—' }}</span>
+    </p>
+  </div>
+
+  @if (hasLinkedClinicalNote()) {
+    <button type="button" class="clinical-link" (click)="goToPetClinicalHistory()">
+      <mat-icon class="clinical-link__ic" aria-hidden="true">assignment</mat-icon>
+      <span class="clinical-link__text">
+        <span class="clinical-link__title">Diagnóstico (nota vinculada)</span>
+        <span class="clinical-link__sub">Clic para detalles</span>
+      </span>
+      <mat-icon class="clinical-link__chevron" aria-hidden="true">chevron_right</mat-icon>
+    </button>
+  }
+
+  @if (isCompleted()) {
+    <div class="invoice-summary" role="group" aria-label="Resumen de factura">
+      <div class="invoice-summary__top">
+        <div class="invoice-summary__main">
+          <span class="invoice-summary__label">Total visita</span>
+          <strong class="invoice-summary__amount">
+            {{ (paidCount() > 0 ? paidTotal() : data.servicePrice) | copCurrency }}
+          </strong>
+        </div>
+        <div class="invoice-summary__actions">
+          @if (canDownloadInvoicePdf()) {
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              class="invoice-summary__download"
+              (click)="downloadInvoicePdf()"
+            >
+              <mat-icon>download</mat-icon>
+              Descargar
+            </button>
+          }
+          <button
+            mat-stroked-button
+            type="button"
+            class="invoice-summary__toggle"
+            [disabled]="invoiceLoading()"
+            (click)="toggleInvoiceExpanded()"
+          >
+            <mat-icon>{{ invoiceExpanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ invoiceExpanded() ? 'Ocultar factura' : 'Ver factura' }}
+          </button>
+        </div>
+      </div>
+      @if (paidCount() > 0) {
+        <p class="invoice-summary__meta">
+          Facturada · {{ paidMethod() }} · {{ paidAt() | date: 'short' }}
+          @if (paidTransferProof()) {
+            · Comp.: {{ paidTransferProof() }}
+          }
+        </p>
+      } @else {
+        <p class="invoice-summary__meta">Sin pago registrado aún</p>
+      }
+      @if (invoiceExpanded() && invoiceBreakdown(); as bill) {
+        <div class="invoice-summary__details">
+          <p class="invoice-summary__row">
+            <span>{{ bill.serviceLabel }}</span>
+            <span>{{ bill.serviceAmount | copCurrency }}</span>
+          </p>
+          @if (bill.extrasAmount > 0) {
+            <p class="invoice-summary__sub">Gastos adicionales</p>
+            @if (bill.extrasLines?.length) {
+              <ul class="invoice-summary__lines">
+                @for (line of bill.extrasLines; track $index) {
+                  <li>
+                    <span>{{ line.description }}</span>
+                    <span>{{ line.amount | copCurrency }}</span>
+                  </li>
+                }
+              </ul>
+            }
+            <p class="invoice-summary__row invoice-summary__row--muted">
+              <span>Subtotal extras</span>
+              <span>{{ bill.extrasAmount | copCurrency }}</span>
+            </p>
+          }
+          <p class="invoice-summary__row invoice-summary__row--total">
+            <span>Total</span>
+            <strong>{{ (paidCount() > 0 ? paidTotal() : bill.serviceAmount + bill.extrasAmount) | copCurrency }}</strong>
+          </p>
+        </div>
+      }
+    </div>
+  }
+
   @if (inAttention()) {
     <div class="attention-panel" [attr.data-tone]="attentionTone()">
       <div class="attention-panel__head">
@@ -81,18 +180,50 @@
       </div>
       <p class="attention-panel__hint">{{ attentionHint() }}</p>
       <div class="attention-panel__actions">
-        <button mat-flat-button color="primary" type="button" (click)="openExtras()">
-          <mat-icon>receipt_long</mat-icon>
-          Gastos adicionales
-        </button>
-        <button
-          mat-button
-          type="button"
-          [disabled]="attentionBusy()"
-          (click)="clearAttention()"
-        >
-          Descartar atención
-        </button>
+        <div class="attention-panel__left">
+          <button mat-flat-button color="primary" type="button" (click)="openExtras()">
+            <mat-icon>receipt_long</mat-icon>
+            Gastos adicionales
+          </button>
+        </div>
+        <div class="attention-panel__right">
+          <button
+            mat-icon-button
+            type="button"
+            class="attention-action attention-action--pause"
+            [attr.aria-label]="attentionPaused() ? 'Reanudar atención' : 'Pausar atención'"
+            [matTooltip]="attentionPaused() ? 'Reanudar' : 'Pausar'"
+            matTooltipPosition="above"
+            [disabled]="attentionBusy() || saving()"
+            (click)="togglePauseAttention()"
+          >
+            <mat-icon>{{ attentionPaused() ? 'play_arrow' : 'pause' }}</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            class="attention-action attention-action--stop"
+            aria-label="Detener atención"
+            matTooltip="Detener atención"
+            matTooltipPosition="above"
+            [disabled]="attentionBusy() || saving()"
+            (click)="clearAttention()"
+          >
+            <mat-icon>stop</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            class="attention-action attention-action--complete"
+            aria-label="Completar cita"
+            matTooltip="Completar y cobrar"
+            matTooltipPosition="above"
+            [disabled]="attentionBusy() || saving()"
+            (click)="completeAttention()"
+          >
+            <mat-icon>task_alt</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
   }
@@ -132,28 +263,19 @@
       </div>
     }
 
-    <app-appointment-email-notifications-panel [appointmentId]="data.id" />
-
-    @if (hasLinkedClinicalNote()) {
-      <button type="button" class="clinical-link" (click)="goToPetClinicalHistory()">
-        <mat-icon class="clinical-link__ic" aria-hidden="true">assignment</mat-icon>
-        <span class="clinical-link__text">
-          <span class="clinical-link__title">Diagnóstico (nota vinculada)</span>
-          <span class="clinical-link__sub">Clic para detalles</span>
-        </span>
-        <mat-icon class="clinical-link__chevron" aria-hidden="true">chevron_right</mat-icon>
-      </button>
+    @if (showStatusField()) {
+      <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
+        <mat-icon matPrefix class="field-prefix-ic" aria-hidden="true">flag</mat-icon>
+        <mat-label>Estado de la cita</mat-label>
+        <mat-select formControlName="status_id" (selectionChange)="onStatusChange()">
+          @for (s of statusOptionsForSelect(); track s.id) {
+            <mat-option [value]="s.id">{{ s.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     }
 
-    <mat-form-field appearance="outline" class="full" subscriptSizing="dynamic">
-      <mat-icon matPrefix class="field-prefix-ic" aria-hidden="true">flag</mat-icon>
-      <mat-label>Estado de la cita</mat-label>
-      <mat-select formControlName="status_id" (selectionChange)="onStatusChange()">
-        @for (s of data.statuses; track s.id) {
-          <mat-option [value]="s.id">{{ s.name }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <app-appointment-email-notifications-panel [appointmentId]="data.id" />
   </div>
 
   <div class="appt-dlg__toolbar">
@@ -206,7 +328,7 @@
     </div>
   </div>
 </mat-dialog-content>
-@if (showSaveStatusButton()) {
+@if (showSaveStatusButton() && showStatusField()) {
   <mat-dialog-actions class="appt-dlg__footer" align="end">
     <button
       mat-flat-button

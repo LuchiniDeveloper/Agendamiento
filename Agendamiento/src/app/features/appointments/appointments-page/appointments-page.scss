@@ -24,11 +24,93 @@
   }
 }
 
+.attention-strip {
+  margin: 0 0 0.85rem;
+  padding: 0.72rem 0.78rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 30%, transparent);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--mat-sys-primary) 12%, transparent), transparent 55%),
+    color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+}
+
+.attention-strip__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    color: var(--mat-sys-primary);
+  }
+}
+
+.attention-strip__list {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.attention-chip {
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 36%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 94%, transparent);
+  color: inherit;
+  border-radius: 10px;
+  padding: 0.52rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.16rem;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    border-color 0.14s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--mat-sys-shadow, #000) 12%, transparent);
+  }
+}
+
+.attention-chip__title {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.attention-chip__sub {
+  font-size: 0.76rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.attention-chip__meta {
+  margin-top: 0.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 0.92rem;
+    width: 0.92rem;
+    height: 0.92rem;
+  }
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  padding: 0.5rem 0.15rem;
 }
 
 .leg-item {
@@ -354,6 +436,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+:host ::ng-deep .fc-appt-custom__attention {
+  margin-top: 0.16rem;
+  align-self: flex-start;
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #1b5e20;
+  background: color-mix(in srgb, #ffffff 88%, #66bb6a);
+  border-radius: 999px;
+  padding: 0.12rem 0.35rem;
+}
+
+:host ::ng-deep .fc-event--attention {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #43a047 55%, transparent),
+    0 2px 6px color-mix(in srgb, var(--mat-sys-shadow, #000) 14%, transparent) !important;
 }
 
 :host ::ng-deep .pet-cal-avatar {

@@ -3,12 +3,18 @@
   <div>
     <p class="app-page-kicker">Historial clínico</p>
     <h1 class="page-title">{{ petName() }}</h1>
-    <p class="muted">Registros cargados por la clínica en consultas anteriores.</p>
+    <p class="muted">
+      @if (selectedAppointmentId()) {
+        Registro clínico de la cita seleccionada.
+      } @else {
+        Registros cargados por la clínica en consultas anteriores.
+      }
+    </p>
   </div>
   <div class="app-page-hero-actions">
-    <a mat-stroked-button class="app-cta" [routerLink]="['/portal', businessId()]">
+    <a mat-stroked-button class="app-cta" [routerLink]="['/portal', businessId(), 'citas']">
       <mat-icon>arrow_back</mat-icon>
-      Inicio
+      Mis citas
     </a>
   </div>
 </header>

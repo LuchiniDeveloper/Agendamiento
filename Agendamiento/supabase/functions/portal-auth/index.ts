@@ -109,6 +109,9 @@ Deno.serve(async (req) => {
   if (action === 'register') {
     return handleRegister(admin, supabaseUrl, anonKey, body);
   }
+  if (action === 'register_precheck') {
+    return handleRegisterPrecheck(admin, body);
+  }
   if (action === 'activate') {
     return handleActivate(admin, supabaseUrl, anonKey, body);
   }
@@ -316,6 +319,44 @@ async function handleRegister(
     return json(200, { ok: true, need_manual_login: true });
   }
   return json(200, { ok: true, session: tok.session });
+}
+
+async function handleRegisterPrecheck(
+  admin: ReturnType<typeof createClient>,
+  body: Record<string, unknown>,
+) {
+  const businessId = String(body.business_id ?? '').trim();
+  const idDocument = normalizeDoc(String(body.id_document ?? ''));
+  if (!businessId || idDocument.length < 5) {
+    return json(400, { error: 'Datos incompletos' });
+  }
+
+  const { data: rawExisting, error: lookupError } = await admin.rpc('portal_lookup_customer', {
+    p_business_id: businessId,
+    p_id_document: idDocument,
+  });
+  if (lookupError) {
+    console.error('portal_lookup_customer precheck', lookupError);
+    return json(500, { error: 'No se pudo validar la cédula. Probá de nuevo.', error_code: 'LOOKUP_ERROR' });
+  }
+
+  const existing = rpcRows<{ has_portal: boolean }>(rawExisting);
+  if (existing.length) {
+    const ex = existing[0]!;
+    if (ex.has_portal) {
+      return json(409, {
+        error: 'Ya existe una cuenta con esta cédula. Iniciá sesión con tus datos del portal.',
+        error_code: 'CEDULA_ALREADY_HAS_PORTAL',
+      });
+    }
+    return json(409, {
+      error: 'Esta cédula ya está registrada en la clínica. Usá “Activar cuenta” para habilitar tu acceso.',
+      need_activate: true,
+      error_code: 'CEDULA_ALREADY_REGISTERED',
+    });
+  }
+
+  return json(200, { ok: true, can_register: true });
 }
 
 async function handleActivate(

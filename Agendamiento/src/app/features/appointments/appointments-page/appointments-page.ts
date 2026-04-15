@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, inject, PLATFORM_ID, signal, viewChild } from '@angular/core';
+import { Component, inject, OnDestroy, PLATFORM_ID, signal, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -43,6 +43,12 @@ interface ApptRow {
   status: { name: string } | null;
 }
 
+function isInAttention(row: ApptRow | null | undefined): boolean {
+  if (!row?.attention_started_at) return false;
+  const st = row.status?.name ?? '';
+  return st !== 'Completada' && st !== 'Cancelada' && st !== 'NoShow';
+}
+
 const STATUS_COLORS: Record<string, string> = {
   Agendada: '#5c6bc0',
   Confirmada: '#00897b',
@@ -65,7 +71,7 @@ const STATUS_COLORS: Record<string, string> = {
   templateUrl: './appointments-page.html',
   styleUrl: './appointments-page.scss',
 })
-export class AppointmentsPage {
+export class AppointmentsPage implements OnDestroy {
   private readonly appts = inject(AppointmentsData);
   private readonly services = inject(ServicesData);
   private readonly dialog = inject(MatDialog);
@@ -78,6 +84,9 @@ export class AppointmentsPage {
   protected readonly statuses = signal<{ id: number; name: string }[]>([]);
   /** Veterinarios para filtrar la vista del calendario. */
   protected readonly vetOptions = signal<StaffMini[]>([]);
+  protected readonly attentionBannerRows = signal<ApptRow[]>([]);
+  private readonly attentionTick = signal(0);
+  private attentionTimerId: ReturnType<typeof setInterval> | null = null;
   /** null = todos los veterinarios en una sola agenda. */
   protected readonly filterVetId = signal<string | null>(null);
 
@@ -114,13 +123,17 @@ export class AppointmentsPage {
     eventContent: (arg: EventContentArg) => {
       const raw = arg.event.extendedProps['raw'] as ApptRow | undefined;
       const av = petAvatarFromSpecies(raw?.pet?.species);
+      const inAttention = isInAttention(raw);
       const vetFull = raw?.vet?.name?.trim() ?? '';
       const vetShort = vetDisplayShort(vetFull);
       const sharedAgenda = this.filterVetId() === null;
       const showVet = sharedAgenda && !!vetShort && !!raw?.user_id;
 
       const wrap = document.createElement('div');
-      wrap.className = 'fc-appt-custom' + (showVet ? ' fc-appt-custom--shared' : '');
+      wrap.className =
+        'fc-appt-custom' +
+        (showVet ? ' fc-appt-custom--shared' : '') +
+        (inAttention ? ' fc-appt-custom--attention' : '');
 
       const avatar = document.createElement('span');
       avatar.className = 'pet-cal-avatar';
@@ -150,6 +163,12 @@ export class AppointmentsPage {
         svc.textContent = svcName;
         main.appendChild(svc);
       }
+      if (inAttention) {
+        const at = document.createElement('span');
+        at.className = 'fc-appt-custom__attention';
+        at.textContent = 'En atención';
+        main.appendChild(at);
+      }
       wrap.appendChild(avatar);
       wrap.appendChild(main);
       return { domNodes: [wrap] };
@@ -160,6 +179,14 @@ export class AppointmentsPage {
     void this.loadStatuses();
     void this.loadVetOptions();
     void this.applyScheduleSlotBounds();
+    this.attentionTimerId = setInterval(() => this.attentionTick.update((n) => n + 1), 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.attentionTimerId != null) {
+      clearInterval(this.attentionTimerId);
+      this.attentionTimerId = null;
+    }
   }
 
   private async loadVetOptions() {
@@ -219,9 +246,18 @@ export class AppointmentsPage {
       );
       if (error) throw error;
       const rows = (data ?? []) as unknown as ApptRow[];
+      if (this.tenant.isAdmin() && this.filterVetId()) {
+        const allRes = await this.appts.listRange(start.toISOString(), end.toISOString(), null);
+        if (allRes.error) throw allRes.error;
+        const allRows = (allRes.data ?? []) as unknown as ApptRow[];
+        this.updateAttentionBanner(allRows);
+      } else {
+        this.updateAttentionBanner(rows);
+      }
       success(
         rows.map((r) => {
           const bg = STATUS_COLORS[r.status?.name ?? ''] ?? '#3949ab';
+          const inAttention = isInAttention(r);
           return {
             id: r.id,
             title: `${r.pet?.name ?? 'Mascota'} · ${r.customer?.name ?? 'Cliente'}`,
@@ -231,6 +267,7 @@ export class AppointmentsPage {
             borderColor: bg,
             textColor: '#ffffff',
             editable: r.status?.name === 'Agendada',
+            classNames: inAttention ? ['fc-event--attention'] : [],
             extendedProps: {
               vetId: r.user_id,
               raw: r,
@@ -243,14 +280,76 @@ export class AppointmentsPage {
     }
   }
 
-  private onEventClick(arg: EventClickArg) {
-    const r = arg.event.extendedProps['raw'] as ApptRow;
-    if (!r) return;
+  private updateAttentionBanner(rows: ApptRow[]) {
+    const active = rows
+      .filter((r) => isInAttention(r))
+      .sort((a, b) => {
+        const ta = new Date(a.attention_started_at ?? a.start_date_time).getTime();
+        const tb = new Date(b.attention_started_at ?? b.start_date_time).getTime();
+        return ta - tb;
+      });
+    if (!active.length) {
+      this.attentionBannerRows.set([]);
+      return;
+    }
+    if (this.tenant.isAdmin()) {
+      this.attentionBannerRows.set(active);
+      return;
+    }
+    const uid = this.tenant.profile()?.id ?? null;
+    if (!uid) {
+      this.attentionBannerRows.set([]);
+      return;
+    }
+    const own = active.filter((r) => r.user_id === uid);
+    this.attentionBannerRows.set(own.length ? [own[0]!] : []);
+  }
+
+  protected hasAttentionBanner(): boolean {
+    return this.attentionBannerRows().length > 0;
+  }
+
+  protected attentionCardTitle(r: ApptRow): string {
+    const pet = r.pet?.name?.trim() || 'Mascota';
+    const customer = r.customer?.name?.trim() || 'Cliente';
+    return `${pet} · ${customer}`;
+  }
+
+  protected attentionCardSubtitle(r: ApptRow): string {
+    const service = r.service?.name?.trim() || 'Servicio';
+    if (this.tenant.isAdmin()) {
+      const vet = r.vet?.name?.trim() || 'Veterinario';
+      return `${service} · ${vet}`;
+    }
+    return service;
+  }
+
+  protected attentionElapsedLabel(r: ApptRow): string {
+    this.attentionTick();
+    const iso = r.attention_started_at;
+    if (!iso) return '0 min';
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m} min`;
+  }
+
+  protected attentionStartLabel(r: ApptRow): string {
+    const iso = r.attention_started_at;
+    if (!iso) return 'Inicio no registrado';
+    return new Intl.DateTimeFormat('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
+  }
+
+  private buildQuickPayloadFromRow(r: ApptRow): QuickApptPayload {
     const b = this.tenant.profile()?.business;
     const fmt = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
-    const startLabel = arg.event.start ? fmt.format(arg.event.start) : '';
-    const endLabel = arg.event.end ? fmt.format(arg.event.end) : '';
-    const payload: QuickApptPayload = {
+    const startLabel = r.start_date_time ? fmt.format(new Date(r.start_date_time)) : '';
+    const endLabel = r.end_date_time ? fmt.format(new Date(r.end_date_time)) : '';
+    return {
       id: r.id,
       userId: r.user_id,
       vetName: r.vet?.name?.trim() ?? '',
@@ -276,16 +375,41 @@ export class AppointmentsPage {
       startIso: r.start_date_time,
       endIso: r.end_date_time,
     };
+  }
+
+  protected openAttentionFromBanner(r: ApptRow) {
+    const payload = this.buildQuickPayloadFromRow(r);
     this.dialog.open(AppointmentQuickDialog, {
       width: 'min(680px, calc(100vw - 32px))',
       maxWidth: '96vw',
       maxHeight: 'min(92vh, 920px)',
       panelClass: 'appt-quick-dialog-panel',
       data: payload,
+      disableClose: isInAttention(r),
     })
       .afterClosed()
-      .subscribe((ok) => {
-        if (ok) this.cal()?.getApi()?.refetchEvents();
+      .subscribe(() => {
+        this.cal()?.getApi()?.refetchEvents();
+      });
+  }
+
+  private onEventClick(arg: EventClickArg) {
+    const r = arg.event.extendedProps['raw'] as ApptRow;
+    if (!r) return;
+    const payload = this.buildQuickPayloadFromRow(r);
+    this.dialog.open(AppointmentQuickDialog, {
+      width: 'min(680px, calc(100vw - 32px))',
+      maxWidth: '96vw',
+      maxHeight: 'min(92vh, 920px)',
+      panelClass: 'appt-quick-dialog-panel',
+      data: payload,
+      disableClose: isInAttention(r),
+    })
+      .afterClosed()
+      .subscribe(() => {
+        // Refrescar siempre para levantar cambios hechos dentro del modal
+        // (ej. iniciar atención) incluso cuando se cierra sin "guardar estado".
+        this.cal()?.getApi()?.refetchEvents();
       });
   }
 

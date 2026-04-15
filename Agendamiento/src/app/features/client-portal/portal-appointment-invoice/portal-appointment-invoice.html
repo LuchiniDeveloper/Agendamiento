@@ -1,0 +1,81 @@
+<main class="portal-page portal-inv-page">
+<header class="app-page-hero app-reveal no-print">
+  <div>
+    <p class="app-page-kicker">Factura</p>
+    <h1 class="page-title">{{ petName() }}</h1>
+    <p class="muted">Detalle de cobro de la cita seleccionada.</p>
+  </div>
+  <div class="app-page-hero-actions">
+    <a mat-stroked-button class="app-cta" [routerLink]="['/portal', businessId(), 'citas']">
+      <mat-icon>arrow_back</mat-icon>
+      Mis citas
+    </a>
+  </div>
+</header>
+
+@if (loading()) {
+  <div class="inv-loading app-reveal">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <div class="inv-stack">
+    <mat-card class="inv-download-card app-card-lift app-reveal app-reveal-delay-1 no-print">
+      <div class="inv-download-inner">
+        <span class="inv-download-glyph" aria-hidden="true">🧾</span>
+        <span class="inv-download-label">Descargar factura</span>
+        <span class="inv-download-sub muted">Total pagado y conceptos cobrados</span>
+        <button mat-flat-button color="primary" type="button" (click)="printPage()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Descargar / Imprimir
+        </button>
+      </div>
+    </mat-card>
+
+    <mat-card class="inv-card app-card-lift app-reveal app-reveal-delay-2">
+      <div class="inv-head">
+        <div>
+          <p class="inv-kicker">Factura</p>
+          <p class="inv-no">{{ invoiceNo() }}</p>
+        </div>
+        <p class="inv-issued">Cita: {{ apptId() }}</p>
+      </div>
+
+      <dl class="inv-meta">
+        <div><dt>Clínica</dt><dd>{{ businessName() }}</dd></div>
+        <div><dt>Cliente</dt><dd>{{ customerName() }}</dd></div>
+        <div><dt>Mascota</dt><dd>{{ petName() }}</dd></div>
+        <div><dt>Veterinario</dt><dd>{{ vetName() }}</dd></div>
+        <div><dt>Fecha cita</dt><dd>{{ apptStart() | date: 'full' }}</dd></div>
+        <div><dt>Fecha pago</dt><dd>{{ paidAt() ? (paidAt() | date: 'full') : 'Sin pago registrado' }}</dd></div>
+      </dl>
+
+      <div class="inv-table">
+        <div class="inv-row inv-row--head">
+          <span>Concepto</span>
+          <span>Valor</span>
+        </div>
+        <div class="inv-row">
+          <span>{{ serviceName() }}</span>
+          <span>{{ serviceAmount() | copCurrency }}</span>
+        </div>
+        @for (x of extras(); track x.description + $index) {
+          <div class="inv-row">
+            <span>{{ x.description }}</span>
+            <span>{{ x.amount | copCurrency }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="inv-totals">
+        <p><span>Subtotal medicamentos / extras</span><strong>{{ extrasAmount() | copCurrency }}</strong></p>
+        <p><span>Total facturado</span><strong>{{ totalExpected() | copCurrency }}</strong></p>
+        <p><span>Método de pago</span><strong>{{ paymentMethod() }}</strong></p>
+        <p><span>Comprobante</span><strong>{{ paymentProof() }}</strong></p>
+        <p><span>ID pago</span><strong>{{ paymentId() || '—' }}</strong></p>
+        <p class="inv-total-paid"><span>Total pagado</span><strong>{{ totalPaid() | copCurrency }}</strong></p>
+      </div>
+    </mat-card>
+  </div>
+}
+</main>
+

@@ -56,9 +56,23 @@
       }
 
       @if (pets().length === 0) {
-        <p class="muted">No hay mascotas. Agrega la primera.</p>
+        <div class="pet-empty app-empty-state">
+          <span class="app-empty-state__icon" aria-hidden="true">
+            <mat-icon>pets</mat-icon>
+          </span>
+          <p class="app-empty-state__title">Aún no hay mascotas en esta ficha</p>
+          <p class="app-empty-state__text">
+            Registra la primera para vincular citas, historial clínico y recordatorios con su nombre.
+          </p>
+        </div>
       } @else if (filteredPets().length === 0) {
-        <p class="muted">Ninguna mascota coincide con la búsqueda.</p>
+        <div class="pet-empty app-empty-state pet-empty--subtle">
+          <span class="app-empty-state__icon" aria-hidden="true">
+            <mat-icon>search_off</mat-icon>
+          </span>
+          <p class="app-empty-state__title">Ningún paciente coincide</p>
+          <p class="app-empty-state__text">Prueba otra palabra en el buscador o revisa el nombre registrado.</p>
+        </div>
       } @else {
         <mat-accordion class="pet-accordion" multi>
           @for (p of filteredPets(); track p.id) {

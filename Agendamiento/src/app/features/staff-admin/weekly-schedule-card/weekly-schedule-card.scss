@@ -1,0 +1,226 @@
+.mb {
+  margin-bottom: 1rem;
+}
+
+.sched-table thead th:nth-child(3),
+.sched-table thead th:nth-child(4) {
+  min-width: 9.5rem;
+}
+
+.sched-table__th--row-actions {
+  width: 6.75rem;
+  text-align: right;
+}
+
+.sched-row-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  vertical-align: middle;
+  width: 6.75rem;
+}
+
+.sched-row-actions__delete {
+  color: var(--mat-sys-error);
+}
+
+.sched-slot-cell {
+  vertical-align: middle;
+}
+
+.sched-slot__time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.sched-slot__empty {
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.simple {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.92rem;
+
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mat-sys-on-surface-variant);
+    background: color-mix(in srgb, var(--mat-sys-surface-container) 80%, transparent);
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  }
+
+  tbody tr:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 4%, transparent);
+  }
+}
+
+.vet-schedule-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--app-radius-md);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  box-shadow: var(--app-shadow-soft);
+}
+
+.vet-schedule-toolbar__primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.vet-schedule-toolbar__actions {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+
+  .app-cta {
+    margin-bottom: 0;
+  }
+}
+
+.vet-select {
+  flex: 1 1 11rem;
+  width: 100%;
+  max-width: 20rem;
+  margin-bottom: 0;
+}
+
+:host ::ng-deep .vet-schedule-toolbar .vet-select.mat-mdc-form-field .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 0;
+}
+
+.add-vet-btn {
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+
+  mat-icon {
+    margin-right: 0.35rem;
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+:host ::ng-deep .add-vet-btn.mat-mdc-outlined-button {
+  border-radius: var(--app-radius-sm) !important;
+}
+
+.sched-table-wrap {
+  min-width: 0;
+}
+
+.sched-table-wrap .sched-table {
+  width: 100%;
+}
+
+@media (max-width: 719.98px) {
+  :host ::ng-deep .sched-week-card .mat-mdc-card-header {
+    padding-bottom: 0.15rem;
+  }
+
+  :host ::ng-deep .sched-week-card .mat-mdc-card-content {
+    padding-top: 0.45rem;
+    padding-inline: 0.65rem;
+    padding-bottom: 1rem;
+  }
+
+  .vet-schedule-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0.75rem 0.7rem;
+    border-radius: var(--app-radius-sm);
+  }
+
+  .vet-schedule-toolbar__primary {
+    flex-direction: column;
+    align-items: stretch;
+    flex: none;
+    width: 100%;
+    gap: 0.7rem;
+  }
+
+  .vet-select {
+    flex: none;
+    max-width: none;
+    width: 100%;
+  }
+
+  .add-vet-btn {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.3;
+    padding-block: 0.6rem;
+    min-height: 2.75rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .vet-schedule-toolbar__actions {
+    margin-inline-start: 0;
+    width: 100%;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 42%, transparent);
+    justify-content: stretch;
+
+    .app-cta {
+      flex: none;
+      width: 100%;
+      min-height: 2.75rem;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+  }
+
+  .sched-table-wrap {
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: var(--app-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 40%, transparent);
+    background: color-mix(in srgb, var(--mat-sys-surface-container-low) 55%, transparent);
+  }
+
+  .sched-table-wrap .sched-table {
+    min-width: 22rem;
+    font-size: 0.84rem;
+  }
+
+  .sched-table-wrap .sched-table th,
+  .sched-table-wrap .sched-table td {
+    padding: 0.62rem 0.5rem;
+  }
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}

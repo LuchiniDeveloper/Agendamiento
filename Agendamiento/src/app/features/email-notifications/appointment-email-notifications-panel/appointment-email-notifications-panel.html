@@ -5,6 +5,16 @@
     <button
       mat-icon-button
       type="button"
+      class="mail-panel__toggle"
+      [attr.aria-label]="collapsed() ? 'Expandir notificaciones' : 'Contraer notificaciones'"
+      [matTooltip]="collapsed() ? 'Expandir' : 'Contraer'"
+      (click)="toggleCollapsed()"
+    >
+      <mat-icon>{{ collapsed() ? 'expand_more' : 'expand_less' }}</mat-icon>
+    </button>
+    <button
+      mat-icon-button
+      type="button"
       class="mail-panel__refresh"
       aria-label="Actualizar lista de correos"
       (click)="load()"
@@ -12,44 +22,48 @@
       <mat-icon>refresh</mat-icon>
     </button>
   </div>
-  <p class="mail-panel__hint">Trazabilidad de envíos automáticos vinculados solo a esta cita.</p>
+  @if (!collapsed()) {
+    <p class="mail-panel__hint">Trazabilidad de envíos automáticos vinculados solo a esta cita.</p>
 
-  @if (loading()) {
-    <div class="mail-panel__loading">
-      <mat-spinner diameter="28" />
-    </div>
-  } @else if (rows().length === 0) {
-    <p class="mail-panel__empty">Todavía no hay registros de correo para esta cita.</p>
-  } @else {
-    <div class="mail-panel__scroll">
-      <table class="mail-table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Detalle</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (r of rows(); track r.id) {
+    @if (loading()) {
+      <div class="mail-panel__loading">
+        <mat-spinner diameter="28" />
+      </div>
+    } @else if (rows().length === 0) {
+      <p class="mail-panel__empty">Todavía no hay registros de correo para esta cita.</p>
+    } @else {
+      <div class="mail-panel__scroll">
+        <table class="mail-table">
+          <thead>
             <tr>
-              <td>{{ r.created_at | date: 'short' }}</td>
-              <td>{{ kindLabel(r.kind) }}</td>
-              <td>
-                <span class="pill" [class]="statusClass(r.status)">{{ r.status }}</span>
-              </td>
-              <td
-                class="mail-table__detail"
-                [matTooltip]="r.last_error || r.recipient_email || ''"
-                matTooltipShowDelay="300"
-              >
-                {{ r.last_error || r.recipient_email || '—' }}
-              </td>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Detalle</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (r of rows(); track r.id) {
+              <tr>
+                <td>{{ r.created_at | date: 'short' }}</td>
+                <td>{{ kindLabel(r.kind) }}</td>
+                <td>
+                  <span class="pill" [class]="statusClass(r.status)">{{ r.status }}</span>
+                </td>
+                <td
+                  class="mail-table__detail"
+                  [matTooltip]="r.last_error || r.recipient_email || ''"
+                  matTooltipShowDelay="300"
+                >
+                  {{ r.last_error || r.recipient_email || '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    <p class="mail-panel__collapsed-resume">Panel resumido. Expande para ver trazabilidad.</p>
   }
 </section>

@@ -27,7 +27,10 @@
 }
 
 .mail-panel__refresh {
-  margin-left: auto;
+  transform: scale(0.92);
+}
+
+.mail-panel__toggle {
   transform: scale(0.92);
 }
 
@@ -36,6 +39,12 @@
   font-size: 0.78rem;
   color: var(--mat-sys-on-surface-variant);
   line-height: 1.45;
+}
+
+.mail-panel__collapsed-resume {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .mail-panel__loading {

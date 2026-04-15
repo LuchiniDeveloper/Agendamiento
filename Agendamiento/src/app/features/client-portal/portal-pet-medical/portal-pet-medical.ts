@@ -11,6 +11,7 @@ import { snapshotBusinessId } from '../client-portal-route.utils';
 
 type MedRow = {
   id: string;
+  appointment_id: string | null;
   created_at: string;
   diagnosis: string | null;
   treatment: string | null;
@@ -51,6 +52,7 @@ export class PortalPetMedical implements OnInit {
   protected readonly completedForDownload = signal<CompletedApptForDownload[]>([]);
   protected readonly loading = signal(true);
   protected readonly businessId = signal(snapshotBusinessId(this.route.snapshot) ?? '');
+  protected readonly selectedAppointmentId = signal(this.route.snapshot.queryParamMap.get('appointmentId') ?? '');
 
   async ngOnInit() {
     const petId = this.route.snapshot.paramMap.get('petId');
@@ -59,6 +61,7 @@ export class PortalPetMedical implements OnInit {
       return;
     }
     const sb = this.supabase;
+    const selectedApptId = this.selectedAppointmentId();
 
     const { data: pet, error: pe } = await sb.from('pet').select('name').eq('id', petId).maybeSingle();
     if (pe || !pet) {
@@ -71,12 +74,14 @@ export class PortalPetMedical implements OnInit {
     const { data: stRow } = await sb.from('appointment_status').select('id').eq('name', 'Completada').maybeSingle();
     const completedId = (stRow as { id: number } | null)?.id;
 
-    const [medRes, apptRes] = await Promise.all([
-      sb
-        .from('medical_record')
-        .select('id, created_at, diagnosis, treatment, observations, weight')
-        .eq('pet_id', petId)
-        .order('created_at', { ascending: false }),
+    let medQ = sb
+      .from('medical_record')
+      .select('id, appointment_id, created_at, diagnosis, treatment, observations, weight')
+      .eq('pet_id', petId)
+      .order('created_at', { ascending: false });
+    if (selectedApptId) medQ = medQ.eq('appointment_id', selectedApptId);
+
+    let apptQ =
       completedId != null
         ? sb
             .from('appointment')
@@ -91,8 +96,10 @@ export class PortalPetMedical implements OnInit {
             .eq('status_id', completedId)
             .order('start_date_time', { ascending: false })
             .limit(20)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
+        : null;
+    if (apptQ && selectedApptId) apptQ = apptQ.eq('id', selectedApptId);
+
+    const [medRes, apptRes] = await Promise.all([medQ, apptQ ?? Promise.resolve({ data: [], error: null })]);
 
     if (medRes.error) {
       this.snack.open('No se pudo cargar el historial.', 'OK', { duration: 4000 });

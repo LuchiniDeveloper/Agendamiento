@@ -1,0 +1,1 @@
+{"query":"SELECT ('-- ### AUTH SESSIONS' || E'\\n' ||\n  COALESCE((\n    SELECT string_agg(\n      format('INSERT INTO auth.sessions SELECT * FROM json_populate_record(NULL::auth.sessions, %L::json);', row_to_json(t)::text),\n      E'\\n'\n    )\n    FROM auth.sessions t\n  ), '')) AS part;"}

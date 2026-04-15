@@ -80,6 +80,15 @@ mat-card-header {
   }
 }
 
+.pet-empty {
+  margin-top: 0.35rem;
+}
+
+.pet-empty--subtle {
+  padding: 1.35rem 1rem;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 92%, transparent);
+}
+
 .pet-search {
   width: 100%;
   max-width: 22rem;
@@ -97,6 +106,15 @@ mat-card-header {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 42%, transparent) !important;
   box-shadow: var(--app-shadow-soft) !important;
+  transition:
+    box-shadow var(--app-transition),
+    border-color var(--app-transition),
+    transform var(--app-transition);
+
+  &.mat-expanded {
+    border-color: color-mix(in srgb, var(--mat-sys-primary) 28%, var(--mat-sys-outline-variant)) !important;
+    box-shadow: var(--app-shadow-soft), 0 0 0 1px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent) !important;
+  }
 }
 
 :host ::ng-deep .pet-panel .mat-expansion-panel-header {

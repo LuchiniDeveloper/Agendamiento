@@ -1,0 +1,108 @@
+<mat-card class="sched-week-card mb">
+  <mat-card-header>
+    <mat-card-title>Horario semanal</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    @if (loading()) {
+      <div class="center"><mat-spinner diameter="36" /></div>
+    } @else {
+      <div class="vet-schedule-toolbar">
+        <div class="vet-schedule-toolbar__primary">
+          <mat-form-field appearance="outline" class="vet-select" subscriptSizing="dynamic">
+            <mat-label>Veterinario</mat-label>
+            <mat-select [value]="selectedVetId()" (selectionChange)="onVetChange($event.value)">
+              @for (v of staff(); track v.id) {
+                <mat-option [value]="v.id">{{ v.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (tenant.isAdmin()) {
+            <button
+              matButton="outlined"
+              type="button"
+              color="primary"
+              class="add-vet-btn"
+              (click)="openCreateVetDialog()"
+            >
+              <mat-icon aria-hidden="true">person_add</mat-icon>
+              Añadir veterinario
+            </button>
+          }
+        </div>
+        <div class="vet-schedule-toolbar__actions">
+          <button
+            matButton="tonal"
+            type="button"
+            class="app-cta app-cta--tonal"
+            [disabled]="!selectedVetId()"
+            [matTooltip]="!selectedVetId() ? 'Seleccioná un veterinario para añadir franjas' : ''"
+            [matTooltipDisabled]="!!selectedVetId()"
+            (click)="openScheduleDialog(null)"
+          >
+            <mat-icon aria-hidden="true">more_time</mat-icon>
+            Añadir franja
+          </button>
+        </div>
+      </div>
+
+      <div class="sched-table-wrap">
+        <table class="simple sched-table">
+          <thead>
+            <tr>
+              <th>Día</th>
+              <th>Servicio</th>
+              <th>Horario 1</th>
+              <th>Horario 2</th>
+              <th class="sched-table__th--row-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (g of scheduleDayGroups(); track g.key) {
+              <tr>
+                <td>{{ days[g.day_of_week] }}</td>
+                <td>{{ g.serviceLabel }}</td>
+                <td class="sched-slot-cell">
+                  @if (g.window1) {
+                    <span class="sched-slot__time"
+                      >{{ g.window1.start_time.slice(0, 5) }} – {{ g.window1.end_time.slice(0, 5) }}</span
+                    >
+                  } @else {
+                    <span class="sched-slot__empty">—</span>
+                  }
+                </td>
+                <td class="sched-slot-cell">
+                  @if (g.window2) {
+                    <span class="sched-slot__time"
+                      >{{ g.window2.start_time.slice(0, 5) }} – {{ g.window2.end_time.slice(0, 5) }}</span
+                    >
+                  } @else {
+                    <span class="sched-slot__empty">—</span>
+                  }
+                </td>
+                <td class="sched-row-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    matTooltip="Editar (elegí horario 1 o 2 en el modal)"
+                    (click)="openScheduleGroupEdit(g)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="sched-row-actions__delete"
+                    matTooltip="Quitar este día y servicio (horarios 1 y 2)"
+                    (click)="removeScheduleGroup(g)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

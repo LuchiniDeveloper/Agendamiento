@@ -1,3 +1,11 @@
+.med-loading {
+  margin: 0.75rem 0 1rem;
+}
+
+.med-empty {
+  margin: 0.5rem 0 1rem;
+}
+
 .med-toolbar {
   margin: 0.35rem 0 1rem;
   border-radius: var(--app-radius-md);
@@ -141,6 +149,16 @@
   border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
   border-radius: 999px;
   padding: 0.1rem 0.45rem;
+  transition:
+    background-color var(--app-transition),
+    border-color var(--app-transition),
+    color var(--app-transition);
+}
+
+.hist-sum__tipo--cita {
+  color: color-mix(in srgb, var(--mat-sys-tertiary) 92%, var(--mat-sys-on-surface));
+  border-color: color-mix(in srgb, var(--mat-sys-tertiary) 42%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-tertiary) 10%, transparent);
 }
 
 .hist-sum__one-line {

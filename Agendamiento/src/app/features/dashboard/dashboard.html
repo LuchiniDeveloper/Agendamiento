@@ -3,7 +3,7 @@
     <p class="app-page-kicker">Panel del día</p>
     <h1 class="page-title">Inicio</h1>
     <p class="muted">
-      Respuestas rápidas: ingresos, agenda, alertas y operación de tu clínica.
+      Respuestas rápidas: ingresos, agenda y operación de tu clínica.
       @if (newCustomersRegistered30() > 0) {
         <span class="dash-inline-stat"
           >{{ newCustomersRegistered30() }} clientes nuevos de alta en los últimos 30 días.</span
@@ -44,9 +44,9 @@
 }
 
 @if (loading()) {
-  <div class="center">
+  <div class="app-loading-shell dashboard-loading">
     <mat-spinner diameter="44" />
-    <p class="muted load-hint">Sincronizando métricas…</p>
+    <p class="muted load-hint">Sincronizando el día con tu clínica…</p>
   </div>
 } @else {
   <div class="dashboard-shell">
@@ -489,10 +489,18 @@
       </mat-card-header>
       <mat-card-content>
         @if (agendaToday().length === 0) {
-          <div class="empty-today">
-            <mat-icon>event_available</mat-icon>
-            <p>No hay citas para hoy. ¡Buen momento para promociones!</p>
-            <a mat-flat-button color="primary" routerLink="/app/appointments">Agendar rápido</a>
+          <div class="empty-today app-empty-state empty-today--warm">
+            <span class="app-empty-state__icon" aria-hidden="true">
+              <mat-icon>pets</mat-icon>
+            </span>
+            <p class="app-empty-state__title">Hoy la agenda está tranquila</p>
+            <p class="app-empty-state__text">
+              No hay citas programadas. Es un buen momento para recordatorios a tutores o campañas de bienestar.
+            </p>
+            <a mat-flat-button color="primary" class="app-cta app-cta--primary" routerLink="/app/appointments">
+              <mat-icon>add</mat-icon>
+              Nueva cita
+            </a>
           </div>
         } @else {
           <div class="agenda-table" role="table">
@@ -501,6 +509,7 @@
               <span>Mascota</span>
               <span>Cliente</span>
               <span>Servicio</span>
+              <span>Veterinario</span>
               <span>Estado</span>
             </div>
             @for (a of agendaToday(); track a.id) {
@@ -509,6 +518,7 @@
                 <span class="agenda-strong">{{ a.pet?.name ?? '—' }}</span>
                 <span>{{ a.customer?.name ?? '—' }}</span>
                 <span class="agenda-muted">{{ a.service?.name ?? '—' }}</span>
+                <span class="agenda-muted">{{ a.vet?.name ?? '—' }}</span>
                 <span
                   class="agenda-status"
                   [style.color]="statusColor(a.status?.name)"
@@ -521,89 +531,6 @@
       </mat-card-content>
     </mat-card>
 
-    <div class="dash-grid dash-grid--admin-triple">
-      <mat-card class="mini-card mini-card--brand mini-card--elevated app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>schedule</mat-icon>
-            Huecos libres hoy
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (freeSlotsToday() !== null) {
-            <p class="mini-stat">
-              Te quedan <strong>{{ freeSlotsToday() }}</strong> espacios estimados (todos los vets, servicio base).
-            </p>
-          } @else {
-            <p class="mini-muted">Configura servicios y horarios para ver huecos.</p>
-          }
-          <a mat-button color="primary" routerLink="/app/appointments">
-            <mat-icon>add_circle</mat-icon>
-            Agendar rápido
-          </a>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="mini-card mini-card--alert mini-card--brand mini-card--elevated app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>warning</mat-icon>
-            Alertas
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <ul class="alert-list">
-            <li>
-              <span class="alert-n">{{ alertsUnconfirmed() }}</span>
-              citas sin confirmar hoy
-            </li>
-            <li>
-              <span class="alert-n">{{ alertsReminders() }}</span>
-              seguimientos en cola de mensajes (cita hoy)
-            </li>
-            <li>
-              <span class="alert-n">{{ alertsEmailFailed() }}</span>
-              envíos de correo fallidos (hoy)
-            </li>
-          </ul>
-          <a mat-stroked-button routerLink="/app/appointments" class="full-btn">
-            <mat-icon>mark_email_read</mat-icon>
-            Ver correos por cita en la agenda
-          </a>
-          <a mat-stroked-button routerLink="/app/reminders" class="full-btn alert-reminders-btn">
-            <mat-icon>chat</mat-icon>
-            Chat con clientes
-          </a>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="chart-card chart-card--brand chart-card--follow app-card-lift">
-        <mat-card-header>
-          <mat-card-title>
-            <span class="card-title-row">
-              <mat-icon class="card-title-icon">event_repeat</mat-icon>
-              Próximas visitas / seguimiento
-            </span>
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          @if (followUps().length) {
-            <ul class="follow-list">
-              @for (f of followUps(); track f.next_visit_date + (f.pet?.name ?? '')) {
-                <li>
-                  <span class="follow-date">{{ f.next_visit_date }}</span>
-                  <span class="follow-pet">{{ f.pet?.name ?? 'Mascota' }}</span>
-                  <span class="follow-tr">{{ f.treatment ?? '—' }}</span>
-                </li>
-              }
-            </ul>
-            <a mat-button routerLink="/app/reminders" class="full-btn">Abrir chat con clientes</a>
-          } @else {
-            <p class="empty-chart">No hay próximas visitas programadas en historias.</p>
-          }
-        </mat-card-content>
-      </mat-card>
-    </div>
   </section>
   </div>
 }

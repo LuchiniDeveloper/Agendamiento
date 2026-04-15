@@ -16,6 +16,7 @@ import { StaffData, type RoleRow, type StaffDirectoryRow } from '../staff.data';
 import { StaffCreateDialog } from '../staff-create-dialog/staff-create-dialog';
 import { StaffDeleteDialog } from '../staff-delete-dialog/staff-delete-dialog';
 import { StaffEditDialog } from '../staff-edit-dialog/staff-edit-dialog';
+import { WeeklyScheduleCard } from '../weekly-schedule-card/weekly-schedule-card';
 
 @Component({
   selector: 'app-staff-page',
@@ -28,6 +29,7 @@ import { StaffEditDialog } from '../staff-edit-dialog/staff-edit-dialog';
     MatSlideToggleModule,
     MatSnackBarModule,
     MatTooltipModule,
+    WeeklyScheduleCard,
   ],
   templateUrl: './staff-page.html',
   styleUrl: './staff-page.scss',
@@ -45,6 +47,8 @@ export class StaffPage implements OnInit {
   protected readonly togglingId = signal<string | null>(null);
   protected readonly deletingId = signal<string | null>(null);
 
+  protected readonly isAdmin = computed(() => this.tenant.isAdmin());
+
   protected readonly currentUserId = computed(() => this.auth.user()?.id ?? '');
 
   protected readonly activeAdminCount = computed(() =>
@@ -52,6 +56,10 @@ export class StaffPage implements OnInit {
   );
 
   async ngOnInit() {
+    if (!this.tenant.isAdmin()) {
+      this.loading.set(false);
+      return;
+    }
     await this.reload();
     this.loading.set(false);
   }

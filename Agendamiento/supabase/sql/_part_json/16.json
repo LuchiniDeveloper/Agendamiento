@@ -1,0 +1,1 @@
+{"query":"SELECT ('-- ### PUBLIC MEDICAL RECORD' || E'\\n' ||\n  COALESCE((\n    SELECT string_agg(\n      format('INSERT INTO public.medical_record SELECT * FROM json_populate_record(NULL::public.medical_record, %L::json);', row_to_json(t)::text),\n      E'\\n'\n    )\n    FROM public.medical_record t\n  ), '')) AS part;"}

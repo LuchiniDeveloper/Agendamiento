@@ -6,8 +6,8 @@
 
 .dash-stats {
   display: grid;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: clamp(0.75rem, 1.8vw, 1.15rem);
+  margin-bottom: clamp(1rem, 2.2vw, 1.4rem);
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -17,7 +17,7 @@
 .dash-stat {
   display: flex;
   gap: 1rem;
-  padding: 1.15rem 1.25rem;
+  padding: clamp(0.95rem, 2.2vw, 1.25rem) clamp(0.95rem, 2.2vw, 1.3rem);
   align-items: flex-start;
 }
 
@@ -52,7 +52,7 @@
 
 .dash-stat-value {
   font-family: var(--app-font-display);
-  font-size: 1.85rem;
+  font-size: clamp(1.45rem, 3.7vw, 1.95rem);
   font-weight: 650;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -240,8 +240,8 @@
 }
 
 .dash-upcoming {
-  margin-bottom: 1.25rem;
-  padding: 1.15rem 1.25rem 1.25rem;
+  margin-bottom: clamp(1rem, 2.3vw, 1.35rem);
+  padding: clamp(0.95rem, 2.2vw, 1.25rem);
 }
 
 .dash-empty {
@@ -309,7 +309,7 @@
 }
 
 .dash-quick {
-  margin-bottom: 1.25rem;
+  margin-bottom: clamp(1rem, 2.3vw, 1.35rem);
 }
 
 .dash-quick-title {
@@ -318,7 +318,7 @@
 
 .dash-quick-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: clamp(0.65rem, 1.6vw, 0.95rem);
 
   @media (min-width: 720px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -331,10 +331,19 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: 5.5rem;
-  padding: 1rem 1.1rem !important;
-  border-radius: 1rem !important;
+  min-height: clamp(5rem, 12vw, 6rem);
+  padding: clamp(0.85rem, 2.2vw, 1.15rem) !important;
+  border-radius: calc(var(--app-radius-md) + 2px) !important;
   line-height: 1.25;
+  transition:
+    transform 0.18s ease,
+    box-shadow var(--app-transition),
+    filter 0.2s ease;
+}
+
+.dash-quick-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.01);
 }
 
 .dash-quick-btn--wa:not(:disabled) {
@@ -362,9 +371,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-height: 5.5rem;
-  padding: 1rem 1.1rem;
-  border-radius: 1rem;
+  min-height: clamp(5rem, 12vw, 6rem);
+  padding: clamp(0.85rem, 2.2vw, 1.15rem);
+  border-radius: calc(var(--app-radius-md) + 2px);
   border: 1px dashed color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
   background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, transparent);
 }

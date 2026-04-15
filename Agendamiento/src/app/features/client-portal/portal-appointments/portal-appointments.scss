@@ -56,11 +56,12 @@
 .appts-table-wrap {
   overflow-x: auto;
   border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 45%, transparent);
+  border-radius: 0 0 calc(var(--app-radius-lg) + 4px) calc(var(--app-radius-lg) + 4px);
 }
 
 .appts-table {
   width: 100%;
-  min-width: 720px;
+  min-width: 760px;
   background: transparent;
 }
 
@@ -72,10 +73,19 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
 }
 
 .appt-act-btn {
+  border-radius: 0.75rem !important;
+  transition:
+    transform 0.16s ease,
+    background-color var(--app-transition);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
   mat-spinner {
     display: inline-block;
   }
@@ -113,11 +123,17 @@
 }
 
 :host ::ng-deep .appts-table .mat-mdc-cell {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 :host ::ng-deep .appts-table .mat-mdc-row:hover {
   background: color-mix(in srgb, var(--mat-sys-primary) 4%, transparent);
+}
+
+@media (max-width: 960px) {
+  .appts-table {
+    min-width: 680px;
+  }
 }
 
 @media (max-width: 640px) {

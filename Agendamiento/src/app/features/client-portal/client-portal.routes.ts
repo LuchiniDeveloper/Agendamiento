@@ -50,6 +50,11 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () =>
           import('./portal-appointment-summary/portal-appointment-summary').then((m) => m.PortalAppointmentSummary),
       },
+      {
+        path: 'cita/:appointmentId/factura',
+        loadComponent: () =>
+          import('./portal-appointment-invoice/portal-appointment-invoice').then((m) => m.PortalAppointmentInvoice),
+      },
     ],
   },
 ];
