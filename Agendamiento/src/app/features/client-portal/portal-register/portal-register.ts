@@ -41,6 +41,8 @@ export class PortalRegister {
   protected readonly businessId = signal('');
   /** 0 = datos del titular, 1 = mascota */
   protected readonly step = signal(0);
+  /** Tras intentar registrar: la cédula ya existe en la clínica; ofrecer activación en lugar de reintentar. */
+  protected readonly needActivateInstead = signal(false);
 
   protected readonly speciesGroups = PET_SPECIES_GROUPS;
   protected readonly speciesOther = PET_SPECIES_OTHER;
@@ -93,6 +95,7 @@ export class PortalRegister {
         // Compatibilidad temporal: si la Edge Function vieja no soporta register_precheck,
         // no bloqueamos el flujo y dejamos que la validación ocurra al crear la cuenta.
         if (/acci[oó]n no v[aá]lida/i.test(precheck.error)) {
+          this.needActivateInstead.set(false);
           this.step.set(1);
           return;
         }
@@ -105,6 +108,7 @@ export class PortalRegister {
         this.error.set(precheck.error);
         return;
       }
+      this.needActivateInstead.set(false);
       this.step.set(1);
     } finally {
       this.saving.set(false);
@@ -112,7 +116,24 @@ export class PortalRegister {
   }
 
   protected backToClientStep() {
+    this.needActivateInstead.set(false);
+    this.error.set(null);
     this.step.set(0);
+  }
+
+  /** Navega al flujo de activación con cédula y correo del formulario para agilizar el paso. */
+  protected goToActivate() {
+    const bid = this.businessId();
+    if (!bid) return;
+    const v = this.form.getRawValue();
+    const idDigits = v.id_document.trim().replace(/\D/g, '');
+    const email = v.email.trim();
+    this.router.navigate(['/portal', bid, 'activate'], {
+      queryParams: {
+        ...(idDigits.length >= 5 ? { id_document: idDigits } : {}),
+        ...(email ? { verify_email: email } : {}),
+      },
+    });
   }
 
   protected async registerWithoutPet() {
@@ -165,7 +186,16 @@ export class PortalRegister {
         pet_species: petSpecies,
       });
       if ('error' in res) {
-        this.error.set(res.need_activate ? `${res.error} Podés usar “Activar cuenta”.` : res.error);
+        if (res.need_activate) {
+          this.needActivateInstead.set(true);
+          const msg = res.error
+            .replace(/\s*Podés usar\s*[«"\u201c]Activar cuenta[»"\u201d]\.?\s*$/iu, '')
+            .trim();
+          this.error.set(msg || res.error);
+        } else {
+          this.needActivateInstead.set(false);
+          this.error.set(res.error);
+        }
         return;
       }
       const ok = await this.portalAuth.applySessionIfPresent(res);

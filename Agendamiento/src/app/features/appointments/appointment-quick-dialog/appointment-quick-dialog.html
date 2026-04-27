@@ -51,6 +51,21 @@
     </p>
   }
 
+  <p
+    class="appt-dlg__earlier-slot"
+    [class.appt-dlg__earlier-slot--yes]="data.notifyIfEarlierSlot"
+    role="status"
+  >
+    <mat-icon aria-hidden="true">{{ data.notifyIfEarlierSlot ? 'notifications_active' : 'notifications_off' }}</mat-icon>
+    @if (data.notifyIfEarlierSlot) {
+      <span>
+        El cliente solicitó recibir avisos si se libera un <strong>horario más temprano</strong>.
+      </span>
+    } @else {
+      <span>No marcó avisos por horario más temprano.</span>
+    }
+  </p>
+
   @if (canStartAttention()) {
     <div class="attention-start">
       <button

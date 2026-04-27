@@ -92,6 +92,9 @@
       <mat-label>Notas</mat-label>
       <textarea matInput rows="2" formControlName="notes"></textarea>
     </mat-form-field>
+    <mat-checkbox formControlName="notify_if_earlier_slot" class="full">
+      Deseo recibir notificaciones si se libera un horario más temprano.
+    </mat-checkbox>
     @if (error()) {
       <p class="err">{{ error() }}</p>
     }

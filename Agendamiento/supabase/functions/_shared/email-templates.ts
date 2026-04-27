@@ -93,6 +93,7 @@ export type KindPayload = {
   serviceName: string;
   vetName: string;
   whenFormatted: string;
+  earlierSlotWhenFormatted?: string;
   confirmUrl?: string;
   rescheduleUrl?: string;
   diagnosisExcerpt?: string | null;
@@ -281,6 +282,25 @@ export function buildEmailForKind(p: KindPayload): { subject: string; html: stri
         preheader: pre,
         html: emailLayout({
           title: 'Volver a agendar',
+          preheader: pre,
+          businessName: p.businessName,
+          innerHtml: inner,
+        }),
+      };
+    }
+    case 'EARLIER_SLOT_AVAILABLE': {
+      const pre = `Se liberó un horario más temprano para ${pet}.`;
+      const earlierWhen = p.earlierSlotWhenFormatted?.trim() || p.whenFormatted;
+      const inner = `
+        <p style="margin:0 0 12px 0;font-size:16px;line-height:1.55;color:${BRAND.onSurface};">${esc(name)}, tenemos una opción mejor para ustedes.</p>
+        <p style="margin:0 0 12px 0;font-size:15px;line-height:1.6;color:${BRAND.muted};">Se liberó un espacio para <strong>${esc(pet)}</strong> el <strong>${esc(earlierWhen)}</strong>, más temprano que tu cita actual (<strong>${esc(p.whenFormatted)}</strong>).</p>
+        <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:${BRAND.muted};">Podés intentar reagendar con el siguiente botón. El cupo se asigna por orden de confirmación, así que puede ocuparse mientras revisás el mensaje.</p>
+        ${p.rescheduleUrl ? ctaButton('Intentar reagendar a horario más temprano', p.rescheduleUrl) : ''}`;
+      return {
+        subject: `Horario más temprano disponible para ${pet} · ${p.businessName}`,
+        preheader: pre,
+        html: emailLayout({
+          title: 'Horario más temprano disponible',
           preheader: pre,
           businessName: p.businessName,
           innerHtml: inner,

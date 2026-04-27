@@ -11,7 +11,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { customerHasPortalAccount, CustomersData, type CustomerRow } from '../customers.data';
+import {
+  customerHasPortalAccount,
+  CustomersData,
+  type CustomerAppointmentIndicators,
+  type CustomerPetIndicator,
+  type CustomerRow,
+} from '../customers.data';
 import { CustomerFormDialog } from '../customer-form-dialog/customer-form-dialog';
 
 @Component({
@@ -38,8 +44,8 @@ export class CustomersList implements OnInit {
 
   protected readonly loading = signal(true);
   protected readonly rows = signal<(CustomerRow & { created_at?: string })[]>([]);
-  /** id cliente → texto resumen de mascotas */
-  protected readonly petSummaries = signal<Map<string, string>>(new Map());
+  protected readonly petIndicators = signal<Map<string, CustomerPetIndicator[]>>(new Map());
+  protected readonly appointmentIndicators = signal<Map<string, CustomerAppointmentIndicators>>(new Map());
   search = new FormControl('', { nonNullable: true });
 
   constructor() {
@@ -77,17 +83,38 @@ export class CustomersList implements OnInit {
       if (res.error) throw res.error;
       const list = (res.data ?? []) as (CustomerRow & { created_at?: string })[];
       const withPortal = await this.data.mergePortalAccountFlags(list);
-      this.rows.set(withPortal);
       const ids = list.map((r) => r.id);
-      const sums = await this.data.petSummariesForCustomers(ids);
-      this.petSummaries.set(sums);
+      const [petsByCustomer, apptByCustomer] = await Promise.all([
+        this.data.petIndicatorsForCustomers(ids),
+        this.data.appointmentIndicatorsForCustomers(ids),
+      ]);
+      const sortedByAppointments = [...withPortal].sort((a, b) => {
+        const aStats = apptByCustomer.get(a.id) ?? { attended: 0, cancelled: 0, noShow: 0 };
+        const bStats = apptByCustomer.get(b.id) ?? { attended: 0, cancelled: 0, noShow: 0 };
+        const aTotal = aStats.attended + aStats.cancelled + aStats.noShow;
+        const bTotal = bStats.attended + bStats.cancelled + bStats.noShow;
+        if (bTotal !== aTotal) return bTotal - aTotal;
+        return a.name.localeCompare(b.name, 'es');
+      });
+      this.rows.set(sortedByAppointments);
+      this.petIndicators.set(petsByCustomer);
+      this.appointmentIndicators.set(apptByCustomer);
     } catch (e) {
       console.error(e);
       this.rows.set([]);
-      this.petSummaries.set(new Map());
+      this.petIndicators.set(new Map());
+      this.appointmentIndicators.set(new Map());
     } finally {
       this.loading.set(false);
     }
+  }
+
+  protected customerPetIndicators(customerId: string): CustomerPetIndicator[] {
+    return this.petIndicators().get(customerId) ?? [];
+  }
+
+  protected customerAppointmentIndicators(customerId: string): CustomerAppointmentIndicators {
+    return this.appointmentIndicators().get(customerId) ?? { attended: 0, cancelled: 0, noShow: 0 };
   }
 
   openNew() {

@@ -55,14 +55,37 @@
   </section>
 }
 
-<div class="legend">
-  @for (s of ['Agendada', 'Confirmada', 'Completada', 'Cancelada', 'NoShow']; track s) {
-    <span class="leg-item">
-      <span class="dot" [style.background]="s === 'Agendada' ? '#5c6bc0' : s === 'Confirmada' ? '#00897b' : s === 'Completada' ? '#43a047' : s === 'Cancelada' ? '#757575' : '#e53935'"></span>
-      {{ s }}
+<section class="legend-strip" aria-label="Filtrar citas por estado">
+  <div class="legend-strip__head">
+    <span class="legend-strip__title">
+      <mat-icon class="legend-strip__title-ic" aria-hidden="true">visibility</mat-icon>
+      Estados en la agenda
     </span>
-  }
-</div>
+    @if (!allStatusesShown()) {
+      <button type="button" mat-button class="legend-strip__reset" (click)="showAllStatuses()">
+        <mat-icon aria-hidden="true">select_all</mat-icon>
+        Ver todos
+      </button>
+    }
+  </div>
+  <p class="legend-strip__hint muted">Activá o desactivá cada estado para mostrar u ocultar esas citas en el calendario.</p>
+  <div class="legend-strip__chips">
+    @for (s of appointmentStatusLegend; track s) {
+      <button
+        type="button"
+        class="leg-chip"
+        [class.leg-chip--on]="isStatusFilteredOn(s)"
+        [class.leg-chip--off]="!isStatusFilteredOn(s)"
+        [attr.aria-pressed]="isStatusFilteredOn(s)"
+        [attr.aria-label]="statusFilterAriaToggle(s)"
+        (click)="toggleStatusFilter(s)"
+      >
+        <span class="leg-chip__dot" [style.background]="statusLegendSwatch(s)"></span>
+        <span class="leg-chip__label">{{ statusFilterLabel(s) }}</span>
+      </button>
+    }
+  </div>
+</section>
 
 @if (showCalendar) {
   <full-calendar [options]="calendarOptions()"></full-calendar>

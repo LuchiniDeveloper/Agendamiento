@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SUPABASE_CLIENT } from '../../core/supabase';
+import { petAvatarFromSpecies } from './pet-avatar.util';
 
 /** Fila embebida desde `customer_portal_account` (existe = cliente registrado en el portal). */
 export type CustomerPortalAccountEmbed = { customer_id: string } | null;
@@ -27,6 +28,19 @@ export interface PetRow {
   weight: number | null;
   color: string | null;
   notes: string | null;
+}
+
+export interface CustomerPetIndicator {
+  species: string;
+  emoji: string;
+  tone: string;
+  count: number;
+}
+
+export interface CustomerAppointmentIndicators {
+  attended: number;
+  cancelled: number;
+  noShow: number;
 }
 
 /** True si el cliente tiene fila en `customer_portal_account` (registrado en el portal). */
@@ -149,6 +163,75 @@ export class CustomersData {
     for (const id of customerIds) {
       const m = byCustomer.get(id);
       out.set(id, m ? formatPetSpeciesSummary(m) : 'Sin mascotas');
+    }
+    return out;
+  }
+
+  /** Indicadores de mascotas por cliente para tabla (icono + contador por especie). */
+  async petIndicatorsForCustomers(customerIds: string[]): Promise<Map<string, CustomerPetIndicator[]>> {
+    const out = new Map<string, CustomerPetIndicator[]>();
+    if (!this.supabase || customerIds.length === 0) return out;
+    for (const id of customerIds) out.set(id, []);
+    const { data, error } = await this.supabase
+      .from('pet')
+      .select('customer_id, species')
+      .in('customer_id', customerIds);
+    if (error || !data) return out;
+
+    const byCustomer = new Map<string, Map<string, number>>();
+    for (const row of data as { customer_id: string; species: string | null }[]) {
+      const cid = row.customer_id;
+      const sp = (row.species ?? '').trim() || 'Sin especificar';
+      let m = byCustomer.get(cid);
+      if (!m) {
+        m = new Map();
+        byCustomer.set(cid, m);
+      }
+      m.set(sp, (m.get(sp) ?? 0) + 1);
+    }
+
+    for (const id of customerIds) {
+      const speciesMap = byCustomer.get(id);
+      if (!speciesMap) {
+        out.set(id, []);
+        continue;
+      }
+      const indicators = [...speciesMap.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
+        .map(([species, count]) => {
+          const avatar = petAvatarFromSpecies(species);
+          return {
+            species,
+            emoji: avatar.emoji,
+            tone: avatar.tone,
+            count,
+          };
+        });
+      out.set(id, indicators);
+    }
+    return out;
+  }
+
+  /** Conteo histórico de citas por cliente para indicadores de tabla. */
+  async appointmentIndicatorsForCustomers(customerIds: string[]): Promise<Map<string, CustomerAppointmentIndicators>> {
+    const out = new Map<string, CustomerAppointmentIndicators>();
+    if (!this.supabase || customerIds.length === 0) return out;
+    for (const id of customerIds) out.set(id, { attended: 0, cancelled: 0, noShow: 0 });
+    const { data, error } = await this.supabase
+      .from('appointment')
+      .select('customer_id, status:status_id (name)')
+      .in('customer_id', customerIds);
+    if (error || !data) return out;
+
+    for (const row of data as { customer_id: string; status: { name?: string | null } | null }[]) {
+      const cid = row.customer_id;
+      const counters = out.get(cid);
+      if (!counters) continue;
+      const rawName = (row.status?.name ?? '').trim().toLowerCase();
+      if (!rawName) continue;
+      if (rawName === 'completada') counters.attended += 1;
+      else if (rawName === 'cancelada') counters.cancelled += 1;
+      else if (rawName === 'noshow' || rawName === 'no show' || rawName === 'no-show') counters.noShow += 1;
     }
     return out;
   }

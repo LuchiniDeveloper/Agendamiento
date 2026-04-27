@@ -15,6 +15,23 @@
   margin-top: 0;
 }
 
+.wa-link {
+  .wa-link__icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+
+  .wa-link__icon path {
+    fill: #25d366;
+  }
+
+  &--disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
 .customer-detail__hero .head .page-title {
   margin: 0;
   flex: 1 1 auto;

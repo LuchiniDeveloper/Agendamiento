@@ -17,6 +17,7 @@ import { CustomerFormDialog } from '../customer-form-dialog/customer-form-dialog
 import { PetFormDialog } from '../pet-form-dialog/pet-form-dialog';
 import { PetDeleteDialog } from '../pet-delete-dialog/pet-delete-dialog';
 import { MedicalRecordList } from '../../medical-records/medical-record-list/medical-record-list';
+import { buildWhatsAppLink } from '../../../shared/util/whatsapp';
 
 @Component({
   selector: 'app-customer-detail',
@@ -60,6 +61,11 @@ export class CustomerDetail implements OnInit {
   /** Panel de mascota abierto/cerrado (por defecto: colapsados para ahorrar espacio). */
   protected readonly petPanelOpen = signal<Record<string, boolean>>({});
   protected customerId = '';
+
+  protected customerWhatsAppLink(c: CustomerRow): string {
+    const message = `Hola ${c.name}, te escribimos desde la veterinaria.`;
+    return buildWhatsAppLink(c.phone, message);
+  }
 
   protected readonly filteredPets = computed(() => {
     const q = this.petFilterText().trim().toLowerCase();

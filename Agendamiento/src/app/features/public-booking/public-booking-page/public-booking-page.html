@@ -1,159 +1,282 @@
 <app-portal-auth-shell [widePanel]="true">
+  <!-- Dos nodos hijos directos para que ng-content multi-slot proyecte bien (SSR + navegador). -->
   <div portal-auth-intro>
-    <p class="portal-auth__eyebrow">
-      <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
-      Sin cuenta del portal
-    </p>
-    <h1 id="portal-auth-page-title" class="portal-auth__title">
-      Reserva <em>como invitado</em>
-    </h1>
-    <p class="portal-auth__lede">
-      Solo se crea el turno en la agenda de la clínica. No tendrás historial clínico en línea ni alertas por correo sobre el
-      estado de la cita.
-    </p>
-    <ul class="portal-auth__bullets" aria-label="Qué incluye este modo">
-      <li>
-        <mat-icon aria-hidden="true">event</mat-icon>
-        Elegís servicio, profesional y horario
-      </li>
-      <li>
-        <mat-icon aria-hidden="true">pets</mat-icon>
-        Datos básicos de la mascota
-      </li>
-      <li>
-        <mat-icon aria-hidden="true">mark_email_unread</mat-icon>
-        Con cuenta: alertas por correo y seguimiento del turno
-      </li>
-    </ul>
+    @if (emailEarlierFlow()) {
+      <p class="portal-auth__eyebrow">
+        <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
+        Horario liberado
+      </p>
+      <h1 id="portal-auth-page-title" class="portal-auth__title">
+        Reagendar <em>más temprano</em>
+      </h1>
+      <p class="portal-auth__lede">
+        Confirmá el nuevo horario sin volver a cargar tus datos: el enlace ya identifica tu cita.
+      </p>
+    } @else {
+      <p class="portal-auth__eyebrow">
+        <span class="portal-auth__eyebrow-line" aria-hidden="true"></span>
+        Sin cuenta del portal
+      </p>
+      <h1 id="portal-auth-page-title" class="portal-auth__title">
+        Reserva <em>como invitado</em>
+      </h1>
+      <p class="portal-auth__lede">
+        Solo se crea el turno en la agenda de la clínica. No tendrás historial clínico en línea ni alertas por correo sobre el
+        estado de la cita.
+      </p>
+      <ul class="portal-auth__bullets" aria-label="Qué incluye este modo">
+        <li>
+          <mat-icon aria-hidden="true">event</mat-icon>
+          Elegís servicio, profesional y horario
+        </li>
+        <li>
+          <mat-icon aria-hidden="true">pets</mat-icon>
+          Datos básicos de la mascota
+        </li>
+        <li>
+          <mat-icon aria-hidden="true">mark_email_unread</mat-icon>
+          Con cuenta: alertas por correo y seguimiento del turno
+        </li>
+      </ul>
+    }
   </div>
 
   <div portal-auth-panel>
-    @if (loading()) {
-      <div class="portal-auth__loading" aria-busy="true" aria-live="polite">
-        <mat-spinner diameter="44" />
-      </div>
-    } @else {
-      <h2 id="portal-auth-form-heading" class="portal-auth__form-title">{{ businessName() }}</h2>
-      @if (rescheduleMode()) {
-        <div class="portal-auth__chip-row">
-          <mat-chip-set aria-label="Modo de reserva">
-            <mat-chip highlighted>Reagendar visita</mat-chip>
-          </mat-chip-set>
+    @if (emailEarlierFlow()) {
+      @if (loading() || earlierPhase() === 'loading') {
+        <div class="portal-auth__loading" aria-busy="true" aria-live="polite">
+          <mat-spinner diameter="44" />
+          <p class="guest-book-form__hint">Preparando tu vista previa…</p>
         </div>
-      }
-      <p class="portal-auth__form-sub">Completá los datos y confirmá el horario disponible.</p>
-
-      <form class="portal-auth__form guest-book-form" [formGroup]="form" (ngSubmit)="submit()">
-        <h3 class="portal-auth__section-heading">Tus datos</h3>
-        <div class="guest-book-form__grid">
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Nombre y apellido</mat-label>
-            <input matInput formControlName="customer_name" autocomplete="name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Teléfono</mat-label>
-            <input matInput formControlName="customer_phone" autocomplete="tel" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field guest-book-form__span-2">
-            <mat-label>Correo</mat-label>
-            <input matInput type="email" formControlName="customer_email" autocomplete="email" />
-            @if (form.controls.customer_email.hasError('email') && form.controls.customer_email.touched) {
-              <mat-error>Correo no válido</mat-error>
+      } @else if ((earlierPhase() === 'preview' || earlierPhase() === 'claiming') && earlierPreview(); as p) {
+        <h2 class="portal-auth__form-title">{{ businessName() }}</h2>
+        <mat-card class="earlier-slot-card app-card-lift">
+          <div class="earlier-slot-card__head">
+            <mat-icon class="earlier-slot-card__icon" aria-hidden="true">event_available</mat-icon>
+            <div>
+              <p class="earlier-slot-card__kicker">Nuevo horario propuesto</p>
+              <p class="earlier-slot-card__title">
+                {{ p.new_start | date: 'EEEE, d MMM y' }} ·
+                {{ p.new_start | date: 'HH:mm' }} — {{ p.new_end | date: 'HH:mm' }}
+              </p>
+            </div>
+          </div>
+          <dl class="earlier-slot-dl">
+            <div class="earlier-slot-row">
+              <dt>Horario actual</dt>
+              <dd>
+                {{ p.current_start | date: 'short' }} — {{ p.current_end | date: 'HH:mm' }}
+              </dd>
+            </div>
+            <div class="earlier-slot-row">
+              <dt>Mascota</dt>
+              <dd>{{ p.pet_name }}</dd>
+            </div>
+            <div class="earlier-slot-row">
+              <dt>Servicio</dt>
+              <dd>{{ p.service_name }}</dd>
+            </div>
+            <div class="earlier-slot-row">
+              <dt>Profesional</dt>
+              <dd>{{ p.vet_name }}</dd>
+            </div>
+          </dl>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            class="portal-auth__submit"
+            [disabled]="earlierPhase() === 'claiming'"
+            (click)="confirmEarlierSlot()"
+          >
+            @if (earlierPhase() === 'claiming') {
+              <mat-spinner diameter="22" />
+              <span>Confirmando…</span>
+            } @else {
+              <span>Confirmar reagendamiento</span>
             }
-          </mat-form-field>
-        </div>
-
-        <h3 class="portal-auth__section-heading">Mascota</h3>
-        <div class="guest-book-form__grid">
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Nombre</mat-label>
-            <input matInput formControlName="pet_name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Especie</mat-label>
-            <mat-select formControlName="pet_species_preset" placeholder="Seleccionar">
-              @for (g of speciesGroups; track g.label) {
-                <mat-optgroup [label]="g.label">
-                  @for (opt of g.options; track opt.value) {
-                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                  }
-                </mat-optgroup>
-              }
-              <mat-optgroup label="Otra">
-                <mat-option [value]="speciesOther">Otro</mat-option>
-              </mat-optgroup>
-            </mat-select>
-          </mat-form-field>
-          @if (form.controls.pet_species_preset.value === speciesOther) {
-            <mat-form-field appearance="outline" class="portal-auth__field guest-book-form__span-2">
-              <mat-label>Especifique la especie</mat-label>
-              <input matInput formControlName="pet_species_other" autocomplete="off" />
-            </mat-form-field>
-          }
-        </div>
-
-        <h3 class="portal-auth__section-heading">Turno</h3>
-        <div class="guest-book-form__grid">
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Servicio</mat-label>
-            <mat-select formControlName="service_id">
-              @for (s of services(); track s.id) {
-                <mat-option [value]="s.id">{{ s.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Profesional</mat-label>
-            <mat-select formControlName="user_id">
-              @for (v of vets(); track v.id) {
-                <mat-option [value]="v.id">{{ v.name }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Fecha</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="date" />
-            <mat-datepicker-toggle matIconSuffix [for]="picker" />
-            <mat-datepicker #picker />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="portal-auth__field">
-            <mat-label>Hora</mat-label>
-            <mat-select formControlName="start_time" [disabled]="slotsLoading()">
-              @for (sl of slots(); track sl) {
-                <mat-option [value]="sl">{{ sl }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        @if (slotsLoading()) {
-          <p class="guest-book-form__hint">Cargando horarios…</p>
-        } @else if (slots().length === 0) {
-          <p class="guest-book-form__hint guest-book-form__hint--warn">
-            No hay horarios para la combinación elegida. Probá otra fecha o profesional.
+          </button>
+          <p class="guest-book-form__hint">
+            El cupo puede tomarse si otro cliente confirma antes; si falla, probá de nuevo desde el portal.
           </p>
+        </mat-card>
+      } @else if (earlierPhase() === 'success' && earlierSuccess(); as s) {
+        <h2 class="portal-auth__form-title">{{ businessName() }}</h2>
+        <mat-card class="earlier-slot-card earlier-slot-card--success app-card-lift">
+          <div class="earlier-slot-card__head">
+            <mat-icon class="earlier-slot-card__icon earlier-slot-card__icon--ok" aria-hidden="true">check_circle</mat-icon>
+            <div>
+              <p class="earlier-slot-card__kicker">Listo — cita actualizada</p>
+              <p class="earlier-slot-card__title">
+                {{ s.new_start | date: 'EEEE, d MMM y, HH:mm' }} — {{ s.new_end | date: 'HH:mm' }}
+              </p>
+            </div>
+          </div>
+          <dl class="earlier-slot-dl">
+            <div class="earlier-slot-row">
+              <dt>Mascota</dt>
+              <dd>{{ s.pet_name }}</dd>
+            </div>
+            <div class="earlier-slot-row">
+              <dt>Servicio</dt>
+              <dd>{{ s.service_name }}</dd>
+            </div>
+            <div class="earlier-slot-row">
+              <dt>Profesional</dt>
+              <dd>{{ s.vet_name }}</dd>
+            </div>
+            <div class="earlier-slot-row ticket-row--mono">
+              <dt>Referencia</dt>
+              <dd>{{ s.appointment_id }}</dd>
+            </div>
+          </dl>
+          <p class="guest-book-form__hint">
+            Guardá o imprimí esta pantalla. También podés ver la cita en el portal si tenés cuenta.
+          </p>
+          <nav class="portal-auth__nav" aria-label="Siguientes pasos">
+            <a class="portal-auth__nav-link" [routerLink]="['/portal', businessIdForLink(), 'login']">
+              <mat-icon aria-hidden="true">login</mat-icon>
+              Ingresar al portal para ver mis citas
+            </a>
+          </nav>
+        </mat-card>
+      } @else if (earlierPhase() === 'error') {
+        <h2 class="portal-auth__form-title">{{ businessName() }}</h2>
+        <mat-card class="earlier-slot-card earlier-slot-card--error app-card-lift">
+          <mat-icon class="earlier-slot-card__icon earlier-slot-card__icon--warn" aria-hidden="true">error_outline</mat-icon>
+          <p class="earlier-slot-card__error-title">No pudimos usar este enlace</p>
+          <p class="guest-book-form__hint">{{ earlierErrorMessage() }}</p>
+          <a mat-stroked-button [routerLink]="['/portal', businessIdForLink(), 'login']">Ir al portal</a>
+        </mat-card>
+      }
+    } @else {
+      @if (loading()) {
+        <div class="portal-auth__loading" aria-busy="true" aria-live="polite">
+          <mat-spinner diameter="44" />
+        </div>
+      } @else {
+        <h2 id="portal-auth-form-heading" class="portal-auth__form-title">{{ businessName() }}</h2>
+        @if (rescheduleMode()) {
+          <div class="portal-auth__chip-row">
+            <mat-chip-set aria-label="Modo de reserva">
+              <mat-chip highlighted>Reagendar visita</mat-chip>
+            </mat-chip-set>
+          </div>
         }
+        <p class="portal-auth__form-sub">Completá los datos y confirmá el horario disponible.</p>
 
-        <button
-          mat-flat-button
-          color="primary"
-          class="portal-auth__submit"
-          type="submit"
-          [disabled]="saving() || form.invalid"
-        >
-          <span>{{ saving() ? 'Reservando…' : 'Confirmar reserva' }}</span>
-          @if (!saving()) {
-            <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        <form class="portal-auth__form guest-book-form" [formGroup]="form" (ngSubmit)="submit()">
+          <h3 class="portal-auth__section-heading">Tus datos</h3>
+          <div class="guest-book-form__grid">
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Nombre y apellido</mat-label>
+              <input matInput formControlName="customer_name" autocomplete="name" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="customer_phone" autocomplete="tel" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field guest-book-form__span-2">
+              <mat-label>Correo</mat-label>
+              <input matInput type="email" formControlName="customer_email" autocomplete="email" />
+              @if (form.controls.customer_email.hasError('email') && form.controls.customer_email.touched) {
+                <mat-error>Correo no válido</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <h3 class="portal-auth__section-heading">Mascota</h3>
+          <div class="guest-book-form__grid">
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="pet_name" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Especie</mat-label>
+              <mat-select formControlName="pet_species_preset" placeholder="Seleccionar">
+                @for (g of speciesGroups; track g.label) {
+                  <mat-optgroup [label]="g.label">
+                    @for (opt of g.options; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-optgroup>
+                }
+                <mat-optgroup label="Otra">
+                  <mat-option [value]="speciesOther">Otro</mat-option>
+                </mat-optgroup>
+              </mat-select>
+            </mat-form-field>
+            @if (form.controls.pet_species_preset.value === speciesOther) {
+              <mat-form-field appearance="outline" class="portal-auth__field guest-book-form__span-2">
+                <mat-label>Especifique la especie</mat-label>
+                <input matInput formControlName="pet_species_other" autocomplete="off" />
+              </mat-form-field>
+            }
+          </div>
+
+          <h3 class="portal-auth__section-heading">Turno</h3>
+          <div class="guest-book-form__grid">
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Servicio</mat-label>
+              <mat-select formControlName="service_id">
+                @for (s of services(); track s.id) {
+                  <mat-option [value]="s.id">{{ s.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Profesional</mat-label>
+              <mat-select formControlName="user_id">
+                @for (v of vets(); track v.id) {
+                  <mat-option [value]="v.id">{{ v.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Fecha</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="date" />
+              <mat-datepicker-toggle matIconSuffix [for]="picker" />
+              <mat-datepicker #picker />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="portal-auth__field">
+              <mat-label>Hora</mat-label>
+              <mat-select formControlName="start_time" [disabled]="slotsLoading()">
+                @for (sl of slots(); track sl) {
+                  <mat-option [value]="sl">{{ sl }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          @if (slotsLoading()) {
+            <p class="guest-book-form__hint">Cargando horarios…</p>
+          } @else if (slots().length === 0) {
+            <p class="guest-book-form__hint guest-book-form__hint--warn">
+              No hay horarios para la combinación elegida. Probá otra fecha o profesional.
+            </p>
           }
-        </button>
-      </form>
 
-      <nav class="portal-auth__nav" aria-label="Cuenta del portal">
-        <a class="portal-auth__nav-link" [routerLink]="['/portal', businessIdForLink(), 'register']">
-          <mat-icon aria-hidden="true">person_add</mat-icon>
-          Crear cuenta para alertas y seguimiento de tus citas
-        </a>
-      </nav>
+          <button
+            mat-flat-button
+            color="primary"
+            class="portal-auth__submit"
+            type="submit"
+            [disabled]="saving() || form.invalid"
+          >
+            <span>{{ saving() ? 'Reservando…' : 'Confirmar reserva' }}</span>
+            @if (!saving()) {
+              <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+            }
+          </button>
+        </form>
+
+        <nav class="portal-auth__nav" aria-label="Cuenta del portal">
+          <a class="portal-auth__nav-link" [routerLink]="['/portal', businessIdForLink(), 'register']">
+            <mat-icon aria-hidden="true">person_add</mat-icon>
+            Crear cuenta para alertas y seguimiento de tus citas
+          </a>
+        </nav>
+      }
     }
   </div>
 </app-portal-auth-shell>

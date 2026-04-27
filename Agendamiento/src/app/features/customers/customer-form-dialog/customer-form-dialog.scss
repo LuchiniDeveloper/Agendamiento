@@ -14,3 +14,20 @@
   color: var(--mat-sys-error);
   font-size: 0.875rem;
 }
+
+.wa-link {
+  .wa-link__icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+
+  .wa-link__icon path {
+    fill: #25d366;
+  }
+
+  &--disabled {
+    pointer-events: none;
+    opacity: 0.55;
+  }
+}

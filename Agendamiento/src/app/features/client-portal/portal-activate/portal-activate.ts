@@ -40,6 +40,15 @@ export class PortalActivate {
 
   constructor() {
     this.businessId.set(snapshotBusinessId(this.route.snapshot) ?? '');
+    const q = this.route.snapshot.queryParamMap;
+    const idDoc = q.get('id_document') ?? q.get('cedula');
+    const email = q.get('verify_email') ?? q.get('email');
+    if (idDoc?.trim()) {
+      this.form.patchValue({ id_document: idDoc.trim() });
+    }
+    if (email?.trim()) {
+      this.form.patchValue({ verify_email: email.trim().toLowerCase() });
+    }
   }
 
   async submit() {

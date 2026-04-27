@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CustomersData, type PetRow } from '../../customers/customers.data';
 import { petAvatarFromSpecies } from '../../customers/pet-avatar.util';
 import { ServicesData, staffRowsForScheduling } from '../../services-schedule/services.data';
@@ -33,6 +34,7 @@ export type AppointmentPetOption = { id: string; name: string; species: string |
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatCheckboxModule,
   ],
   templateUrl: './appointment-form-dialog.html',
 })
@@ -67,6 +69,7 @@ export class AppointmentFormDialog implements OnInit {
     user_id: ['', Validators.required],
     date: [AppointmentFormDialog.startOfToday(), Validators.required],
     start_time: ['', Validators.required],
+    notify_if_earlier_slot: [false],
     notes: [''],
   });
 
@@ -272,7 +275,7 @@ export class AppointmentFormDialog implements OnInit {
         return;
       }
 
-      const { error } = await this.appts.insert({
+      const { data, error } = await this.appts.insert({
         customer_id: v.customer_id,
         pet_id: v.pet_id,
         service_id: v.service_id,
@@ -283,6 +286,19 @@ export class AppointmentFormDialog implements OnInit {
         notes: v.notes || null,
       });
       if (error) throw error;
+      const appointmentId = (data as { id?: string } | null)?.id;
+      if (appointmentId) {
+        const { data: optData, error: optError } = await this.appts.setEarlierSlotOptIn(
+          appointmentId,
+          v.notify_if_earlier_slot,
+        );
+        if (optError) throw optError;
+        const ok = (optData as { ok?: boolean; error?: string } | null)?.ok;
+        if (!ok) {
+          const code = (optData as { error?: string } | null)?.error ?? 'OPTIN_FAILED';
+          throw new Error(`No se pudo guardar la preferencia (${code}).`);
+        }
+      }
       this.ref.close(true);
     } catch (e: unknown) {
       this.error.set(e instanceof Error ? e.message : 'Error al guardar');

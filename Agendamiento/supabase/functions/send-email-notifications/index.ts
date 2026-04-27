@@ -193,6 +193,26 @@ async function processOne(
     rescheduleUrl = `${appPublicUrl}/portal/${n.business_id}/guest-book?t=${encodeURIComponent(String(tok))}`;
   }
 
+  if (n.kind === 'EARLIER_SLOT_AVAILABLE') {
+    const slotId = String((n.payload_snapshot as { released_slot_id?: string } | null)?.released_slot_id ?? '').trim();
+    const { data: tok, error: tokErr } = await admin.rpc('ensure_appointment_public_token', {
+      p_appointment_id: n.appointment_id,
+      p_purpose: 'reschedule',
+      p_ttl_hours: 48,
+    });
+    if (tokErr) throw tokErr;
+    rescheduleUrl = `${appPublicUrl}/portal/${n.business_id}/guest-book?t=${encodeURIComponent(String(tok))}${
+      slotId ? `&rs=${encodeURIComponent(slotId)}` : ''
+    }`;
+    const earlyIso = (n.payload_snapshot as { released_slot_start_at?: string } | null)?.released_slot_start_at;
+    if (earlyIso) {
+      payload.earlierSlotWhenFormatted = new Intl.DateTimeFormat('es-CO', {
+        dateStyle: 'full',
+        timeStyle: 'short',
+      }).format(new Date(earlyIso));
+    }
+  }
+
   if (n.kind === 'COMPLETED_SUMMARY') {
     const { data: med } = await admin
       .from('medical_record')

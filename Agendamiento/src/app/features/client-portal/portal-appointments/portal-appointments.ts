@@ -18,6 +18,7 @@ type ApptRowRaw = {
   id: string;
   start_date_time: string;
   end_date_time: string;
+  rescheduled_from_released_slot_id: string | null;
   service_id: string;
   user_id: string;
   status: FkName;
@@ -86,6 +87,7 @@ export class PortalAppointments implements OnInit {
         id,
         start_date_time,
         end_date_time,
+        rescheduled_from_released_slot_id,
         service_id,
         user_id,
         pet:pet_id (id, name),
@@ -169,6 +171,10 @@ export class PortalAppointments implements OnInit {
 
   canViewInvoice(r: ApptDisplayRow): boolean {
     return this.statusName(r) === 'Completada';
+  }
+
+  isReleasedReschedule(r: ApptDisplayRow): boolean {
+    return !!r.rescheduled_from_released_slot_id;
   }
 
   openTicket(r: ApptDisplayRow): void {

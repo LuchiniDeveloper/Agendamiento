@@ -903,3 +903,67 @@ h1.page-title::after {
 .app-table-card .simple-table thead th:last-child {
   border-top-right-radius: var(--app-radius-md);
 }
+
+// Tooltip de cita (nodo creado en TS bajo app-appointments-page; estilos globales por encapsulación)
+app-appointments-page > .fc-appt-hovercard {
+  position: fixed;
+  z-index: 10050;
+  pointer-events: none;
+  max-width: min(300px, calc(100vw - 16px));
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+  box-shadow:
+    0 14px 40px color-mix(in srgb, var(--mat-sys-shadow, #0f172a) 16%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--mat-sys-surface) 40%, transparent);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  font-family: var(--app-font-body);
+}
+
+app-appointments-page > .fc-appt-hovercard.fc-appt-hovercard--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__strip {
+  height: 4px;
+  width: 100%;
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__body {
+  padding: 0.65rem 0.75rem 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--mat-sys-on-surface);
+  line-height: 1.25;
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__row {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--mat-sys-on-surface);
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__row--muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+app-appointments-page > .fc-appt-hovercard .fc-appt-hovercard__time {
+  margin-top: 0.15rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 65%, transparent);
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+}

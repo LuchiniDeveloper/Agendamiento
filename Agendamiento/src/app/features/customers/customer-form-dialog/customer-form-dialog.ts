@@ -4,7 +4,10 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CustomersData, type CustomerRow } from '../customers.data';
+import { buildWhatsAppLink } from '../../../shared/util/whatsapp';
 
 @Component({
   selector: 'app-customer-form-dialog',
@@ -15,6 +18,8 @@ import { CustomersData, type CustomerRow } from '../customers.data';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './customer-form-dialog.html',
 })
@@ -38,6 +43,12 @@ export class CustomerFormDialog {
 
   cancel() {
     this.ref.close();
+  }
+
+  protected whatsappLink(): string {
+    const phone = this.form.getRawValue().phone;
+    const name = this.form.getRawValue().name?.trim() || 'cliente';
+    return buildWhatsAppLink(phone, `Hola ${name}, te escribimos desde la veterinaria.`);
   }
 
   async save() {

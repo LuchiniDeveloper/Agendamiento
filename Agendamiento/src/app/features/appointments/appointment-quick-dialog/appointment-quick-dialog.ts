@@ -78,6 +78,8 @@ export interface QuickApptPayload {
   endLabel: string;
   startIso: string;
   endIso: string;
+  /** Cliente marcó recibir aviso si se libera un horario más temprano (portal / agenda). */
+  notifyIfEarlierSlot: boolean;
 }
 
 @Component({

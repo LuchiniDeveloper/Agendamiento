@@ -34,25 +34,16 @@
       <table class="simple-table">
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th class="col-email">Correo</th>
-            <th>Teléfono</th>
             <th class="col-portal">Portal</th>
-            <th class="col-mascotas">Mascotas</th>
+            <th>Nombres</th>
             <th class="col-nota">Nota</th>
-            <th class="col-actions"></th>
+            <th class="col-indicators">Indicadores</th>
+            <th class="col-mascotas">Mascotas</th>
           </tr>
         </thead>
         <tbody>
           @for (c of rows(); track c.id) {
             <tr>
-              <td>{{ c.name }}</td>
-              <td class="col-email">
-                <span class="cell-ellipsis" [matTooltip]="c.email ?? ''" [matTooltipDisabled]="!c.email">
-                  {{ c.email?.trim() ? c.email : '—' }}
-                </span>
-              </td>
-              <td>{{ c.phone ?? '—' }}</td>
               <td class="col-portal">
                 @if (hasPortalAccount(c)) {
                   <span
@@ -74,10 +65,8 @@
                   </span>
                 }
               </td>
-              <td class="col-mascotas">
-                <span class="pet-sum" [matTooltip]="petSummaries().get(c.id) ?? ''">
-                  {{ petSummaries().get(c.id) ?? '—' }}
-                </span>
+              <td>
+                <a class="name-link" [routerLink]="['/app/customers', c.id]">{{ c.name }}</a>
               </td>
               <td class="col-nota">
                 <span
@@ -89,25 +78,35 @@
                   {{ notePreview(c.notes) }}
                 </span>
               </td>
-              <td class="col-actions">
-                <div class="row-actions">
-                  <button
-                    mat-icon-button
-                    type="button"
-                    matTooltip="Editar cliente"
-                    aria-label="Editar cliente"
-                    (click)="openEdit(c)"
-                  >
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <a
-                    mat-icon-button
-                    matTooltip="Ver ficha"
-                    aria-label="Ver ficha del cliente"
-                    [routerLink]="['/app/customers', c.id]"
-                  >
-                    <mat-icon>visibility</mat-icon>
-                  </a>
+              <td class="col-indicators">
+                @let appt = customerAppointmentIndicators(c.id);
+                <div class="history-indicators">
+                  <span class="history-chip history-chip--ok" matTooltip="Citas atendidas / recibidas">
+                    <mat-icon aria-hidden="true">task_alt</mat-icon>
+                    <span>{{ appt.attended }}</span>
+                  </span>
+                  <span class="history-chip history-chip--cancelled" matTooltip="Citas canceladas">
+                    <mat-icon aria-hidden="true">event_busy</mat-icon>
+                    <span>{{ appt.cancelled }}</span>
+                  </span>
+                  <span class="history-chip history-chip--noshow" matTooltip="Citas no asistidas">
+                    <mat-icon aria-hidden="true">person_off</mat-icon>
+                    <span>{{ appt.noShow }}</span>
+                  </span>
+                </div>
+              </td>
+              <td class="col-mascotas">
+                <div class="pet-indicators">
+                  @if (customerPetIndicators(c.id).length === 0) {
+                    <span class="pet-empty-label">—</span>
+                  } @else {
+                    @for (pet of customerPetIndicators(c.id); track pet.species) {
+                      <span class="pet-chip" [attr.data-pet-tone]="pet.tone" [matTooltip]="pet.species">
+                        <span class="pet-chip__emoji" aria-hidden="true">{{ pet.emoji }}</span>
+                        <span class="pet-chip__count">{{ pet.count }}</span>
+                      </span>
+                    }
+                  }
                 </div>
               </td>
             </tr>

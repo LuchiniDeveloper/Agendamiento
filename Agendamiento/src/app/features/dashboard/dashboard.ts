@@ -15,6 +15,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  appointmentStatusChartHex,
+  appointmentStatusDashboardDonutSliceColor,
+} from '../../core/appointment-status-theme';
 import { TenantContextService } from '../../core/tenant-context.service';
 import { SUPABASE_CLIENT } from '../../core/supabase';
 import { CopCurrencyPipe } from '../../shared/pipes/cop-currency.pipe';
@@ -112,14 +116,6 @@ function pctChange(today: number, yest: number): number | null {
   if (yest <= 0) return null;
   return Math.round(((today - yest) / yest) * 1000) / 10;
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  Agendada: '#5c6bc0',
-  Confirmada: '#00897b',
-  Completada: '#43a047',
-  Cancelada: '#9e9e9e',
-  NoShow: '#e53935',
-};
 
 @Component({
   selector: 'app-dashboard',
@@ -290,8 +286,7 @@ export class Dashboard implements OnInit {
   }
 
   protected statusColor(name: string | undefined): string {
-    if (!name) return 'var(--mat-sys-outline)';
-    return STATUS_COLORS[name] ?? 'var(--mat-sys-primary)';
+    return appointmentStatusChartHex(name);
   }
 
   protected donutGradient(slices: DonutSlice[]): string {
@@ -438,7 +433,7 @@ export class Dashboard implements OnInit {
         name,
         count: cnt,
         pct: singleStatus ? 100 : Math.round((cnt / stTotal) * 1000) / 10,
-        color: this.statusColor(name),
+        color: appointmentStatusDashboardDonutSliceColor(name),
       })),
     );
 

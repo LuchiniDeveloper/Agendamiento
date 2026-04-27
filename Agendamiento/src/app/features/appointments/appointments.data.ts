@@ -54,6 +54,7 @@ export class AppointmentsData {
         user_id,
         start_date_time,
         end_date_time,
+        rescheduled_from_released_slot_id,
         attention_started_at,
         notes,
         status_id,
@@ -61,7 +62,8 @@ export class AppointmentsData {
         pet:pet_id (id, name, species),
         service:service_id (id, name, duration_minutes, price),
         vet:user_id (id, name),
-        status:status_id (id, name)
+        status:status_id (id, name),
+        appointment_earlier_slot_opt_in ( enabled )
       `,
       )
       .gte('start_date_time', startIso)
@@ -264,6 +266,14 @@ export class AppointmentsData {
   }) {
     if (!this.supabase) throw new Error('Supabase no configurado');
     return this.supabase.from('appointment').insert(row).select('id').single();
+  }
+
+  setEarlierSlotOptIn(appointmentId: string, enabled: boolean) {
+    if (!this.supabase) throw new Error('Supabase no configurado');
+    return this.supabase.rpc('set_appointment_earlier_slot_opt_in', {
+      p_appointment_id: appointmentId,
+      p_enabled: enabled,
+    });
   }
 
   updateTimes(id: string, start: string, end: string) {

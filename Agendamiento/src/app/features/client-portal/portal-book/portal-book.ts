@@ -13,6 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { debounceTime, merge } from 'rxjs';
 import { SUPABASE_CLIENT } from '../../../core/supabase';
 import { AGENDA_DEFAULT_TZ } from '../../appointments/appointments.data';
@@ -52,6 +53,7 @@ function relName(x: FkName): string {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
+    MatCheckboxModule,
   ],
   templateUrl: './portal-book.html',
   styleUrl: './portal-book.scss',
@@ -83,6 +85,7 @@ export class PortalBook implements OnInit {
     user_id: ['', Validators.required],
     date: [new Date(), Validators.required],
     start_time: ['', Validators.required],
+    notify_if_earlier_slot: [false],
   });
 
   constructor() {
@@ -221,6 +224,7 @@ export class PortalBook implements OnInit {
         p_on_date: onDate,
         p_start_hhmm: v.start_time,
         p_tz: AGENDA_DEFAULT_TZ,
+        p_notify_if_earlier_slot: v.notify_if_earlier_slot,
       });
       if (error) throw error;
       const j = data as { ok?: boolean; error?: string; appointment_id?: string };
